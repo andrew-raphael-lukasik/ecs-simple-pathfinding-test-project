@@ -5,6 +5,7 @@ using ServerAndClient.Input;
 
 namespace Client.Input
 {
+    [WorldSystemFilter(WorldSystemFilterFlags.LocalSimulation | WorldSystemFilterFlags.ClientSimulation)]
     [UpdateInGroup(typeof(InitializationSystemGroup))]
     public partial class PlayerInputActionsSystem : SystemBase
     {
