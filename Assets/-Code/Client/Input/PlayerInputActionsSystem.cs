@@ -6,25 +6,25 @@ using ServerAndClient.Input;
 namespace Client.Input
 {
     [UpdateInGroup(typeof(InitializationSystemGroup))]
-    [Unity.Burst.BurstCompile]
-    public partial struct PlayerInputActionsSystem : ISystem
+    public partial class PlayerInputActionsSystem : SystemBase
     {
         PlayerInputActions _actions;
-        void ISystem.OnCreate(ref SystemState state)
+
+        protected override void OnCreate()
         {
             _actions = new PlayerInputActions();
             _actions.UI.Enable();
 
-            state.EntityManager.CreateSingleton<PointerPositionData>();
+            EntityManager.CreateSingleton<PointerPositionData>();
         }
 
-        void ISystem.OnDestroy(ref SystemState state)
+        protected override void OnDestroy()
         {
             _actions.Disable();
             _actions.Dispose();
         }
 
-        void ISystem.OnUpdate(ref SystemState state)
+        protected override void OnUpdate()
         {
             Vector2 point = _actions.UI.Point.ReadValue<Vector2>();
 
