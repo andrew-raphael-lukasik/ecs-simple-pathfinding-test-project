@@ -14,8 +14,8 @@
 - freely look around the map
 
 ## For Extra Credit:
--if possible move path is selected add option to move unit to destination on click. make the default Unity character model run the path on the map
--if possible attack path is selected add option to destroy enemy on click. If selecting tile with enemy unit and it is out of attack range, show path to closest tile from which unit can attack and an attack path from that tile. If both path are possible click should move unit to attack position and then enemy should be destroyed.
+- if possible move path is selected add option to move unit to destination on click. make the default Unity character model run the path on the map
+- if possible attack path is selected add option to destroy enemy on click. If selecting tile with enemy unit and it is out of attack range, show path to closest tile from which unit can attack and an attack path from that tile. If both path are possible click should move unit to attack position and then enemy should be destroyed.
 
 
 Please submit a working executable and the source project.
