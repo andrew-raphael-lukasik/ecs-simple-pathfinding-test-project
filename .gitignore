@@ -34,6 +34,9 @@
 # Visual Studio cache directory
 .vs/
 
+# VS Code cache directory
+.vscode/
+
 # Gradle cache directory
 .gradle/
 
@@ -97,3 +100,11 @@ InitTestScene*.unity*
 
 # Auto-generated scenes by play mode tests
 /[Aa]ssets/[Ii]nit[Tt]est[Ss]cene*.unity*
+
+# entity cache files, seems safe to ignore
+Assets/SceneDependencyCache.meta
+Assets/SceneDependencyCache/
+Assets/GlobalEntitiesDependencies.meta
+Assets/GlobalEntitiesDependencies/
+
+#
