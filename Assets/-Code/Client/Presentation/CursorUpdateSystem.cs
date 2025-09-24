@@ -5,7 +5,7 @@ using Unity.Transforms;
 using Unity.Collections;
 
 using ServerAndClient.Input;
-using ServerAndClient.GameState;
+using ServerAndClient.Gameplay;
 
 namespace Client.Presentation
 {

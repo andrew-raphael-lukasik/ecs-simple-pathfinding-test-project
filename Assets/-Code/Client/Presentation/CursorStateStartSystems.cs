@@ -6,7 +6,7 @@ using Unity.Jobs;
 
 using ServerAndClient;
 using ServerAndClient.Input;
-using ServerAndClient.GameState;
+using ServerAndClient.Gameplay;
 
 namespace Client.Presentation
 {
@@ -19,7 +19,7 @@ namespace Client.Presentation
         [Unity.Burst.BurstCompile]
         void ISystem.OnCreate(ref SystemState state)
         {
-            state.RequireForUpdate<EDIT_STATE_START_EVENT>();
+            state.RequireForUpdate<GameState.EDIT_STARTED_EVENT>();
         }
 
         [Unity.Burst.BurstCompile]
@@ -54,7 +54,7 @@ namespace Client.Presentation
         [Unity.Burst.BurstCompile]
         void ISystem.OnCreate(ref SystemState state)
         {
-            state.RequireForUpdate<PLAY_STATE_START_EVENT>();
+            state.RequireForUpdate<GameState.PLAY_STARTED_EVENT>();
         }
 
         [Unity.Burst.BurstCompile]

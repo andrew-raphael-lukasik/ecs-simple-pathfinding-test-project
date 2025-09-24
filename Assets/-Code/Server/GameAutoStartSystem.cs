@@ -1,9 +1,7 @@
 using UnityEngine;
 using Unity.Entities;
-using Unity.Collections;
-using Unity.Mathematics;
 
-using ServerAndClient.GameState;
+using ServerAndClient.Gameplay;
 
 namespace Server.GameState
 {
@@ -16,10 +14,10 @@ namespace Server.GameState
         [Unity.Burst.BurstCompile]
         void ISystem.OnCreate(ref SystemState state)
         {
-            Entity entity = state.EntityManager.CreateSingleton<IS_EDIT_GAME_STATE>("EDIT MODE");
-            state.EntityManager.AddComponent<IS_GAME_STATE>(entity);
-            
-            Debug.Log($"EDIT MODE entity created automatically {entity}");
+            state.EntityManager.CreateSingleton(new GameStateChangeRequest{
+                State = EGameState.EDIT
+            });
+            Debug.Log($"initial {nameof(GameStateChangeRequest)} created automatically");
         }
     }
 }
