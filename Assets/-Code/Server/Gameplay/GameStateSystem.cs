@@ -2,7 +2,9 @@ using UnityEngine;
 using Unity.Entities;
 using Unity.Collections;
 
-namespace ServerAndClient.Gameplay
+using ServerAndClient.Gameplay;
+
+namespace Server.Gameplay
 {
     [WorldSystemFilter(WorldSystemFilterFlags.Default | WorldSystemFilterFlags.ServerSimulation)]
     [UpdateInGroup(typeof(InitializationSystemGroup), OrderFirst = true)]
