@@ -15,17 +15,14 @@ namespace Editor.GameState
         [Unity.Burst.BurstCompile]
         void ISystem.OnCreate(ref SystemState state)
         {
-            state.RequireForUpdate<IS_PLAY_GAME_STATE>();
+            state.RequireForUpdate<PLAY_STATE_START_EVENT>();
         }
 
         [Unity.Burst.BurstCompile]
         void ISystem.OnUpdate(ref SystemState state)
         {
-            if (!SystemAPI.HasComponent<IsPlayModeActive>(state.SystemHandle))
-            {
-                Debug.Log($"PLAY MODE start detected");
-                state.EntityManager.AddComponent<IsPlayModeActive>(state.SystemHandle);
-            }
+            Debug.Log($"PLAY MODE START EVENT detected");
+            state.EntityManager.AddComponent<IsPlayModeActive>(state.SystemHandle);
         }
 
         public struct IsPlayModeActive : IComponentData {}
