@@ -2,7 +2,7 @@ using Unity.Entities;
 
 namespace ServerAndClient.GameState
 {
-    public struct IsGameState : IComponentData {}
+    public struct IS_GAME_STATE : IComponentData {}
 
     public struct IS_EDIT_GAME_STATE : IComponentData {}
     public struct IS_EDIT_GAME_STATE_CLEANUP : ICleanupComponentData {}

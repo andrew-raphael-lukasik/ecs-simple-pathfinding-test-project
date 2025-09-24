@@ -14,7 +14,7 @@ namespace ServerAndClient.GameState
         [Unity.Burst.BurstCompile]
         void ISystem.OnCreate(ref SystemState state)
         {
-            state.RequireForUpdate<IsGameState>();
+            state.RequireForUpdate<IS_GAME_STATE>();
         }
 
         [Unity.Burst.BurstCompile]

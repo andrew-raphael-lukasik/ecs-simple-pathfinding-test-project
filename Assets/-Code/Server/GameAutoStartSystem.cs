@@ -17,7 +17,7 @@ namespace Server.GameState
         void ISystem.OnCreate(ref SystemState state)
         {
             Entity entity = state.EntityManager.CreateSingleton<IS_EDIT_GAME_STATE>("EDIT MODE");
-            state.EntityManager.AddComponent<IsGameState>(entity);
+            state.EntityManager.AddComponent<IS_GAME_STATE>(entity);
             
             Debug.Log($"EDIT MODE entity created automatically {entity}");
         }

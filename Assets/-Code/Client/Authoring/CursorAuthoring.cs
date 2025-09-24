@@ -13,6 +13,9 @@ namespace Client.Authoring
             public override void Bake(CursorAuthoring authoring)
             {
                 Entity entity = GetEntity(authoring, TransformUsageFlags.WorldSpace);
+
+                AddComponent<IsCursor>(entity);
+
                 switch (authoring._type)
                 {
                     case EType.EditAndPlay:
