@@ -16,7 +16,7 @@ namespace Server.GameState
         [Unity.Burst.BurstCompile]
         void ISystem.OnCreate(ref SystemState state)
         {
-            Entity entity = state.EntityManager.CreateSingleton<EditModeTag>("EDIT MODE");
+            Entity entity = state.EntityManager.CreateSingleton<IS_EDIT_GAME_STATE>("EDIT MODE");
             Debug.Log($"EDIT MODE entity created automatically {entity}");
         }
     }
