@@ -6,7 +6,7 @@ using ServerAndClient.Gameplay;
 
 namespace Server.Gameplay
 {
-    [WorldSystemFilter(WorldSystemFilterFlags.Default | WorldSystemFilterFlags.ServerSimulation)]
+    [WorldSystemFilter(WorldSystemFilterFlags.Default | WorldSystemFilterFlags.ServerSimulation | WorldSystemFilterFlags.Editor)]
     [UpdateInGroup(typeof(InitializationSystemGroup), OrderFirst = true)]
     [RequireMatchingQueriesForUpdate]
     [Unity.Burst.BurstCompile]
@@ -39,7 +39,7 @@ namespace Server.Gameplay
                 }
                 else
                 {
-                    Debug.LogError($"Multiple GameState.ChangeRequest detected! This will result in undefined behavior - fix asap.");
+                    Debug.LogError($"{state.DebugName}: Multiple GameState.ChangeRequest detected! This will result in undefined behavior - fix asap.");
                     Debug.DebugBreak();
                 }
             }
@@ -48,11 +48,11 @@ namespace Server.Gameplay
             {
                 case EGameState.EDIT:
                     state.EntityManager.AddComponent<GameState.EDIT_STARTED_EVENT>(state.SystemHandle);
-                    Debug.Log($"{nameof(GameState.EDIT_STARTED_EVENT)} created");
+                    Debug.Log($"{state.DebugName}: {GameState.EDIT_STARTED_EVENT.DebugName} created");
                     break;
                 case EGameState.PLAY:
                     state.EntityManager.AddComponent<GameState.PLAY_STARTED_EVENT>(state.SystemHandle);
-                    Debug.Log($"{nameof(GameState.PLAY_STARTED_EVENT)} created");
+                    Debug.Log($"{state.DebugName}: {GameState.PLAY_STARTED_EVENT.DebugName} created");
                     break;
                 default:
                     throw new System.NotImplementedException($"{requestedMode}");
@@ -76,24 +76,25 @@ namespace Server.Gameplay
                 if (SystemAPI.HasComponent<GameState.EDIT_STARTED_EVENT>(gameStateSystemHandle))
                 {
                     entityManager.RemoveComponent<GameState.EDIT_STARTED_EVENT>(gameStateSystemHandle);
-                    Debug.Log($"{nameof(GameState.EDIT_STARTED_EVENT)} has ended.");
+                    Debug.Log($"{state.DebugName}: {GameState.EDIT_STARTED_EVENT.DebugName} has ended.");
                 }
                 if (SystemAPI.HasComponent<GameState.EDIT_ENDED_EVENT>(gameStateSystemHandle))
                 {
                     entityManager.RemoveComponent<GameState.EDIT_ENDED_EVENT>(gameStateSystemHandle);
-                    Debug.Log($"{nameof(GameState.EDIT_ENDED_EVENT)} has ended.");
+                    Debug.Log($"{state.DebugName}: {GameState.EDIT_ENDED_EVENT.DebugName} has ended.");
                 }
                 if (SystemAPI.HasComponent<GameState.PLAY_STARTED_EVENT>(gameStateSystemHandle))
                 {
                     entityManager.RemoveComponent<GameState.PLAY_STARTED_EVENT>(gameStateSystemHandle);
-                    Debug.Log($"{nameof(GameState.PLAY_STARTED_EVENT)} has ended.");
+                    Debug.Log($"{state.DebugName}: {GameState.PLAY_STARTED_EVENT.DebugName} has ended.");
                 }
                 if (SystemAPI.HasComponent<GameState.PLAY_ENDED_EVENT>(gameStateSystemHandle))
                 {
                     entityManager.RemoveComponent<GameState.PLAY_ENDED_EVENT>(gameStateSystemHandle);
-                    Debug.Log($"{nameof(GameState.PLAY_ENDED_EVENT)} has ended.");
+                    Debug.Log($"{state.DebugName}: {GameState.PLAY_ENDED_EVENT.DebugName} has ended.");
                 }
             }
         }
+
     }
 }

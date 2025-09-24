@@ -1,7 +1,9 @@
 using Unity.Entities;
+using Unity.Collections;
 
 namespace ServerAndClient.Gameplay
 {
+    /// <summary> <seealso cref="GameState"/> singleton maintained by <seealso cref="GameStateSystem"/>. </summary>
     public struct GameState : IComponentData
     {
         #region fields
@@ -12,17 +14,34 @@ namespace ServerAndClient.Gameplay
         #region nested types
 
 
+        /// <summary> Consumed by <seealso cref="GameStateSystem"/>. </summary>
         public struct ChangeRequest : IComponentData
         {
             public EGameState State;
+
+            public static FixedString64Bytes DebugName {get;} = nameof(ChangeRequest);
         }
 
 
-        public struct EDIT_STARTED_EVENT : IComponentData {}
-        public struct EDIT_ENDED_EVENT : IComponentData {}
+        /// <summary> <seealso cref="GameStateSystem"/> emits all these events. They exist for a single update cycle. </summary>
+        /// <remarks> Other systems use them to trigger gameplay stage-dependant logic. </remarks>
+        public struct EDIT_STARTED_EVENT : IComponentData
+        {
+            public static FixedString64Bytes DebugName {get;} = nameof(EDIT_STARTED_EVENT);
+        }
+        public struct EDIT_ENDED_EVENT : IComponentData
+        {
+            public static FixedString64Bytes DebugName {get;} = nameof(EDIT_ENDED_EVENT);
+        }
 
-        public struct PLAY_STARTED_EVENT : IComponentData {}
-        public struct PLAY_ENDED_EVENT : IComponentData {}
+        public struct PLAY_STARTED_EVENT : IComponentData
+        {
+            public static FixedString64Bytes DebugName {get;} = nameof(PLAY_STARTED_EVENT);
+        }
+        public struct PLAY_ENDED_EVENT : IComponentData
+        {
+            public static FixedString64Bytes DebugName {get;} = nameof(PLAY_ENDED_EVENT);
+        }
 
 
         #endregion

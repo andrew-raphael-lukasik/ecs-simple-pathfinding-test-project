@@ -1,5 +1,6 @@
 using UnityEngine;
 using Unity.Entities;
+using Unity.Collections;
 
 using ServerAndClient.Gameplay;
 
@@ -20,7 +21,7 @@ namespace EditorOnly.Debugging
         [Unity.Burst.BurstCompile]
         void ISystem.OnUpdate(ref SystemState state)
         {
-            Debug.Log($"{nameof(GameState.EDIT_STARTED_EVENT)} detected");
+            Debug.Log($"{GameState.EDIT_STARTED_EVENT.DebugName} detected");
         }
     }
 
@@ -39,7 +40,7 @@ namespace EditorOnly.Debugging
         [Unity.Burst.BurstCompile]
         void ISystem.OnUpdate(ref SystemState state)
         {
-            Debug.Log($"{nameof(GameState.PLAY_STARTED_EVENT)} detected");
+            Debug.Log($"{GameState.PLAY_STARTED_EVENT.DebugName} detected");
         }
     }
 }
