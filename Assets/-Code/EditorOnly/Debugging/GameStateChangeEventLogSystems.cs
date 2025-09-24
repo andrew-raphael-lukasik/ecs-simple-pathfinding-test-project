@@ -3,7 +3,7 @@ using Unity.Entities;
 
 using ServerAndClient.Gameplay;
 
-namespace Editor.Debugging
+namespace EditorOnly.Debugging
 {
     [WorldSystemFilter(WorldSystemFilterFlags.Default)]
     [UpdateInGroup(typeof(InitializationSystemGroup), OrderLast = true)]

@@ -3,14 +3,13 @@ using Unity.Entities;
 
 using ServerAndClient.Gameplay;
 
-namespace Editor.Debugging
+namespace EditorOnly.Debugging
 {
     [WorldSystemFilter(WorldSystemFilterFlags.Default)]
     [UpdateInGroup(typeof(PresentationSystemGroup))]
     [Unity.Burst.BurstCompile]
     public partial struct ChangeGameStateKeyboardShortcutSystem : ISystem
     {
-        [Unity.Burst.BurstCompile]
         void ISystem.OnUpdate(ref SystemState state)
         {
             var keyboard = Keyboard.current;
