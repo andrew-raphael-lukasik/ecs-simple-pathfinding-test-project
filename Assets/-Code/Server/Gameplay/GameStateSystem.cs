@@ -73,10 +73,26 @@ namespace Server.Gameplay
             {
                 var entityManager = state.EntityManager;
                 var gameStateSystemHandle = state.WorldUnmanaged.GetExistingUnmanagedSystem<GameStateSystem>();
-                if (SystemAPI.HasComponent<GameState.EDIT_STARTED_EVENT>(gameStateSystemHandle)) entityManager.RemoveComponent<GameState.EDIT_STARTED_EVENT>(gameStateSystemHandle);
-                if (SystemAPI.HasComponent<GameState.EDIT_ENDED_EVENT>(gameStateSystemHandle)) entityManager.RemoveComponent<GameState.EDIT_ENDED_EVENT>(gameStateSystemHandle);
-                if (SystemAPI.HasComponent<GameState.PLAY_STARTED_EVENT>(gameStateSystemHandle)) entityManager.RemoveComponent<GameState.PLAY_STARTED_EVENT>(gameStateSystemHandle);
-                if (SystemAPI.HasComponent<GameState.PLAY_ENDED_EVENT>(gameStateSystemHandle)) entityManager.RemoveComponent<GameState.PLAY_ENDED_EVENT>(gameStateSystemHandle);
+                if (SystemAPI.HasComponent<GameState.EDIT_STARTED_EVENT>(gameStateSystemHandle))
+                {
+                    entityManager.RemoveComponent<GameState.EDIT_STARTED_EVENT>(gameStateSystemHandle);
+                    Debug.Log($"{nameof(GameState.EDIT_STARTED_EVENT)} has ended.");
+                }
+                if (SystemAPI.HasComponent<GameState.EDIT_ENDED_EVENT>(gameStateSystemHandle))
+                {
+                    entityManager.RemoveComponent<GameState.EDIT_ENDED_EVENT>(gameStateSystemHandle);
+                    Debug.Log($"{nameof(GameState.EDIT_ENDED_EVENT)} has ended.");
+                }
+                if (SystemAPI.HasComponent<GameState.PLAY_STARTED_EVENT>(gameStateSystemHandle))
+                {
+                    entityManager.RemoveComponent<GameState.PLAY_STARTED_EVENT>(gameStateSystemHandle);
+                    Debug.Log($"{nameof(GameState.PLAY_STARTED_EVENT)} has ended.");
+                }
+                if (SystemAPI.HasComponent<GameState.PLAY_ENDED_EVENT>(gameStateSystemHandle))
+                {
+                    entityManager.RemoveComponent<GameState.PLAY_ENDED_EVENT>(gameStateSystemHandle);
+                    Debug.Log($"{nameof(GameState.PLAY_ENDED_EVENT)} has ended.");
+                }
             }
         }
     }
