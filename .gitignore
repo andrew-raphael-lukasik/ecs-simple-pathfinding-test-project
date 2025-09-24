@@ -108,3 +108,5 @@ Assets/GlobalEntitiesDependencies.meta
 Assets/GlobalEntitiesDependencies/
 
 #
+Assets/_Recovery/*
+Assets/_Recovery.meta
