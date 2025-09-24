@@ -7,7 +7,7 @@
       "dependencies": {
         "com.unity.entities": "1.0.8"
       },
-      "hash": "3f8312a63f05fa35f4595057b2604614c1355a0b"
+      "hash": "e7340492d3f547940961ef70d9ac62f1f7dadf71"
     },
     "com.andrewraphaellukasik.segments": {
       "version": "https://github.com/andrew-raphael-lukasik/Segments.git#upm",
