@@ -4,7 +4,7 @@ using Unity.Jobs;
 
 namespace ServerAndClient
 {
-    [WorldSystemFilter(WorldSystemFilterFlags.Presentation)]
+    [WorldSystemFilter(WorldSystemFilterFlags.Presentation | WorldSystemFilterFlags.Editor)]
     [UpdateInGroup(typeof(PresentationSystemGroup), OrderLast = true)]
     [Unity.Burst.BurstCompile]
     public partial struct EndPresentationECBSystem: ISystem

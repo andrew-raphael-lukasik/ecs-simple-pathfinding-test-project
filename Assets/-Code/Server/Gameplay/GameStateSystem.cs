@@ -62,7 +62,7 @@ namespace Server.Gameplay
                 commandBuffer.Playback(state.EntityManager);
         }
 
-        [WorldSystemFilter(WorldSystemFilterFlags.Default | WorldSystemFilterFlags.ServerSimulation)]
+        [WorldSystemFilter(WorldSystemFilterFlags.Default | WorldSystemFilterFlags.ServerSimulation | WorldSystemFilterFlags.Editor)]
         [UpdateInGroup(typeof(InitializationSystemGroup), OrderFirst = true)]
         [UpdateBefore(typeof(GameStateSystem))]
         [Unity.Burst.BurstCompile]

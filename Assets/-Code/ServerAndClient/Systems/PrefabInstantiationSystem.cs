@@ -6,7 +6,7 @@ using Unity.Jobs;
 
 namespace ServerAndClient
 {
-    [WorldSystemFilter(WorldSystemFilterFlags.Presentation)]
+    [WorldSystemFilter(WorldSystemFilterFlags.Presentation | WorldSystemFilterFlags.Editor)]
     [UpdateInGroup(typeof(InitializationSystemGroup))]
     [RequireMatchingQueriesForUpdate]
     [Unity.Burst.BurstCompile]
