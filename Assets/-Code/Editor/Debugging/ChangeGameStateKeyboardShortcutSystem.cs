@@ -19,13 +19,13 @@ namespace Editor.Debugging
             {
                 if (keyboard.digit1Key.wasPressedThisFrame)
                 {
-                    state.EntityManager.CreateSingleton(new GameStateChangeRequest{
+                    state.EntityManager.CreateSingleton(new GameState.ChangeRequest{
                         State = EGameState.EDIT
                     });
                 }
                 else if (keyboard.digit2Key.wasPressedThisFrame)
                 {
-                    state.EntityManager.CreateSingleton(new GameStateChangeRequest{
+                    state.EntityManager.CreateSingleton(new GameState.ChangeRequest{
                         State = EGameState.PLAY
                     });
                 }

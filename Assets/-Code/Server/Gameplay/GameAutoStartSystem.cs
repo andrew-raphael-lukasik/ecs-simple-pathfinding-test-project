@@ -3,7 +3,7 @@ using Unity.Entities;
 
 using ServerAndClient.Gameplay;
 
-namespace Server.GameState
+namespace Server.Gameplay
 {
     [WorldSystemFilter(WorldSystemFilterFlags.Default | WorldSystemFilterFlags.ServerSimulation)]
     [UpdateInGroup(typeof(InitializationSystemGroup))]
@@ -14,10 +14,10 @@ namespace Server.GameState
         [Unity.Burst.BurstCompile]
         void ISystem.OnCreate(ref SystemState state)
         {
-            state.EntityManager.CreateSingleton(new GameStateChangeRequest{
+            state.EntityManager.CreateSingleton(new GameState.ChangeRequest{
                 State = EGameState.EDIT
             });
-            Debug.Log($"initial {nameof(GameStateChangeRequest)} created automatically");
+            Debug.Log($"initial {nameof(GameState.ChangeRequest)} created automatically");
         }
     }
 }

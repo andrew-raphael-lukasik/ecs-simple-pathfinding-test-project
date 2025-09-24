@@ -1,11 +1,10 @@
 using UnityEngine;
 using Unity.Entities;
 using Unity.Collections;
-using Unity.Jobs;
 
 namespace ServerAndClient.Gameplay
 {
-    [WorldSystemFilter(WorldSystemFilterFlags.LocalSimulation | WorldSystemFilterFlags.ServerSimulation | WorldSystemFilterFlags.ClientSimulation)]
+    [WorldSystemFilter(WorldSystemFilterFlags.Default | WorldSystemFilterFlags.ServerSimulation)]
     [UpdateInGroup(typeof(InitializationSystemGroup), OrderFirst = true)]
     [RequireMatchingQueriesForUpdate]
     [Unity.Burst.BurstCompile]
@@ -19,23 +18,17 @@ namespace ServerAndClient.Gameplay
                 State = EGameState.UNDEFINED
             });
 
-            state.RequireForUpdate<GameStateChangeRequest>();
+            state.RequireForUpdate<GameState.ChangeRequest>();
         }
 
         [Unity.Burst.BurstCompile]
         void ISystem.OnUpdate(ref SystemState state)
         {
-            // remove active events:
-            state.EntityManager.RemoveComponent<GameState.EDIT_STARTED_EVENT>(state.SystemHandle);
-            state.EntityManager.RemoveComponent<GameState.EDIT_ENDED_EVENT>(state.SystemHandle);
-            state.EntityManager.RemoveComponent<GameState.PLAY_STARTED_EVENT>(state.SystemHandle);
-            state.EntityManager.RemoveComponent<GameState.PLAY_ENDED_EVENT>(state.SystemHandle);
-
             // look for game state changes:
             var commandBuffer = new EntityCommandBuffer(Allocator.TempJob);
             EGameState requestedMode = EGameState.UNDEFINED;
             int requestCounter = 0;
-            foreach (var (request, entity) in SystemAPI.Query< RefRO<GameStateChangeRequest> >().WithEntityAccess())
+            foreach (var (request, entity) in SystemAPI.Query< RefRO<GameState.ChangeRequest> >().WithEntityAccess())
             {
                 if(requestCounter++==0)
                 {
@@ -44,7 +37,7 @@ namespace ServerAndClient.Gameplay
                 }
                 else
                 {
-                    Debug.LogError($"Multiple GameStateChangeRequest detected! This will result in undefined behavior - fix asap.");
+                    Debug.LogError($"Multiple GameState.ChangeRequest detected! This will result in undefined behavior - fix asap.");
                     Debug.DebugBreak();
                 }
             }
@@ -65,6 +58,24 @@ namespace ServerAndClient.Gameplay
 
             if (commandBuffer.ShouldPlayback)
                 commandBuffer.Playback(state.EntityManager);
+        }
+
+        [WorldSystemFilter(WorldSystemFilterFlags.Default | WorldSystemFilterFlags.ServerSimulation)]
+        [UpdateInGroup(typeof(InitializationSystemGroup), OrderFirst = true)]
+        [UpdateBefore(typeof(GameStateSystem))]
+        [Unity.Burst.BurstCompile]
+        public partial struct EventRemovalSystem : ISystem
+        {
+            [Unity.Burst.BurstCompile]
+            void ISystem.OnUpdate(ref SystemState state)
+            {
+                var entityManager = state.EntityManager;
+                var gameStateSystemHandle = state.WorldUnmanaged.GetExistingUnmanagedSystem<GameStateSystem>();
+                if (SystemAPI.HasComponent<GameState.EDIT_STARTED_EVENT>(gameStateSystemHandle)) entityManager.RemoveComponent<GameState.EDIT_STARTED_EVENT>(gameStateSystemHandle);
+                if (SystemAPI.HasComponent<GameState.EDIT_ENDED_EVENT>(gameStateSystemHandle)) entityManager.RemoveComponent<GameState.EDIT_ENDED_EVENT>(gameStateSystemHandle);
+                if (SystemAPI.HasComponent<GameState.PLAY_STARTED_EVENT>(gameStateSystemHandle)) entityManager.RemoveComponent<GameState.PLAY_STARTED_EVENT>(gameStateSystemHandle);
+                if (SystemAPI.HasComponent<GameState.PLAY_ENDED_EVENT>(gameStateSystemHandle)) entityManager.RemoveComponent<GameState.PLAY_ENDED_EVENT>(gameStateSystemHandle);
+            }
         }
     }
 }
