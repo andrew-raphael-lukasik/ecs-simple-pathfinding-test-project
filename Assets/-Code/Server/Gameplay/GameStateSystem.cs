@@ -27,7 +27,7 @@ namespace Server.Gameplay
         void ISystem.OnUpdate(ref SystemState state)
         {
             // look for game state changes:
-            var commandBuffer = new EntityCommandBuffer(Allocator.TempJob);
+            var ecb = new EntityCommandBuffer(Allocator.TempJob);
             EGameState requestedMode = EGameState.UNDEFINED;
             int requestCounter = 0;
             foreach (var (request, entity) in SystemAPI.Query< RefRO<GameState.ChangeRequest> >().WithEntityAccess())
@@ -35,7 +35,7 @@ namespace Server.Gameplay
                 if(requestCounter++==0)
                 {
                     requestedMode = request.ValueRO.State;
-                    commandBuffer.DestroyEntity(entity);
+                    ecb.DestroyEntity(entity);
                 }
                 else
                 {
@@ -58,8 +58,7 @@ namespace Server.Gameplay
                     throw new System.NotImplementedException($"{requestedMode}");
             }
 
-            if (commandBuffer.ShouldPlayback)
-                commandBuffer.Playback(state.EntityManager);
+            if (ecb.ShouldPlayback) ecb.Playback(state.EntityManager);
         }
 
         [WorldSystemFilter(WorldSystemFilterFlags.Default | WorldSystemFilterFlags.ServerSimulation | WorldSystemFilterFlags.Editor)]

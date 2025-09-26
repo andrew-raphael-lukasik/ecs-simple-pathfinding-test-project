@@ -27,29 +27,32 @@ namespace ServerAndClient
             int numRequests = buffer.Length;
             if (numRequests==0) return;
 
-            var commandBuffer = new EntityCommandBuffer(Allocator.TempJob);
+            var ecb = new EntityCommandBuffer(Allocator.TempJob);
             var prefabs = SystemAPI.GetSingleton<PrefabSystem.Prefabs>();
             state.Dependency = JobHandle.CombineDependencies(state.Dependency, prefabs.Dependency, SystemAPI.GetComponent<RequestBufferMeta>(state.SystemHandle).Dependency);
 
             state.Dependency = new InstantiateJob{
                 DeltaTime       = SystemAPI.Time.DeltaTime,
                 Buffer          = buffer,
-                CommandBufferPW = commandBuffer.AsParallelWriter(),
-                Prefabs         = prefabs.Registry,
+                CommandBufferPW = ecb.AsParallelWriter(),
+                Prefabs         = prefabs.Lookup,
             }.Schedule(arrayLength: buffer.Length, innerloopBatchCount: 128, state.Dependency);
 
             state.Dependency = new RemoveFullfiledAndExpiredJob{
                 Buffer          = buffer,
             }.Schedule(state.Dependency);
 
-            var ecbss = SystemAPI.GetSingleton<EndInitializationECBSystem.Singleton>();
-            ecbss.Append(commandBuffer, state.Dependency);
+            // var ecbss = SystemAPI.GetSingleton<EndInitializationECBSystem.Singleton>();
+            // ecbss.Append(ecb, state.Dependency);
 
-            prefabs.Dependency = state.Dependency;
-            SystemAPI.SetSingleton(prefabs);
-            SystemAPI.SetComponent(state.SystemHandle, new RequestBufferMeta{
-                Dependency = prefabs.Dependency
-            });
+            // prefabs.Dependency = state.Dependency;
+            // SystemAPI.SetSingleton(prefabs);
+            // SystemAPI.SetComponent(state.SystemHandle, new RequestBufferMeta{
+            //     Dependency = prefabs.Dependency
+            // });
+
+            state.Dependency.Complete();
+            if(ecb.ShouldPlayback) ecb.Playback(state.EntityManager);
         }
 
         public struct Request : IBufferElementData

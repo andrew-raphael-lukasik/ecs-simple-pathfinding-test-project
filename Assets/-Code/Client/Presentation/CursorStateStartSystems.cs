@@ -25,15 +25,10 @@ namespace Client.Presentation
         [Unity.Burst.BurstCompile]
         void ISystem.OnUpdate(ref SystemState state)
         {
-            var ecb = new EntityCommandBuffer(Allocator.Temp);
+            var ecb = SystemAPI.GetSingleton<EndInitializationEntityCommandBufferSystem.Singleton>().CreateCommandBuffer(state.WorldUnmanaged);
             foreach (var (_, entity) in SystemAPI.Query< RefRO<IsCursor> >().WithAbsent<IsEditModeCursor>().WithEntityAccess())
             {
                 ecb.DestroyEntity(entity);
-            }
-            if (ecb.ShouldPlayback)
-            {
-                var ecbs = SystemAPI.GetSingleton<EndInitializationECBSystem.Singleton>();
-                ecbs.Append(ecb, default(JobHandle));
             }
 
             SystemAPI.GetSingleton<PrefabInstantiationSystem.RequestBufferMeta>().Dependency.Complete();
@@ -60,15 +55,10 @@ namespace Client.Presentation
         [Unity.Burst.BurstCompile]
         void ISystem.OnUpdate(ref SystemState state)
         {
-            var ecb = new EntityCommandBuffer(Allocator.Temp);
+            var ecb = SystemAPI.GetSingleton<EndInitializationEntityCommandBufferSystem.Singleton>().CreateCommandBuffer(state.WorldUnmanaged);
             foreach (var (_, entity) in SystemAPI.Query< RefRO<IsCursor> >().WithAbsent<IsPlayModeCursor>().WithEntityAccess())
             {
                 ecb.DestroyEntity(entity);
-            }
-            if (ecb.ShouldPlayback)
-            {
-                var ecbs = SystemAPI.GetSingleton<EndInitializationECBSystem.Singleton>();
-                ecbs.Append(ecb, default(JobHandle));
             }
 
             SystemAPI.GetSingleton<PrefabInstantiationSystem.RequestBufferMeta>().Dependency.Complete();

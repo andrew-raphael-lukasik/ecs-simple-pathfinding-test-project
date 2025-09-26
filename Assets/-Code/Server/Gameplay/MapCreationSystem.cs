@@ -8,6 +8,8 @@ using Unity.Transforms;
 using ServerAndClient.Gameplay;
 using ServerAndClient;
 
+using Random = Unity.Mathematics.Random;
+
 namespace Server.Gameplay
 {
     [WorldSystemFilter(WorldSystemFilterFlags.Default | WorldSystemFilterFlags.ServerSimulation | WorldSystemFilterFlags.Editor)]
@@ -25,6 +27,7 @@ namespace Server.Gameplay
             Segments.Core.Create(out _segmentEntity);
             _segment = Segments.Core.GetSegment(_segmentEntity);
 
+            state.RequireForUpdate<PrefabSystem.Prefabs>();
             state.RequireForUpdate<CreateMapRequest>();
         }
 
@@ -33,26 +36,42 @@ namespace Server.Gameplay
         {
             Entity singletonEntity = SystemAPI.GetSingletonEntity<CreateMapRequest>();
             var singleton = SystemAPI.GetSingleton<CreateMapRequest>();
-            Debug.Log($"{state.DebugName}: {CreateMapRequest.DebugName} found, creating a map...");
+            Debug.Log($"{DebugName}: {CreateMapRequest.DebugName} found, creating a map...");
 
-            // generate map:
+            var ecb = SystemAPI.GetSingleton<EndInitializationEntityCommandBufferSystem.Singleton>().CreateCommandBuffer(state.WorldUnmanaged);
+
+            // clear existing map:
+            state.Dependency = new DestroyExistingMapJob{
+                ECBPW = ecb.AsParallelWriter(),
+            }.ScheduleParallel(state.Dependency);
+
+            // regenerate map:
             {
-                var commandBuffer = new EntityCommandBuffer(Allocator.TempJob);
-                
                 var prefabs = SystemAPI.GetSingleton<PrefabSystem.Prefabs>();
                 state.Dependency = JobHandle.CombineDependencies(state.Dependency, prefabs.Dependency);
+                FixedString64Bytes cube_prefab_key = "cube";
+                if (prefabs.Lookup.TryGetValue(cube_prefab_key, out Entity cubePrefab))
+                {
+                    if (state.EntityManager.Exists(cubePrefab))
+                    {
+                        state.Dependency = new MapCreationJob{
+                            Settings        = singleton.Settings,
+                            ECB             = ecb,
+                            CubePrefab      = cubePrefab
+                        }.Schedule(state.Dependency);
 
-                state.Dependency = new MapCreationJob{
-                    Settings        = singleton.Settings,
-                    CommandBuffer   = commandBuffer,
-                    LookupPrefabs   = prefabs.Registry,
-                }.Schedule(state.Dependency);
-
-                var ecbss = SystemAPI.GetSingleton<EndInitializationECBSystem.Singleton>();
-                ecbss.Append(commandBuffer, state.Dependency);
-
-                prefabs.Dependency = state.Dependency;
-                SystemAPI.SetSingleton(prefabs);
+                        prefabs.Dependency = state.Dependency;
+                        SystemAPI.SetSingleton(prefabs);
+                    }
+                    else
+                    {
+                        Debug.LogError($"Prefab '{cube_prefab_key}' {cubePrefab} does not exist anymore - can't complete map generation");
+                    }
+                }
+                else
+                {
+                    Debug.LogError($"Prefab '{cube_prefab_key}' not found! Can't complete map generation");
+                }
             }
             
             // draw map boundaries
@@ -75,39 +94,50 @@ namespace Server.Gameplay
 
             state.EntityManager.DestroyEntity(singletonEntity);
         }
-    }
 
-    partial struct MapCreationJob : IJob
-    {
-        public GameStartSettings Settings;
-        public EntityCommandBuffer CommandBuffer;
-        [ReadOnly] public NativeHashMap<FixedString64Bytes, Entity> LookupPrefabs;
-        void IJob.Execute()
+        [Unity.Burst.BurstCompile]
+        partial struct MapCreationJob : IJob
         {
-            int2 size = new int2(Settings.MapSize.x, Settings.MapSize.y);
-            float3 origin = Settings.MapOffset;
-            const string key = "cube";
-            if (LookupPrefabs.TryGetValue(key, out Entity prefab))
+            public GameStartSettings Settings;
+            public EntityCommandBuffer ECB;
+            public Entity CubePrefab;
+            void IJob.Execute()
             {
-                
+                int2 size = new int2(Settings.MapSize.x, Settings.MapSize.y);
+                float3 origin = Settings.MapOffset;
+                Random rnd = new (Settings.Seed);
+                float2 elevOrigin = rnd.NextFloat2();
+
                 for (int y = 0; y < size.y; y++)
                 for (int x = 0; x < size.x; x++)
                 {
-                    Entity e = CommandBuffer.Instantiate(prefab);
-                    float elev = noise.srnoise(new float2(x, y)*0.1f);
+                    float elev = noise.srnoise(elevOrigin + new float2(x, y)*0.1f);
 
-                    CommandBuffer.RemoveComponent<LocalTransform>(e);
-                    CommandBuffer.SetComponent(e, new LocalToWorld{
+                    Entity e = ECB.Instantiate(CubePrefab);
+                    ECB.AddComponent<IsGeneratedMapContent>(e);
+                    ECB.RemoveComponent<LocalTransform>(e);
+                    ECB.SetComponent(e, new LocalToWorld{
                         Value = float4x4.TRS(origin + new float3(x, elev, y) + new float3(0.5f, 0, 0.5f), quaternion.identity, 1)
                     });
                 }
 
-                Debug.Log($"map generation completed");
-            }
-            else
-            {
-                Debug.LogError($"prefab '{key}' not found! Can't complete map generation");
+                Debug.Log($"Map generation completed");
             }
         }
+
+        [WithAll(typeof(IsGeneratedMapContent))]
+        [Unity.Burst.BurstCompile]
+        partial struct DestroyExistingMapJob : IJobEntity
+        {
+            public EntityCommandBuffer.ParallelWriter ECBPW;
+            public void Execute(in Entity entity, [EntityIndexInQuery] int indexInQuery)
+            {
+                ECBPW.DestroyEntity(indexInQuery, entity);
+            }
+        }
+
+        struct IsGeneratedMapContent : IComponentData {}
+
+        public static FixedString64Bytes DebugName {get;} = nameof(MapCreationSystem);
     }
 }

@@ -6,7 +6,8 @@ using ServerAndClient.Gameplay;
 
 namespace EditorOnly.Authoring
 {
-    [AddComponentMenu("Game/Authoring/Cursor")]
+    [DisallowMultipleComponent]
+    [AddComponentMenu("Game/Cursor Authoring")]
     public class CursorAuthoring : MonoBehaviour
     {
         [SerializeField] EGameState _type = EGameState.UNDEFINED;

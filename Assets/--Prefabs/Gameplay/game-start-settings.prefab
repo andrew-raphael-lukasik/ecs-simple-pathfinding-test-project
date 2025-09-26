@@ -45,3 +45,5 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EditorOnly.Authoring.GameStartSettingsAuthoring
   _mapSize: {x: 16, y: 16}
+  _mapOffset: {x: 0, y: 0, z: 0}
+  _seed: 743

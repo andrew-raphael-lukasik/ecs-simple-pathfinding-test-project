@@ -6,11 +6,13 @@ using Server.Gameplay;
 
 namespace EditorOnly.Authoring
 {
-    [AddComponentMenu("Game/Authoring/Game Start Settings")]
+    [DisallowMultipleComponent]
+    [AddComponentMenu("Game/Game Start Settings Authoring")]
     public class GameStartSettingsAuthoring : MonoBehaviour
     {
         [SerializeField] Vector2Int _mapSize = new Vector2Int(16, 16);
         [SerializeField] Vector3 _mapOffset = new Vector3(0, 0, 0);
+        [SerializeField][Min(1)] uint _seed = 1;
 
         class Oven : Baker<GameStartSettingsAuthoring>
         {
@@ -20,6 +22,7 @@ namespace EditorOnly.Authoring
                 AddComponent(entity, new GameStartSettings{
                     MapSize = authoring._mapSize,
                     MapOffset = authoring._mapOffset,
+                    Seed = authoring._seed,
                 });
             }
         }

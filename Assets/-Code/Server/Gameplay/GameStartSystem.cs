@@ -22,18 +22,27 @@ namespace Server.Gameplay
         [Unity.Burst.BurstCompile]
         void ISystem.OnUpdate(ref SystemState state)
         {
-            Entity singletonEntity = SystemAPI.GetSingletonEntity<GameStartSettings>();
-            var singleton = SystemAPI.GetSingleton<GameStartSettings>();
+            Entity requestEntity = SystemAPI.GetSingletonEntity<GameStartSettings>();
+            var request = SystemAPI.GetSingleton<GameStartSettings>();
 
-            state.EntityManager.CreateSingleton(new GameState.ChangeRequest{
-                State = EGameState.EDIT
-            });
-            state.EntityManager.CreateSingleton(new CreateMapRequest{
-                Settings = singleton
-            });
-            Debug.Log($"{state.DebugName}: {GameStartSettings.DebugName} found, starting the game...");
+            if (!SystemAPI.HasSingleton<CreateMapRequest>())
+            {
+                state.EntityManager.CreateSingleton(new GameState.ChangeRequest{
+                    State = EGameState.EDIT
+                });
+                state.EntityManager.CreateSingleton(new CreateMapRequest{
+                    Settings = request
+                });
+                
+                Debug.Log($"{state.DebugName}: {GameStartSettings.DebugName} found, starting the game...");
 
-            state.EntityManager.DestroyEntity(singletonEntity);
+                state.EntityManager.DestroyEntity(requestEntity);
+            }
+            else
+            {
+                Debug.LogError($"{state.DebugName}: {GameStartSettings.DebugName} found but {CreateMapRequest.DebugName} already exists, destroying request...");
+                state.EntityManager.DestroyEntity(requestEntity);
+            }
         }
     }
 }
