@@ -39,8 +39,7 @@ namespace Server.Gameplay
             Debug.Log($"{DebugName}: {CreateMapRequest.DebugName} {singletonEntity} found, creating a map...");
             var request = SystemAPI.GetSingleton<CreateMapRequest>();
             var settings = request.Settings;
-            // var ecb = SystemAPI.GetSingleton<EndInitializationEntityCommandBufferSystem.Singleton>().CreateCommandBuffer(state.WorldUnmanaged);
-            var ecb = new EntityCommandBuffer(Allocator.TempJob);
+            var ecb = SystemAPI.GetSingleton<EndInitializationEntityCommandBufferSystem.Singleton>().CreateCommandBuffer(state.WorldUnmanaged);
 
             // destroy request:
             state.EntityManager.DestroyEntity(singletonEntity);
@@ -164,9 +163,6 @@ namespace Server.Gameplay
                 _segment.Dependency.Value = JobHandle.CombineDependencies(_segment.Dependency.Value, state.Dependency);
                 Segments.Core.SetSegmentChanged(_segmentEntity, state.EntityManager);
             }
-
-            state.Dependency.Complete();
-            ecb.Playback(state.EntityManager);
         }
 
         [Unity.Burst.BurstCompile]

@@ -656,6 +656,7 @@ GameObject:
   m_Component:
   - component: {fileID: 868777114}
   - component: {fileID: 868777113}
+  - component: {fileID: 868777116}
   - component: {fileID: 868777115}
   m_Layer: 0
   m_Name: edit stated
@@ -714,6 +715,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 467f2c6cce7832a4ab5e37c875b5eddf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ServerAndClient.MonoBehaviours.EditStateGameObject
+--- !u!114 &868777116
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 868777112}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7bbd79c451839b577901d71282cc16d6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Client.Presentation.EditStateUIController
+  _UIDocument: {fileID: 868777113}
 --- !u!1 &946355574
 GameObject:
   m_ObjectHideFlags: 0
@@ -777,6 +791,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1021312467}
   - component: {fileID: 1021312466}
+  - component: {fileID: 1021312469}
   - component: {fileID: 1021312468}
   m_Layer: 0
   m_Name: play stated
@@ -799,7 +814,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: UnityEngine.dll::UnityEngine.UIElements.UIDocument
   m_PanelSettings: {fileID: 11400000, guid: f71b4996e888ba1be97d37304da2cf37, type: 2}
   m_ParentUI: {fileID: 0}
-  sourceAsset: {fileID: 9197481963319205126, guid: 9197157d3a8641bf198c786200b7085a, type: 3}
+  sourceAsset: {fileID: 9197481963319205126, guid: cb4debcaccedc732da0ae9a42182a2dc, type: 3}
   m_SortingOrder: 0
   m_Position: 0
   m_WorldSpaceSizeMode: 1
@@ -835,6 +850,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: efaee99519f85fd6783db208beeef6a8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ServerAndClient.MonoBehaviours.PlayModeGameObject
+--- !u!114 &1021312469
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1021312465}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ca4478e04d7966926aa5dfb62a80aedf, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Client.Presentation.PlayStateUIController
+  _UIDocument: {fileID: 1021312466}
 --- !u!1 &1582408733
 GameObject:
   m_ObjectHideFlags: 0
@@ -1060,7 +1088,7 @@ MonoBehaviour:
   m_AdditionalLightsShadowResolutionTier: 2
   m_CustomShadowLayers: 0
   m_LightCookieSize: {x: 111, y: 111}
-  m_LightCookieOffset: {x: 146.58063, y: 119.096756}
+  m_LightCookieOffset: {x: 3.5021522, y: 2.8454986}
   m_SoftShadowQuality: 0
   m_RenderingLayersMask:
     serializedVersion: 0

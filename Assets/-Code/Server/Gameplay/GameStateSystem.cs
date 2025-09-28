@@ -44,6 +44,13 @@ namespace Server.Gameplay
                 }
             }
 
+            // update singleton:
+            SystemAPI.SetSingleton(new GameState{
+                State = requestedMode
+            });
+            Debug.Log($"{state.DebugName}: Game state changed to: {requestedMode}");
+
+            // raise state start event:
             switch (requestedMode)
             {
                 case EGameState.EDIT:
@@ -70,6 +77,7 @@ namespace Server.Gameplay
             [Unity.Burst.BurstCompile]
             void ISystem.OnUpdate(ref SystemState state)
             {
+                // end active events:
                 var entityManager = state.EntityManager;
                 var gameStateSystemHandle = state.WorldUnmanaged.GetExistingUnmanagedSystem<GameStateSystem>();
                 if (SystemAPI.HasComponent<GameState.EDIT_STARTED_EVENT>(gameStateSystemHandle))
