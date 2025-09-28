@@ -40,7 +40,7 @@ namespace Server.Gameplay
             }
             else
             {
-                Debug.LogError($"{state.DebugName}: {GameStartSettings.DebugName} found but {CreateMapRequest.DebugName} already exists, destroying request...");
+                Debug.LogError($"{state.DebugName}: {GameStartSettings.DebugName} found but {CreateMapRequest.DebugName} already exists, destroying new request...");
                 state.EntityManager.DestroyEntity(requestEntity);
             }
         }

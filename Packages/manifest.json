@@ -1,5 +1,6 @@
 {
   "dependencies": {
+	"com.dbrizov.naughtyattributes": "https://github.com/dbrizov/NaughtyAttributes.git#upm",
     "com.andrewraphaellukasik.prefab-system": "https://github.com/andrew-raphael-lukasik/Prefab-System.git#upm",
     "com.andrewraphaellukasik.segments": "https://github.com/andrew-raphael-lukasik/Segments.git#upm",
     "com.unity.addressables": "2.7.2",
