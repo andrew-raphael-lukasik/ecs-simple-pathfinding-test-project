@@ -1,0 +1,5 @@
+#title {
+    font-size: 24px;
+    color: rgb(87, 255, 73);
+    -unity-font-style: bold;
+}
