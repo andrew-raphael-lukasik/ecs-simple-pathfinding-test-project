@@ -22,7 +22,6 @@ namespace ServerAndClient.MonoBehaviours
             state.RequireForUpdate(query);
         }
 
-        [Unity.Burst.BurstCompile]
         void ISystem.OnUpdate(ref SystemState state)
         {
             EGameState gameState = EGameState.UNDEFINED;

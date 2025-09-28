@@ -9,6 +9,8 @@ namespace Server.Gameplay
     {
         public Vector2Int MapSize;
         public Vector3 MapOffset;
+        public int NumPlayerUnits;
+        public int NumEnemyUnits;
         public uint Seed;
 
         public static FixedString64Bytes DebugName {get;} = nameof(GameStartSettings);

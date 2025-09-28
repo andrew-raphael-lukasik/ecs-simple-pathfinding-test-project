@@ -56,7 +56,7 @@ namespace Server.Gameplay
                 
                 new DeallocateNativeArrayJob<EMapCell>(data.Cell)
                     .Schedule(state.Dependency);
-                new DeallocateNativeArrayJob<float>(data.Elevation)
+                new DeallocateNativeArrayJob<float3>(data.Position)
                     .Schedule(state.Dependency);
                 
                 state.EntityManager.DestroyEntity(dataEntity);
@@ -66,7 +66,7 @@ namespace Server.Gameplay
             {
                 int numMapCells = settings.MapSize.x * settings.MapSize.y;
                 Entity mapDataEntity = state.EntityManager.CreateSingleton(new GeneratedMapData{
-                    Elevation = new (numMapCells, Allocator.Persistent),
+                    Position = new (numMapCells, Allocator.Persistent),
                     Cell = new (numMapCells, Allocator.Persistent),
                 });
                 var mapContent = state.EntityManager.AddBuffer<CellContentData>(mapDataEntity);
@@ -124,21 +124,62 @@ namespace Server.Gameplay
                 }
                 Assert.IsTrue(state.EntityManager.Exists(prefabCover));
 
+                Entity prefabPlayer;
+                {
+                    FixedString64Bytes key = "player-unit";
+                    if (!prefabs.Lookup.TryGetValue(key, out prefabPlayer))
+                    {
+                        Debug.LogError($"Prefab '{key}' not found! Can't complete map generation");
+                        goto map_generation_canceled;
+                    }
+                    if (!state.EntityManager.Exists(prefabPlayer))
+                    {
+                        Debug.LogError($"Prefab '{key}' {prefabPlayer} does not exist anymore - can't complete map generation");
+                        goto map_generation_canceled;
+                    }
+                }
+                Assert.IsTrue(state.EntityManager.Exists(prefabPlayer));
+
+                Entity prefabEnemy;
+                {
+                    FixedString64Bytes key = "enemy-unit";
+                    if (!prefabs.Lookup.TryGetValue(key, out prefabEnemy))
+                    {
+                        Debug.LogError($"Prefab '{key}' not found! Can't complete map generation");
+                        goto map_generation_canceled;
+                    }
+                    if (!state.EntityManager.Exists(prefabEnemy))
+                    {
+                        Debug.LogError($"Prefab '{key}' {prefabEnemy} does not exist anymore - can't complete map generation");
+                        goto map_generation_canceled;
+                    }
+                }
+                Assert.IsTrue(state.EntityManager.Exists(prefabEnemy));
+
                 state.Dependency = new GenerateMapDataJob{
                     Settings = settings,
-                    ElevationData = mapData.Elevation,
+                    PositionData = mapData.Position,
                     CellData = mapData.Cell,
                 }.Schedule(state.Dependency);
 
-                state.Dependency = new InstantiatePrefabsJob{
+                state.Dependency = new InstantiateMapCellsJob{
                     Settings = settings,
                     ECB = ecb,
                     PrefabTraversable = prefabTraversable,
                     PrefabCover = prefabCover,
                     PrefabObstacle = prefabObstacle,
-                    ElevationData = mapData.Elevation,
+                    PositionData = mapData.Position,
                     CellData = mapData.Cell,
                     ContentData = mapContant.Reinterpret<Entity>(),
+                }.Schedule(state.Dependency);
+
+                state.Dependency = new InstantiateUnitsJob{
+                    Settings = settings,
+                    ECB = ecb,
+                    PrefabPlayer = prefabPlayer,
+                    PrefabEnemy = prefabEnemy,
+                    PositionData = mapData.Position,
+                    CellData = mapData.Cell,
                 }.Schedule(state.Dependency);
 
                 prefabs.Dependency = state.Dependency;
@@ -169,7 +210,7 @@ namespace Server.Gameplay
         partial struct GenerateMapDataJob : IJob
         {
             public GameStartSettings Settings;
-            [WriteOnly] public NativeArray<float> ElevationData;
+            [WriteOnly] public NativeArray<float3> PositionData;
             public NativeArray<EMapCell> CellData;
             void IJob.Execute()
             {
@@ -178,6 +219,7 @@ namespace Server.Gameplay
                 Assert.IsTrue(Settings.Seed>0);
 
                 int2 size = new int2(Settings.MapSize.x, Settings.MapSize.y);
+                float3 origin = Settings.MapOffset;
                 Random rnd = new (math.max(Settings.Seed, 1));
                 float2 elevOrigin = rnd.NextFloat2();
 
@@ -186,8 +228,9 @@ namespace Server.Gameplay
                 {
                     int i = y * Settings.MapSize.x + x;
 
-                    float elev = noise.srnoise(elevOrigin + new float2(x, y)*0.1f);
-                    ElevationData[i] = elev;
+                    float elevation = noise.srnoise(elevOrigin + new float2(x, y)*0.1f);
+                    float3 pos = origin + new float3(x, elevation, y) + new float3(0.5f, 0, 0.5f);
+                    PositionData[i] = pos;
                 }
 
                 int mapCellArea = size.x * size.y;
@@ -231,18 +274,17 @@ namespace Server.Gameplay
         }
 
         [Unity.Burst.BurstCompile]
-        partial struct InstantiatePrefabsJob : IJob
+        partial struct InstantiateMapCellsJob : IJob
         {
             public GameStartSettings Settings;
             public EntityCommandBuffer ECB;
             public Entity PrefabTraversable, PrefabCover, PrefabObstacle;
-            [ReadOnly] public NativeArray<float> ElevationData;
+            [ReadOnly] public NativeArray<float3> PositionData;
             [ReadOnly] public NativeArray<EMapCell> CellData;
             [WriteOnly] public DynamicBuffer<Entity> ContentData;
             void IJob.Execute()
             {
                 int2 size = new int2(Settings.MapSize.x, Settings.MapSize.y);
-                float3 origin = Settings.MapOffset;
 
                 ContentData.Length = size.x * size.y;
 
@@ -263,23 +305,16 @@ namespace Server.Gameplay
                     Entity e = ECB.Instantiate(prefab);
                     ContentData[i] = e;
 
-                    ECB.AddComponent<IsCellEntity>(e);
                     ECB.AddComponent(e, new CellCoords{
                         X = (ushort)x,
                         Y = (ushort)y,
                     });
 
-                    Random rnd = new ((uint)i+1);
-                    // float azimuth = rnd.NextInt(0, 4) * math.PIHALF;
                     float azimuth = x * math.PIHALF + y * math.PIHALF;
-                    float elevation = ElevationData[i];
+                    float3 pos = PositionData[i];
 
                     ECB.SetComponent(e, new LocalToWorld{
-                        Value = float4x4.TRS(
-                            origin + new float3(x, elevation, y) + new float3(0.5f, 0, 0.5f),
-                            quaternion.RotateY(azimuth),
-                            1
-                        )
+                        Value = float4x4.TRS(pos, quaternion.RotateY(azimuth), 1)
                     });
                     ECB.RemoveComponent<LocalTransform>(e);
                 }
@@ -288,7 +323,90 @@ namespace Server.Gameplay
             }
         }
 
-        [WithAll(typeof(IsCellEntity))]
+        [Unity.Burst.BurstCompile]
+        partial struct InstantiateUnitsJob : IJob
+        {
+            public GameStartSettings Settings;
+            public EntityCommandBuffer ECB;
+            public Entity PrefabPlayer, PrefabEnemy;
+            [ReadOnly] public NativeArray<float3> PositionData;
+            [ReadOnly] public NativeArray<EMapCell> CellData;
+            void IJob.Execute()
+            {
+                Assert.IsTrue(Settings.MapSize.x>0);
+                Assert.IsTrue(Settings.MapSize.y>0);
+                Assert.IsTrue(Settings.Seed>0);
+
+                int2 size = new int2(Settings.MapSize.x, Settings.MapSize.y);
+                float3 origin = Settings.MapOffset;
+                int mapCellArea = size.x * size.y;
+                Random rnd = new (math.max(Settings.Seed, 1));
+
+                // instantiate player units:
+                {
+                    int dst = Settings.NumPlayerUnits;
+                    int instances = 0;
+                    int attempts = 0;
+                    for (; instances < dst && attempts<mapCellArea*2; attempts++)
+                    {
+                        int2 coord = rnd.NextInt2(0, size);
+                        int i = coord.y * size.x + coord.x;
+                        if (CellData[i]==EMapCell.Traversable)
+                        {
+                            Entity e = ECB.Instantiate(PrefabPlayer);
+                            ECB.AddComponent(e, new CellCoords{
+                                X = (ushort) coord.x,
+                                Y = (ushort) coord.y,
+                            });
+
+                            float azimuth = coord.x * math.PIHALF + coord.y * math.PIHALF;
+                            float3 pos = PositionData[i];
+                            ECB.SetComponent(e, new LocalTransform{
+                                Position = pos,
+                                Rotation = quaternion.RotateY(azimuth),
+                                Scale = 1,
+                            });
+
+                            instances++;
+                        }
+                    }
+                }
+
+                // instantiate enemy units:
+                {
+                    int dst = Settings.NumEnemyUnits;
+                    int instances = 0;
+                    int attempts = 0;
+                    for (; instances < dst && attempts<mapCellArea*2; attempts++)
+                    {
+                        int2 coord = rnd.NextInt2(0, size);
+                        int i = coord.y * size.x + coord.x;
+                        if (CellData[i]==EMapCell.Traversable)
+                        {
+                            Entity e = ECB.Instantiate(PrefabEnemy);
+                            ECB.AddComponent(e, new CellCoords{
+                                X = (ushort) coord.x,
+                                Y = (ushort) coord.y,
+                            });
+
+                            float azimuth = coord.x * math.PIHALF + coord.y * math.PIHALF;
+                            float3 pos = PositionData[i];
+                            ECB.SetComponent(e, new LocalTransform{
+                                Position = pos,
+                                Rotation = quaternion.RotateY(azimuth),
+                                Scale = 1,
+                            });
+
+                            instances++;
+                        }
+                    }
+                }
+
+                Debug.Log($"units instantiated completed");
+            }
+        }
+
+        [WithAll(typeof(CellCoords))]
         [Unity.Burst.BurstCompile]
         partial struct DestroyExistingMapCellEntitiesJob : IJobEntity
         {
@@ -301,7 +419,7 @@ namespace Server.Gameplay
 
         public struct GeneratedMapData : IComponentData
         {
-            public NativeArray<float> Elevation;
+            public NativeArray<float3> Position;
             public NativeArray<EMapCell> Cell;
         }
 
@@ -318,7 +436,6 @@ namespace Server.Gameplay
             Cover
         }
 
-        struct IsCellEntity : IComponentData {}
         struct CellCoords : IComponentData
         {
             public ushort X, Y;

@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 739561232971682486}
   - component: {fileID: 2851294535509167702}
   m_Layer: 0
-  m_Name: prefabs
+  m_Name: prefab pool
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -50,3 +50,5 @@ MonoBehaviour:
   - {fileID: 7923538082853338066, guid: f2ecd5d12d9328e7495b6df97adb1695, type: 3}
   - {fileID: 7923538082853338066, guid: 4e078b1f8465fd9f2812a5cb4b3302cb, type: 3}
   - {fileID: 7923538082853338066, guid: 4f24989ac78c09a2caba0ad383d3fb31, type: 3}
+  - {fileID: 5211430530364168581, guid: 02720609615c45174bec65ab237cba71, type: 3}
+  - {fileID: 5211430530364168581, guid: c97eabc58b8ae0d89a4d637e852f5e25, type: 3}

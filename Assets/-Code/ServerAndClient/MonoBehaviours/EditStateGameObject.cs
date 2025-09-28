@@ -24,7 +24,7 @@ namespace ServerAndClient.MonoBehaviours
 
         void OnDestroy()
         {
-            if (_world.IsCreated)
+            if (_world!=null && _world.IsCreated)
             {
                 var entityManager = _world.EntityManager;
                 if (entityManager.Exists(_entity))
