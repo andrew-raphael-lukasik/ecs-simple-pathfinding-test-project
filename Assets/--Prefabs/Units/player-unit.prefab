@@ -12,6 +12,10 @@ PrefabInstance:
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
       objectReference: {fileID: 2100000, guid: 9c60c6647ae386fd0b8e01d9fe82add8, type: 2}
+    - target: {fileID: 722753020425219393, guid: 7106ca9426f7fdf069e8a05238947276, type: 3}
+      propertyPath: 'm_Materials.Array.data[0]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 9c60c6647ae386fd0b8e01d9fe82add8, type: 2}
     - target: {fileID: 1851647400118133837, guid: 7106ca9426f7fdf069e8a05238947276, type: 3}
       propertyPath: m_Name
       value: player-unit
@@ -89,3 +93,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 899d840a12077a945b277367626f9d0d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EditorOnly.Authoring.PlayerUnitAuthoring
+  _moveRange: 3
+  _attackRange: 3
