@@ -170,7 +170,7 @@ namespace Server.Gameplay
                     int i = y * Settings.Size.x + x;
 
                     float elevation = noise.srnoise(elevOrigin + new float2(x, y)*0.1f);
-                    float3 pos = origin + new float3(x, elevation, y) + new float3(0.5f, 0, 0.5f);
+                    float3 pos = origin + new float3(x, elevation, y)*MapSettingsData.CellSize + new float3(0.5f, 0, 0.5f)*MapSettingsData.CellSize;
                     PositionArray[i] = pos;
                 }
 

@@ -12,6 +12,7 @@ namespace ServerAndClient.Gameplay
         public uint NumEnemyUnits;
         public uint Seed;
 
+        public const float CellSize = 1f;
         public const int Size_MAX = 256;
         public const uint NumPlayerUnits_MAX = 32;
         public const uint NumEnemyUnits_MAX = 32;
