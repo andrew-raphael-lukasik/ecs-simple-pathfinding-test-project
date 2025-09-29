@@ -89,12 +89,17 @@ namespace Client.Presentation
                 {
                     float3 hit = RayValue.origin + RayValue.direction * dist;
                     float3 localPos = hit - (float3) MapSettings.Offset;
-                    int2 coord = (int2)(new float2(localPos.x, localPos.z) / new float2(MapSettingsData.CellSize, MapSettingsData.CellSize));
-                    int i = coord.y * MapSettings.Size.x + coord.x;
-                    if (i<PositionArray.Length)
+
+                    int2 coordRaw = (int2)(new float2(localPos.x, localPos.z) / new float2(MapSettingsData.CellSize, MapSettingsData.CellSize));
+                    int2 coordClamped = math.clamp(coordRaw, 0, new int2(MapSettings.Size.x, MapSettings.Size.y)-1);
+
+                    int i = coordClamped.y * MapSettings.Size.x + coordClamped.x;
+                    if (i<0 || i>=PositionArray.Length)
                     {
-                        PositionRef.Value = PositionArray[i];
+                        Debug.LogError($"BŁĄÐ, i: {i}, PositionArray.Length: {PositionArray.Length},  coordRaw: {coordRaw}, coordClamped: {coordClamped}, MapSettings.Size: {MapSettings.Size}");
+                        return;
                     }
+                    PositionRef.Value = PositionArray[i];
                 }
             }
         }
