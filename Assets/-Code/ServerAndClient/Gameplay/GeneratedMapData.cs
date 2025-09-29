@@ -6,8 +6,8 @@ namespace ServerAndClient.Gameplay
 {
     public struct GeneratedMapData : IComponentData
     {
-        public NativeArray<float3> Position;
-        public NativeArray<EMapCell> Cell;
+        public NativeArray<float3> PositionArray;
+        public NativeArray<EMapCell> CellArray;
     }
 
     public enum EMapCell : byte
