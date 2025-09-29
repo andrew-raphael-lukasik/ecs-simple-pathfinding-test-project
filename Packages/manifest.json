@@ -4,6 +4,7 @@
     "com.andrewraphaellukasik.segments": "https://github.com/andrew-raphael-lukasik/Segments.git#upm",
     "com.unity.addressables": "2.7.2",
     "com.unity.burst": "1.8.24",
+    "com.unity.cinemachine": "3.1.4",
     "com.unity.collections": "2.5.7",
     "com.unity.device-simulator.devices": "1.0.0",
     "com.unity.entities.graphics": "1.4.12",
