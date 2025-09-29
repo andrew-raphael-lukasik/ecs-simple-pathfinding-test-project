@@ -58,7 +58,7 @@ namespace Server.Gameplay
                     .Schedule(state.Dependency);
                 new DeallocateNativeArrayJob<float3>(data.Position)
                     .Schedule(state.Dependency);
-                
+
                 state.EntityManager.DestroyEntity(dataEntity);
             }
 
@@ -69,92 +69,16 @@ namespace Server.Gameplay
                     Position = new (numMapCells, Allocator.Persistent),
                     Cell = new (numMapCells, Allocator.Persistent),
                 });
-                var mapContent = state.EntityManager.AddBuffer<CellContentData>(mapDataEntity);
                 var mapData = SystemAPI.GetSingleton<GeneratedMapData>();
-                var mapContant = state.EntityManager.AddBuffer<CellContentData>(mapDataEntity);
 
                 var prefabs = SystemAPI.GetSingleton<PrefabSystem.Prefabs>();
                 state.Dependency = JobHandle.CombineDependencies(state.Dependency, prefabs.Dependency);
-                
-                Entity prefabTraversable;
-                {
-                    FixedString64Bytes key = "cell-traversable";
-                    if (!prefabs.Lookup.TryGetValue(key, out prefabTraversable))
-                    {
-                        Debug.LogError($"Prefab '{key}' not found! Can't complete map generation");
-                        goto map_generation_canceled;
-                    }
-                    if (!state.EntityManager.Exists(prefabTraversable))
-                    {
-                        Debug.LogError($"Prefab '{key}' {prefabTraversable} does not exist anymore - can't complete map generation");
-                        goto map_generation_canceled;
-                    }
-                }
-                Assert.IsTrue(state.EntityManager.Exists(prefabTraversable));
 
-                Entity prefabObstacle;
-                {
-                    FixedString64Bytes key = "cell-obstacle";
-                    if (!prefabs.Lookup.TryGetValue(key, out prefabObstacle))
-                    {
-                        Debug.LogError($"Prefab '{key}' not found! Can't complete map generation");
-                        goto map_generation_canceled;
-                    }
-                    if (!state.EntityManager.Exists(prefabObstacle))
-                    {
-                        Debug.LogError($"Prefab '{key}' {prefabObstacle} does not exist anymore - can't complete map generation");
-                        goto map_generation_canceled;
-                    }
-                }
-                Assert.IsTrue(state.EntityManager.Exists(prefabObstacle));
-
-                Entity prefabCover;
-                {
-                    FixedString64Bytes key = "cell-cover";
-                    if (!prefabs.Lookup.TryGetValue(key, out prefabCover))
-                    {
-                        Debug.LogError($"Prefab '{key}' not found! Can't complete map generation");
-                        goto map_generation_canceled;
-                    }
-                    if (!state.EntityManager.Exists(prefabCover))
-                    {
-                        Debug.LogError($"Prefab '{key}' {prefabCover} does not exist anymore - can't complete map generation");
-                        goto map_generation_canceled;
-                    }
-                }
-                Assert.IsTrue(state.EntityManager.Exists(prefabCover));
-
-                Entity prefabPlayer;
-                {
-                    FixedString64Bytes key = "player-unit";
-                    if (!prefabs.Lookup.TryGetValue(key, out prefabPlayer))
-                    {
-                        Debug.LogError($"Prefab '{key}' not found! Can't complete map generation");
-                        goto map_generation_canceled;
-                    }
-                    if (!state.EntityManager.Exists(prefabPlayer))
-                    {
-                        Debug.LogError($"Prefab '{key}' {prefabPlayer} does not exist anymore - can't complete map generation");
-                        goto map_generation_canceled;
-                    }
-                }
-                Assert.IsTrue(state.EntityManager.Exists(prefabPlayer));
-
-                Entity prefabEnemy;
-                {
-                    FixedString64Bytes key = "enemy-unit";
-                    if (!prefabs.Lookup.TryGetValue(key, out prefabEnemy))
-                    {
-                        Debug.LogError($"Prefab '{key}' not found! Can't complete map generation");
-                        goto map_generation_canceled;
-                    }
-                    if (!state.EntityManager.Exists(prefabEnemy))
-                    {
-                        Debug.LogError($"Prefab '{key}' {prefabEnemy} does not exist anymore - can't complete map generation");
-                        goto map_generation_canceled;
-                    }
-                }
-                Assert.IsTrue(state.EntityManager.Exists(prefabEnemy));
+                if (!GetPrefabSafe("cell-traversable", prefabs.Lookup, state.EntityManager, out Entity prefabTraversable)) goto map_generation_canceled;
+                if (!GetPrefabSafe("cell-obstacle", prefabs.Lookup, state.EntityManager, out Entity prefabObstacle)) goto map_generation_canceled;
+                if (!GetPrefabSafe("cell-cover", prefabs.Lookup, state.EntityManager, out Entity prefabCover)) goto map_generation_canceled;
+                if (!GetPrefabSafe("player-unit", prefabs.Lookup, state.EntityManager, out Entity prefabPlayer)) goto map_generation_canceled;
+                if (!GetPrefabSafe("enemy-unit", prefabs.Lookup, state.EntityManager, out Entity prefabEnemy)) goto map_generation_canceled;
 
                 state.Dependency = new GenerateMapDataJob{
                     Settings = mapSettings,
@@ -170,7 +94,6 @@ namespace Server.Gameplay
                     PrefabObstacle = prefabObstacle,
                     PositionData = mapData.Position,
                     CellData = mapData.Cell,
-                    ContentData = mapContant.Reinterpret<Entity>(),
                 }.Schedule(state.Dependency);
 
                 state.Dependency = new InstantiateUnitsJob{
@@ -205,6 +128,23 @@ namespace Server.Gameplay
                 _segment.Dependency.Value = JobHandle.CombineDependencies(_segment.Dependency.Value, state.Dependency);
                 Segments.Core.SetSegmentChanged(_segmentEntity, state.EntityManager);
             }
+        }
+
+        bool GetPrefabSafe(FixedString64Bytes key, NativeHashMap<FixedString64Bytes, Entity> lookup, EntityManager entityManager, out Entity prefab)
+        {
+            if (!lookup.TryGetValue(key, out prefab))
+            {
+                Debug.LogError($"Prefab '{key}' not found! Can't complete map generation");
+                return false;
+            }
+            if (!entityManager.Exists(prefab))
+            {
+                Debug.LogError($"Prefab '{key}' {prefab} does not exist anymore - can't complete map generation");
+                return false;
+            }
+
+            Assert.IsTrue(entityManager.Exists(prefab));
+            return true;
         }
 
         [Unity.Burst.BurstCompile]
@@ -282,12 +222,9 @@ namespace Server.Gameplay
             public Entity PrefabTraversable, PrefabCover, PrefabObstacle;
             [ReadOnly] public NativeArray<float3> PositionData;
             [ReadOnly] public NativeArray<EMapCell> CellData;
-            [WriteOnly] public DynamicBuffer<Entity> ContentData;
             void IJob.Execute()
             {
                 int2 size = new int2(MapSettings.Size.x, MapSettings.Size.y);
-
-                ContentData.Length = size.x * size.y;
 
                 for (int y = 0; y < size.y; y++)
                 for (int x = 0; x < size.x; x++)
@@ -304,7 +241,6 @@ namespace Server.Gameplay
                     }
 
                     Entity e = ECB.Instantiate(prefab);
-                    ContentData[i] = e;
 
                     ECB.AddComponent(e, new CellCoords{
                         X = (ushort)x,
@@ -416,25 +352,6 @@ namespace Server.Gameplay
             {
                 ECBPW.DestroyEntity(index, entity);
             }
-        }
-
-        public struct GeneratedMapData : IComponentData
-        {
-            public NativeArray<float3> Position;
-            public NativeArray<EMapCell> Cell;
-        }
-
-        [InternalBufferCapacity(0)]
-        public struct CellContentData : IBufferElementData
-        {
-            public Entity Value;
-        }
-
-        public enum EMapCell : byte
-        {
-            Traversable,
-            Obstacle,
-            Cover
         }
 
         struct CellCoords : IComponentData
