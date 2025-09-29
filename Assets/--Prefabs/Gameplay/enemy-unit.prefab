@@ -56,6 +56,14 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 2815973273719843404, guid: 7106ca9426f7fdf069e8a05238947276, type: 3}
+      propertyPath: 'm_Materials.Array.data[1]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 8a9cda77c4868db1b8e89f333fb2b8bd, type: 2}
+    - target: {fileID: 2815973273719843404, guid: 7106ca9426f7fdf069e8a05238947276, type: 3}
+      propertyPath: 'm_Materials.Array.data[2]'
+      value: 
+      objectReference: {fileID: 2100000, guid: 8a9cda77c4868db1b8e89f333fb2b8bd, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -81,10 +89,3 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 439903d13b53be6ceab0723d860f3eda, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EditorOnly.Authoring.EnemyUnitAuthoring
-  _dynamicChildren:
-  - {fileID: 8334083767741465764}
---- !u!4 &8334083767741465764 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 2470358590393563500, guid: 7106ca9426f7fdf069e8a05238947276, type: 3}
-  m_PrefabInstance: {fileID: 5899969547370921416}
-  m_PrefabAsset: {fileID: 0}
