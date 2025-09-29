@@ -31,7 +31,11 @@ namespace Server.Gameplay
                     State = EGameState.EDIT
                 });
                 
-                Entity mapSettingsSingleton = state.EntityManager.CreateSingleton<MapSettingsData>(request.MapSettings);
+                Entity mapSettingsSingleton;
+                if (!SystemAPI.TryGetSingletonEntity<MapSettingsData>(out mapSettingsSingleton))
+                {
+                    mapSettingsSingleton = state.EntityManager.CreateSingleton<MapSettingsData>(request.MapSettings);
+                }
                 state.EntityManager.AddComponent<GenerateMapEntitiesRequest>(mapSettingsSingleton);
 
                 Debug.Log($"{state.DebugName}: {StartTheGameData.DebugName} found, starting the game...");
