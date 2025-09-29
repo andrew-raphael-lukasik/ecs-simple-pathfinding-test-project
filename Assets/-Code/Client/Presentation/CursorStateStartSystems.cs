@@ -11,7 +11,7 @@ using ServerAndClient.Gameplay;
 namespace Client.Presentation
 {
     [WorldSystemFilter(WorldSystemFilterFlags.Presentation)]
-    [UpdateInGroup(typeof(InitializationSystemGroup))]
+    [UpdateInGroup(typeof(GameInitializationSystemGroup))]
     [RequireMatchingQueriesForUpdate]
     [Unity.Burst.BurstCompile]
     partial struct CursorEditStateStartSystem : ISystem
@@ -41,7 +41,7 @@ namespace Client.Presentation
     }
 
     [WorldSystemFilter(WorldSystemFilterFlags.Presentation)]
-    [UpdateInGroup(typeof(InitializationSystemGroup))]
+    [UpdateInGroup(typeof(GameInitializationSystemGroup))]
     [RequireMatchingQueriesForUpdate]
     [Unity.Burst.BurstCompile]
     partial struct CursorPlayStateStartSystem : ISystem

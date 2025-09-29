@@ -2,11 +2,12 @@ using UnityEngine;
 using Unity.Entities;
 
 using ServerAndClient.Input;
+using ServerAndClient;
 
 namespace Client.Input
 {
-    [WorldSystemFilter(WorldSystemFilterFlags.LocalSimulation | WorldSystemFilterFlags.ClientSimulation)]
-    [UpdateInGroup(typeof(InitializationSystemGroup))]
+    [WorldSystemFilter(WorldSystemFilterFlags.Default | WorldSystemFilterFlags.LocalSimulation | WorldSystemFilterFlags.ClientSimulation)]
+    [UpdateInGroup(typeof(GameInitializationSystemGroup))]
     public partial class PlayerInputActionsSystem : SystemBase
     {
         PlayerInputActions _actions;

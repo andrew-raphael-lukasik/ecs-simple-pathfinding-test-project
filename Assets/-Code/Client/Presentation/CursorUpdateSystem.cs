@@ -7,11 +7,12 @@ using Unity.Jobs;
 
 using ServerAndClient.Input;
 using ServerAndClient.Gameplay;
+using ServerAndClient;
 
 namespace Client.Presentation
 {
     [WorldSystemFilter(WorldSystemFilterFlags.Presentation)]
-    [UpdateInGroup(typeof(PresentationSystemGroup))]
+    [UpdateInGroup(typeof(GamePresentationSystemGroup))]
     [RequireMatchingQueriesForUpdate]
     [Unity.Burst.BurstCompile]
     public partial struct CursorUpdateSystem : ISystem
@@ -39,8 +40,6 @@ namespace Client.Presentation
             {
                 var pointerData = SystemAPI.GetSingleton<PointerPositionData>();
                 var ray = camera.ScreenPointToRay(pointerData.Value);
-
-                _positionRef.Value = new float3(0, 0, 0);
 
                 if (SystemAPI.TryGetSingleton<GeneratedMapData>(out var mapData))
                 {

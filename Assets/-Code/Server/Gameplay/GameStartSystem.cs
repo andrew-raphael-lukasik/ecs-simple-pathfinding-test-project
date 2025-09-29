@@ -3,11 +3,12 @@ using Unity.Entities;
 using Unity.Collections;
 
 using ServerAndClient.Gameplay;
+using ServerAndClient;
 
 namespace Server.Gameplay
 {
     [WorldSystemFilter(WorldSystemFilterFlags.Default | WorldSystemFilterFlags.ServerSimulation | WorldSystemFilterFlags.Editor)]
-    [UpdateInGroup(typeof(InitializationSystemGroup))]
+    [UpdateInGroup(typeof(GameInitializationSystemGroup))]
     [RequireMatchingQueriesForUpdate]
     [Unity.Burst.BurstCompile]
     public partial struct GameStartSystem : ISystem
@@ -30,7 +31,7 @@ namespace Server.Gameplay
                 state.EntityManager.CreateSingleton(new GameState.ChangeRequest{
                     State = EGameState.EDIT
                 });
-                
+
                 Entity mapSettingsSingleton;
                 if (!SystemAPI.TryGetSingletonEntity<MapSettingsData>(out mapSettingsSingleton))
                 {

@@ -52,7 +52,7 @@ namespace ServerAndClient.MonoBehaviours
     }
 
     [WorldSystemFilter(WorldSystemFilterFlags.Default | WorldSystemFilterFlags.ServerSimulation | WorldSystemFilterFlags.ClientSimulation | WorldSystemFilterFlags.ThinClientSimulation | WorldSystemFilterFlags.LocalSimulation | WorldSystemFilterFlags.Presentation)]
-    [UpdateInGroup(typeof(InitializationSystemGroup))]
+    [UpdateInGroup(typeof(GameInitializationSystemGroup))]
     [RequireMatchingQueriesForUpdate]
     [Unity.Burst.BurstCompile]
     partial struct EditStateStartedGameObjectSystem : ISystem
@@ -88,7 +88,7 @@ namespace ServerAndClient.MonoBehaviours
     }
 
     [WorldSystemFilter(WorldSystemFilterFlags.Default | WorldSystemFilterFlags.ServerSimulation | WorldSystemFilterFlags.ClientSimulation | WorldSystemFilterFlags.ThinClientSimulation | WorldSystemFilterFlags.LocalSimulation | WorldSystemFilterFlags.Presentation)]
-    [UpdateInGroup(typeof(InitializationSystemGroup))]
+    [UpdateInGroup(typeof(GameInitializationSystemGroup))]
     [RequireMatchingQueriesForUpdate]
     [Unity.Burst.BurstCompile]
     partial struct PlayStateStartedGameObjectSystem : ISystem

@@ -14,7 +14,7 @@ using Assert = UnityEngine.Assertions.Assert;
 namespace Server.Gameplay
 {
     [WorldSystemFilter(WorldSystemFilterFlags.Default | WorldSystemFilterFlags.ServerSimulation | WorldSystemFilterFlags.Editor)]
-    [UpdateInGroup(typeof(InitializationSystemGroup))]
+    [UpdateInGroup(typeof(GameInitializationSystemGroup))]
     [RequireMatchingQueriesForUpdate]
     [Unity.Burst.BurstCompile]
     public partial struct MapCreationSystem : ISystem

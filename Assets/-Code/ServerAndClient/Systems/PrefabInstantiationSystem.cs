@@ -7,7 +7,7 @@ using Unity.Jobs;
 namespace ServerAndClient
 {
     [WorldSystemFilter(WorldSystemFilterFlags.Presentation | WorldSystemFilterFlags.Editor)]
-    [UpdateInGroup(typeof(InitializationSystemGroup))]
+    [UpdateInGroup(typeof(GameInitializationSystemGroup))]
     [RequireMatchingQueriesForUpdate]
     [Unity.Burst.BurstCompile]
     partial struct PrefabInstantiationSystem : ISystem
