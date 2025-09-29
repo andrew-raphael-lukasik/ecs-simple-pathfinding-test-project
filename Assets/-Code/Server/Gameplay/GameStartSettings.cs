@@ -4,7 +4,7 @@ using Unity.Collections;
 
 namespace Server.Gameplay
 {
-    /// <summary> Consumed by <seealso cref="GameStartSystem"/>. </summary>
+    /// <summary> Triggers game start. Consumed by <seealso cref="GameStartSystem"/>. </summary>
     public struct GameStartSettings : IComponentData
     {
         public Vector2Int MapSize;

@@ -26,18 +26,18 @@ namespace Server.Gameplay
         void ISystem.OnCreate(ref SystemState state)
         {
             Segments.Core.Create(out _segmentEntity);
-            _segment = Segments.Core.GetSegment(_segmentEntity);
+            _segment = Segments.Core.GetSegment(_segmentEntity, state.EntityManager);
 
             state.RequireForUpdate<PrefabSystem.Prefabs>();
-            state.RequireForUpdate<CreateMapRequest>();
+            state.RequireForUpdate<GenerateMapEntitiesRequest>();
         }
 
         [Unity.Burst.BurstCompile]
         void ISystem.OnUpdate(ref SystemState state)
         {
-            Entity singletonEntity = SystemAPI.GetSingletonEntity<CreateMapRequest>();
-            Debug.Log($"{DebugName}: {CreateMapRequest.DebugName} {singletonEntity} found, creating a map...");
-            var request = SystemAPI.GetSingleton<CreateMapRequest>();
+            Entity singletonEntity = SystemAPI.GetSingletonEntity<GenerateMapEntitiesRequest>();
+            Debug.Log($"{DebugName}: {GenerateMapEntitiesRequest.DebugName} {singletonEntity} found, creating a map...");
+            var request = SystemAPI.GetSingleton<GenerateMapEntitiesRequest>();
             var settings = request.Settings;
             var ecb = SystemAPI.GetSingleton<EndInitializationEntityCommandBufferSystem.Singleton>().CreateCommandBuffer(state.WorldUnmanaged);
 
@@ -188,6 +188,7 @@ namespace Server.Gameplay
             map_generation_canceled:
 
             // draw map boundaries
+            if (Application.isPlaying)// editor-only
             {
                 Vector2Int size = settings.MapSize;
                 Vector3 offset = settings.MapOffset;
