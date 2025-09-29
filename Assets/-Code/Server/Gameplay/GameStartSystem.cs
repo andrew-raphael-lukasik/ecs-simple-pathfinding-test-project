@@ -15,32 +15,32 @@ namespace Server.Gameplay
         [Unity.Burst.BurstCompile]
         void ISystem.OnCreate(ref SystemState state)
         {
-            state.RequireForUpdate<GameStartSettings>();
-            Debug.Log($"{state.DebugName}: waiting for {GameStartSettings.DebugName}...");
+            state.RequireForUpdate<StartTheGameData>();
+            Debug.Log($"{state.DebugName}: waiting for {StartTheGameData.DebugName}...");
         }
 
         [Unity.Burst.BurstCompile]
         void ISystem.OnUpdate(ref SystemState state)
         {
-            Entity requestEntity = SystemAPI.GetSingletonEntity<GameStartSettings>();
-            var request = SystemAPI.GetSingleton<GameStartSettings>();
+            Entity requestEntity = SystemAPI.GetSingletonEntity<StartTheGameData>();
+            var request = SystemAPI.GetSingleton<StartTheGameData>();
 
             if (!SystemAPI.HasSingleton<GenerateMapEntitiesRequest>())
             {
                 state.EntityManager.CreateSingleton(new GameState.ChangeRequest{
                     State = EGameState.EDIT
                 });
-                state.EntityManager.CreateSingleton(new GenerateMapEntitiesRequest{
-                    Settings = request
-                });
+                
+                Entity mapSettingsSingleton = state.EntityManager.CreateSingleton<MapSettingsData>(request.MapSettings);
+                state.EntityManager.AddComponent<GenerateMapEntitiesRequest>(mapSettingsSingleton);
 
-                Debug.Log($"{state.DebugName}: {GameStartSettings.DebugName} found, starting the game...");
+                Debug.Log($"{state.DebugName}: {StartTheGameData.DebugName} found, starting the game...");
 
                 state.EntityManager.DestroyEntity(requestEntity);
             }
             else
             {
-                Debug.LogError($"{state.DebugName}: {GameStartSettings.DebugName} found but {GenerateMapEntitiesRequest.DebugName} already exists, destroying new request...");
+                Debug.LogError($"{state.DebugName}: {StartTheGameData.DebugName} found but {GenerateMapEntitiesRequest.DebugName} already exists, destroying new request...");
                 state.EntityManager.DestroyEntity(requestEntity);
             }
         }

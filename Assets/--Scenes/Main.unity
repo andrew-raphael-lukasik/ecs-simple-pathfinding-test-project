@@ -1047,7 +1047,7 @@ Transform:
   m_GameObject: {fileID: 2043941136}
   serializedVersion: 2
   m_LocalRotation: {x: 0.43301338, y: 0.43301186, z: -0.24999982, w: 0.7500002}
-  m_LocalPosition: {x: 2.1, y: 8.55, z: 4.43}
+  m_LocalPosition: {x: 9.61, y: 8.55, z: 11.64}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1088,7 +1088,7 @@ MonoBehaviour:
   m_AdditionalLightsShadowResolutionTier: 2
   m_CustomShadowLayers: 0
   m_LightCookieSize: {x: 111, y: 111}
-  m_LightCookieOffset: {x: 3.5021522, y: 2.8454986}
+  m_LightCookieOffset: {x: 38.503746, y: 31.28429}
   m_SoftShadowQuality: 0
   m_RenderingLayersMask:
     serializedVersion: 0

@@ -35,14 +35,14 @@ namespace Server.Gameplay
         [Unity.Burst.BurstCompile]
         void ISystem.OnUpdate(ref SystemState state)
         {
-            Entity singletonEntity = SystemAPI.GetSingletonEntity<GenerateMapEntitiesRequest>();
-            Debug.Log($"{DebugName}: {GenerateMapEntitiesRequest.DebugName} {singletonEntity} found, creating a map...");
+            Entity mapSettingsSingleton = SystemAPI.GetSingletonEntity<MapSettingsData>();
+            Debug.Log($"{DebugName}: {GenerateMapEntitiesRequest.DebugName} {mapSettingsSingleton} found, creating a map...");
             var request = SystemAPI.GetSingleton<GenerateMapEntitiesRequest>();
-            var settings = request.Settings;
+            var mapSettings = SystemAPI.GetComponent<MapSettingsData>(mapSettingsSingleton);
             var ecb = SystemAPI.GetSingleton<EndInitializationEntityCommandBufferSystem.Singleton>().CreateCommandBuffer(state.WorldUnmanaged);
 
             // destroy request:
-            state.EntityManager.DestroyEntity(singletonEntity);
+            state.EntityManager.RemoveComponent<GenerateMapEntitiesRequest>(mapSettingsSingleton);
 
             // clear existing map:
             {
@@ -64,7 +64,7 @@ namespace Server.Gameplay
 
             // regenerate map:
             {
-                int numMapCells = settings.MapSize.x * settings.MapSize.y;
+                int numMapCells = mapSettings.Size.x * mapSettings.Size.y;
                 Entity mapDataEntity = state.EntityManager.CreateSingleton(new GeneratedMapData{
                     Position = new (numMapCells, Allocator.Persistent),
                     Cell = new (numMapCells, Allocator.Persistent),
@@ -157,13 +157,13 @@ namespace Server.Gameplay
                 Assert.IsTrue(state.EntityManager.Exists(prefabEnemy));
 
                 state.Dependency = new GenerateMapDataJob{
-                    Settings = settings,
+                    Settings = mapSettings,
                     PositionData = mapData.Position,
                     CellData = mapData.Cell,
                 }.Schedule(state.Dependency);
 
                 state.Dependency = new InstantiateMapCellsJob{
-                    Settings = settings,
+                    MapSettings = mapSettings,
                     ECB = ecb,
                     PrefabTraversable = prefabTraversable,
                     PrefabCover = prefabCover,
@@ -174,7 +174,7 @@ namespace Server.Gameplay
                 }.Schedule(state.Dependency);
 
                 state.Dependency = new InstantiateUnitsJob{
-                    Settings = settings,
+                    MapSettings = mapSettings,
                     ECB = ecb,
                     PrefabPlayer = prefabPlayer,
                     PrefabEnemy = prefabEnemy,
@@ -190,8 +190,8 @@ namespace Server.Gameplay
             // draw map boundaries
             if (Application.isPlaying)// editor-only
             {
-                Vector2Int size = settings.MapSize;
-                Vector3 offset = settings.MapOffset;
+                Vector2Int size = mapSettings.Size;
+                Vector3 offset = mapSettings.Offset;
                 int _ = 0;
                 _segment.Buffer.Length = 12;
                 state.Dependency = new Segments.Plot.BoxJob(
@@ -210,24 +210,24 @@ namespace Server.Gameplay
         [Unity.Burst.BurstCompile]
         partial struct GenerateMapDataJob : IJob
         {
-            public GameStartSettings Settings;
+            public MapSettingsData Settings;
             [WriteOnly] public NativeArray<float3> PositionData;
             public NativeArray<EMapCell> CellData;
             void IJob.Execute()
             {
-                Assert.IsTrue(Settings.MapSize.x>0);
-                Assert.IsTrue(Settings.MapSize.y>0);
+                Assert.IsTrue(Settings.Size.x>0);
+                Assert.IsTrue(Settings.Size.y>0);
                 Assert.IsTrue(Settings.Seed>0);
 
-                int2 size = new int2(Settings.MapSize.x, Settings.MapSize.y);
-                float3 origin = Settings.MapOffset;
+                int2 size = new int2(Settings.Size.x, Settings.Size.y);
+                float3 origin = Settings.Offset;
                 Random rnd = new (math.max(Settings.Seed, 1));
                 float2 elevOrigin = rnd.NextFloat2();
 
                 for (int y = 0; y < size.y; y++)
                 for (int x = 0; x < size.x; x++)
                 {
-                    int i = y * Settings.MapSize.x + x;
+                    int i = y * Settings.Size.x + x;
 
                     float elevation = noise.srnoise(elevOrigin + new float2(x, y)*0.1f);
                     float3 pos = origin + new float3(x, elevation, y) + new float3(0.5f, 0, 0.5f);
@@ -277,7 +277,7 @@ namespace Server.Gameplay
         [Unity.Burst.BurstCompile]
         partial struct InstantiateMapCellsJob : IJob
         {
-            public GameStartSettings Settings;
+            public MapSettingsData MapSettings;
             public EntityCommandBuffer ECB;
             public Entity PrefabTraversable, PrefabCover, PrefabObstacle;
             [ReadOnly] public NativeArray<float3> PositionData;
@@ -285,14 +285,14 @@ namespace Server.Gameplay
             [WriteOnly] public DynamicBuffer<Entity> ContentData;
             void IJob.Execute()
             {
-                int2 size = new int2(Settings.MapSize.x, Settings.MapSize.y);
+                int2 size = new int2(MapSettings.Size.x, MapSettings.Size.y);
 
                 ContentData.Length = size.x * size.y;
 
                 for (int y = 0; y < size.y; y++)
                 for (int x = 0; x < size.x; x++)
                 {
-                    int i = y * Settings.MapSize.x + x;
+                    int i = y * MapSettings.Size.x + x;
 
                     Entity prefab;
                     switch (CellData[i])
@@ -327,25 +327,25 @@ namespace Server.Gameplay
         [Unity.Burst.BurstCompile]
         partial struct InstantiateUnitsJob : IJob
         {
-            public GameStartSettings Settings;
+            public MapSettingsData MapSettings;
             public EntityCommandBuffer ECB;
             public Entity PrefabPlayer, PrefabEnemy;
             [ReadOnly] public NativeArray<float3> PositionData;
             [ReadOnly] public NativeArray<EMapCell> CellData;
             void IJob.Execute()
             {
-                Assert.IsTrue(Settings.MapSize.x>0);
-                Assert.IsTrue(Settings.MapSize.y>0);
-                Assert.IsTrue(Settings.Seed>0);
+                Assert.IsTrue(MapSettings.Size.x>0);
+                Assert.IsTrue(MapSettings.Size.y>0);
+                Assert.IsTrue(MapSettings.Seed>0);
 
-                int2 size = new int2(Settings.MapSize.x, Settings.MapSize.y);
-                float3 origin = Settings.MapOffset;
+                int2 size = new int2(MapSettings.Size.x, MapSettings.Size.y);
+                float3 origin = MapSettings.Offset;
                 int mapCellArea = size.x * size.y;
-                Random rnd = new (math.max(Settings.Seed, 1));
+                Random rnd = new (math.max(MapSettings.Seed, 1));
 
                 // instantiate player units:
                 {
-                    int dst = Settings.NumPlayerUnits;
+                    uint dst = MapSettings.NumPlayerUnits;
                     int instances = 0;
                     int attempts = 0;
                     for (; instances < dst && attempts<mapCellArea*2; attempts++)
@@ -375,7 +375,7 @@ namespace Server.Gameplay
 
                 // instantiate enemy units:
                 {
-                    int dst = Settings.NumEnemyUnits;
+                    uint dst = MapSettings.NumEnemyUnits;
                     int instances = 0;
                     int attempts = 0;
                     for (; instances < dst && attempts<mapCellArea*2; attempts++)
