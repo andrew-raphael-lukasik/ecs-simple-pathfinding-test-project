@@ -2,6 +2,9 @@
     <Style src="project://database/Assets/--UI/game-style.uss?fileID=7433441132597879392&amp;guid=ae41f5c3580b5a454875016925a9b96a&amp;type=3#game-style" />
     <ui:VisualElement style="flex-grow: 0; flex-direction: row;">
         <ui:Label text="(PLAY MODE)" class="label-title" style="-unity-text-align: upper-center; flex-grow: 1;" />
-        <ui:Button text="EDIT" name="enter-edit-mode" />
+    </ui:VisualElement>
+    <ui:VisualElement style="flex-grow: 1;" />
+    <ui:VisualElement style="flex-grow: 0; flex-direction: row; align-self: flex-end;">
+        <ui:Button text="EDIT" name="enter-edit-mode" style="min-width: 260px;" />
     </ui:VisualElement>
 </ui:UXML>
