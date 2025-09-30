@@ -35,11 +35,11 @@ public class UIDocumentLocalization : MonoBehaviour
     [SerializeField] LocalizedStringTable _table = null;
     UIDocument _uiDocument;
 
-    /// <summary> Executed after hierarchy is cloned fresh and translated. </summary>
+    /// <summary> Executed after hierarchy is cloned fresh and localized. </summary>
     public event System.Action<VisualElement> onCompleted = ( VisualElement root ) =>
     {
 #if DEBUG
-        Debug.Log($"{nameof(UIDocumentLocalization)}: {nameof(UIDocument)} translated");
+        Debug.Log($"{nameof(UIDocumentLocalization)}: {nameof(UIDocument)} localized");
 #endif
     };
 
