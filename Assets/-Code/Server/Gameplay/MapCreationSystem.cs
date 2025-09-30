@@ -35,9 +35,9 @@ namespace Server.Gameplay
         [Unity.Burst.BurstCompile]
         void ISystem.OnUpdate(ref SystemState state)
         {
-            Entity mapSettingsSingleton = SystemAPI.GetSingletonEntity<MapSettingsData>();
+            Entity mapSettingsSingleton = SystemAPI.GetSingletonEntity<MapSettingsSingleton>();
             Debug.Log($"{DebugName}: {GenerateMapEntitiesRequest.DebugName} {mapSettingsSingleton} found, creating a map...");
-            var mapSettings = SystemAPI.GetComponent<MapSettingsData>(mapSettingsSingleton);
+            var mapSettings = SystemAPI.GetComponent<MapSettingsSingleton>(mapSettingsSingleton);
             var ecb = SystemAPI.GetSingleton<EndInitializationEntityCommandBufferSystem.Singleton>().CreateCommandBuffer(state.WorldUnmanaged);
 
             // destroy request:
@@ -64,7 +64,7 @@ namespace Server.Gameplay
 
             // regenerate map:
             {
-                int numMapCells = mapSettings.Size.x * mapSettings.Size.y;
+                int numMapCells = (int)(mapSettings.Size.x * mapSettings.Size.y);
                 Entity mapDataEntity = state.EntityManager.CreateSingleton(new GeneratedMapData{
                     PositionArray = new (numMapCells, Allocator.Persistent),
                     CellArray = new (numMapCells, Allocator.Persistent),
@@ -113,15 +113,15 @@ namespace Server.Gameplay
             // draw map boundaries
             if (Application.isPlaying)// editor-only
             {
-                Vector2Int size = mapSettings.Size;
-                Vector3 offset = mapSettings.Offset;
+                uint2 size = mapSettings.Size;
+                float3 offset = mapSettings.Origin;
                 int _ = 0;
                 _segment.Buffer.Length = 12;
                 state.Dependency = new Segments.Plot.BoxJob(
                     segments:   _segment.Buffer.AsArray(),
                     index:      ref _,
                     size:       new float3(size.x, 0, size.y),
-                    pos:        offset + new Vector3(size.x, 0, size.y)/2,
+                    pos:        offset + new float3(size.x, 0, size.y)/2,
                     rot:        quaternion.identity
                 ).Schedule(state.Dependency);
 
@@ -150,7 +150,7 @@ namespace Server.Gameplay
         [Unity.Burst.BurstCompile]
         partial struct GenerateMapDataJob : IJob
         {
-            public MapSettingsData Settings;
+            public MapSettingsSingleton Settings;
             [WriteOnly] public NativeArray<float3> PositionArray;
             public NativeArray<EMapCell> CellData;
             void IJob.Execute()
@@ -159,35 +159,35 @@ namespace Server.Gameplay
                 Assert.IsTrue(Settings.Size.y>0);
                 Assert.IsTrue(Settings.Seed>0);
 
-                int2 size = new int2(Settings.Size.x, Settings.Size.y);
-                float3 origin = Settings.Offset;
+                uint2 size = new uint2(Settings.Size.x, Settings.Size.y);
+                float3 origin = Settings.Origin;
                 Random rnd = new (math.max(Settings.Seed, 1));
                 float2 elevOrigin = rnd.NextFloat2();
 
                 for (int y = 0; y < size.y; y++)
                 for (int x = 0; x < size.x; x++)
                 {
-                    int i = y * Settings.Size.x + x;
+                    int i = (int)(y * Settings.Size.x + x);
 
                     float elevation = noise.srnoise(elevOrigin + new float2(x, y)*0.1f);
-                    float3 pos = origin + new float3(x, elevation, y)*MapSettingsData.CellSize + new float3(0.5f, 0, 0.5f)*MapSettingsData.CellSize;
+                    float3 pos = origin + new float3(x, elevation, y)*MapSettingsSingleton.CellSize + new float3(0.5f, 0, 0.5f)*MapSettingsSingleton.CellSize;
                     PositionArray[i] = pos;
                 }
 
-                int mapCellArea = size.x * size.y;
+                uint mapCellArea = size.x * size.y;
                 for (int i = 0; i < mapCellArea; i++)
                 {
                     CellData[i] = EMapCell.Traversable;
                 }
 
                 {
-                    int min = mapCellArea / 10;
-                    int dst = rnd.NextInt(min, min*2);
-                    int instances = 0;
-                    int attempts = 0;
+                    uint min = mapCellArea / 10;
+                    uint dst = rnd.NextUInt(min, min*2);
+                    uint instances = 0;
+                    uint attempts = 0;
                     for (; instances < dst && attempts<mapCellArea*2; attempts++)
                     {
-                        int i = rnd.NextInt(0, mapCellArea);
+                        int i = (int) rnd.NextUInt(0, mapCellArea);
                         if (CellData[i]==EMapCell.Traversable)
                         {
                             CellData[i] = EMapCell.Obstacle;
@@ -197,13 +197,13 @@ namespace Server.Gameplay
                 }
 
                 {
-                    int min = mapCellArea / 20;
-                    int dst = rnd.NextInt(min, min*2);
-                    int instances = 0;
-                    int attempts = 0;
+                    uint min = mapCellArea / 20;
+                    uint dst = rnd.NextUInt(min, min*2);
+                    uint instances = 0;
+                    uint attempts = 0;
                     for (; instances < dst && attempts<mapCellArea*2; attempts++)
                     {
-                        int i = rnd.NextInt(0, mapCellArea);
+                        int i = (int) rnd.NextUInt(0, mapCellArea);
                         if (CellData[i]==EMapCell.Traversable)
                         {
                             CellData[i] = EMapCell.Cover;
@@ -217,19 +217,19 @@ namespace Server.Gameplay
         [Unity.Burst.BurstCompile]
         partial struct InstantiateMapCellsJob : IJob
         {
-            public MapSettingsData MapSettings;
+            public MapSettingsSingleton MapSettings;
             public EntityCommandBuffer ECB;
             public Entity PrefabTraversable, PrefabCover, PrefabObstacle;
             [ReadOnly] public NativeArray<float3> PositionArray;
             [ReadOnly] public NativeArray<EMapCell> CellArray;
             void IJob.Execute()
             {
-                int2 size = new int2(MapSettings.Size.x, MapSettings.Size.y);
+                uint2 size = new uint2(MapSettings.Size.x, MapSettings.Size.y);
 
                 for (int y = 0; y < size.y; y++)
                 for (int x = 0; x < size.x; x++)
                 {
-                    int i = y * MapSettings.Size.x + x;
+                    int i = (int)(y * MapSettings.Size.x + x);
 
                     Entity prefab;
                     switch (CellArray[i])
@@ -242,9 +242,8 @@ namespace Server.Gameplay
 
                     Entity e = ECB.Instantiate(prefab);
 
-                    ECB.AddComponent(e, new CellCoords{
-                        X = (ushort)x,
-                        Y = (ushort)y,
+                    ECB.AddComponent(e, new MapCoord{
+                        Value = new uint2((uint) x, (uint) y)
                     });
 
                     float azimuth = x * math.PIHALF + y * math.PIHALF;
@@ -263,7 +262,7 @@ namespace Server.Gameplay
         [Unity.Burst.BurstCompile]
         partial struct InstantiateUnitsJob : IJob
         {
-            public MapSettingsData MapSettings;
+            public MapSettingsSingleton MapSettings;
             public EntityCommandBuffer ECB;
             public Entity PrefabPlayer, PrefabEnemy;
             [ReadOnly] public NativeArray<float3> PositionArray;
@@ -274,26 +273,25 @@ namespace Server.Gameplay
                 Assert.IsTrue(MapSettings.Size.y>0);
                 Assert.IsTrue(MapSettings.Seed>0);
 
-                int2 size = new int2(MapSettings.Size.x, MapSettings.Size.y);
-                float3 origin = MapSettings.Offset;
-                int mapCellArea = size.x * size.y;
+                uint2 size = MapSettings.Size;
+                float3 origin = MapSettings.Origin;
+                uint mapCellArea = size.x * size.y;
                 Random rnd = new (math.max(MapSettings.Seed, 1));
 
                 // instantiate player units:
                 {
                     uint dst = MapSettings.NumPlayerUnits;
-                    int instances = 0;
-                    int attempts = 0;
+                    uint instances = 0;
+                    uint attempts = 0;
                     for (; instances < dst && attempts<mapCellArea*2; attempts++)
                     {
-                        int2 coord = rnd.NextInt2(0, size);
-                        int i = coord.y * size.x + coord.x;
+                        uint2 coord = rnd.NextUInt2(0, size);
+                        int i = (int)(coord.y * size.x + coord.x);
                         if (CellArray[i]==EMapCell.Traversable)
                         {
                             Entity e = ECB.Instantiate(PrefabPlayer);
-                            ECB.AddComponent(e, new CellCoords{
-                                X = (ushort) coord.x,
-                                Y = (ushort) coord.y,
+                            ECB.AddComponent(e, new UnitCoord{
+                                Value = coord,
                             });
 
                             float azimuth = coord.x * math.PIHALF + coord.y * math.PIHALF;
@@ -316,14 +314,13 @@ namespace Server.Gameplay
                     int attempts = 0;
                     for (; instances < dst && attempts<mapCellArea*2; attempts++)
                     {
-                        int2 coord = rnd.NextInt2(0, size);
-                        int i = coord.y * size.x + coord.x;
+                        uint2 coord = rnd.NextUInt2(0, size);
+                        int i = (int)(coord.y * size.x + coord.x);
                         if (CellArray[i]==EMapCell.Traversable)
                         {
                             Entity e = ECB.Instantiate(PrefabEnemy);
-                            ECB.AddComponent(e, new CellCoords{
-                                X = (ushort) coord.x,
-                                Y = (ushort) coord.y,
+                            ECB.AddComponent(e, new MapCoord{
+                                Value = coord
                             });
 
                             float azimuth = coord.x * math.PIHALF + coord.y * math.PIHALF;
@@ -343,7 +340,7 @@ namespace Server.Gameplay
             }
         }
 
-        [WithAll(typeof(CellCoords))]
+        [WithAll(typeof(MapCoord))]
         [Unity.Burst.BurstCompile]
         partial struct DestroyExistingMapCellEntitiesJob : IJobEntity
         {
@@ -352,11 +349,6 @@ namespace Server.Gameplay
             {
                 ECBPW.DestroyEntity(index, entity);
             }
-        }
-
-        struct CellCoords : IComponentData
-        {
-            public ushort X, Y;
         }
 
         public static FixedString64Bytes DebugName {get;} = nameof(MapCreationSystem);

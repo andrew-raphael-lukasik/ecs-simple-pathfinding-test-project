@@ -33,9 +33,9 @@ namespace Server.Gameplay
                 });
 
                 Entity mapSettingsSingleton;
-                if (!SystemAPI.TryGetSingletonEntity<MapSettingsData>(out mapSettingsSingleton))
+                if (!SystemAPI.TryGetSingletonEntity<MapSettingsSingleton>(out mapSettingsSingleton))
                 {
-                    mapSettingsSingleton = state.EntityManager.CreateSingleton<MapSettingsData>(request.MapSettings);
+                    mapSettingsSingleton = state.EntityManager.CreateSingleton<MapSettingsSingleton>(request.MapSettings);
                 }
                 state.EntityManager.AddComponent<GenerateMapEntitiesRequest>(mapSettingsSingleton);
 

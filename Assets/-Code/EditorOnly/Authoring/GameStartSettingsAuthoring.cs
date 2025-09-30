@@ -1,5 +1,6 @@
-using Unity.Entities;
 using UnityEngine;
+using Unity.Entities;
+using Unity.Mathematics;
 
 using ServerAndClient.Gameplay;
 using Server.Gameplay;
@@ -11,7 +12,7 @@ namespace EditorOnly.Authoring
     public class GameStartSettingsAuthoring : MonoBehaviour
     {
         [SerializeField] Vector2Int _mapSize = new Vector2Int(16, 16);
-        [SerializeField] Vector3 _mapOffset = new Vector3(0, 0, 0);
+        [SerializeField] Vector3 _mapOrigin = new Vector3(0, 0, 0);
         [SerializeField][Min(1)] int _numPlayerUnits = 3;
         [SerializeField][Min(1)] int _numEnemyUnits = 4;
         [SerializeField][Min(1)] uint _seed = 1;
@@ -22,9 +23,9 @@ namespace EditorOnly.Authoring
             {
                 Entity entity = GetEntity(authoring, TransformUsageFlags.None);
                 AddComponent(entity, new StartTheGameData{
-                    MapSettings = new MapSettingsData{
-                        Size = authoring._mapSize,
-                        Offset = authoring._mapOffset,
+                    MapSettings = new MapSettingsSingleton{
+                        Size = new uint2((uint) authoring._mapSize.x, (uint) authoring._mapSize.y),
+                        Origin = authoring._mapOrigin,
                         NumPlayerUnits = (uint) authoring._numPlayerUnits,
                         NumEnemyUnits = (uint) authoring._numEnemyUnits,
                         Seed = authoring._seed,
