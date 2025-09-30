@@ -37,7 +37,7 @@ Label {
 }
 
 .unity-base-field__label {
-    min-width: 0px;
+    min-width: 0;
     flex-grow: 1;
 }
 
@@ -74,7 +74,6 @@ TextField {
 }
 
 .unity-composite-field {
-    
 }
 
 .unity-button {
@@ -83,6 +82,10 @@ TextField {
     border-color: rgb(76, 83, 89);
     -unity-text-align: middle-center;
     color: rgb(100, 94, 80);
+    -unity-font-style: bold;
+    font-size: 29px;
+    background-color: rgb(214, 214, 214);
+    -unity-font-definition: url("project://database/Assets/TextMesh%20Pro/Fonts/LiberationSans.ttf?fileID=12800000&guid=e3265ab4bf004d28a9537516768c1c75&type=3#LiberationSans");
 }
 
 Button:hover {
