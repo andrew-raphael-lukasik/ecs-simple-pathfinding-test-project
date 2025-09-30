@@ -63,8 +63,8 @@ namespace Client.Presentation
                 
                 Segments.Plot.Box(
                     segments: segments.Buffer.AsArray().Slice(segments.Buffer.Length - 12, 12),
-                    size: aabb.Size * 1.1f,
-                    pos: aabb.Center,
+                    size: aabb.Size * new float3(1.4f, 1, 1.4f) + new float3(1, 0, 1)*((float) math.sin(SystemAPI.Time.ElapsedTime*5f)*0.1f),
+                    pos: aabb.Center + new float3(0, 1, 0),
                     rot: quaternion.identity
                 );
 
