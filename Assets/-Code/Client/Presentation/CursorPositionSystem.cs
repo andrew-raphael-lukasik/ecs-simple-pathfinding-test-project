@@ -51,6 +51,7 @@ namespace Client.Presentation
                 }.Schedule(state.Dependency);
 
                 state.Dependency = new SetCursorPositionJob{
+                    ElapsedTime = SystemAPI.Time.ElapsedTime,
                     PositionRef = _positionRef,
                 }.ScheduleParallel(state.Dependency);
             }
@@ -61,6 +62,7 @@ namespace Client.Presentation
                 {
                     _positionRef.Value = ray.origin + ray.direction * dist;
                     state.Dependency = new SetCursorPositionJob{
+                        ElapsedTime = SystemAPI.Time.ElapsedTime,
                         PositionRef = _positionRef,
                     }.ScheduleParallel(state.Dependency);
                 }
@@ -100,10 +102,16 @@ namespace Client.Presentation
         [Unity.Burst.BurstCompile]
         partial struct SetCursorPositionJob : IJobEntity
         {
+            public double ElapsedTime;
             [ReadOnly] public NativeReference<float3> PositionRef;
             public void Execute(ref LocalToWorld transform)
             {
-                transform.Value.c3 = new float4(PositionRef.AsReadOnly().Value, 1);
+                float scale = 0.7f + (Easing.InOutElastic((float)math.sin(ElapsedTime*20f))*0.05f);
+                
+                transform.Value.c0 = new float4(scale, 0, 0, 0);
+                transform.Value.c1 = new float4(0, 0.05f, 0, 0);
+                transform.Value.c2 = new float4(0, 0, scale, 0);
+                transform.Value.c3 = new float4(PositionRef.AsReadOnly().Value + new float3(0, 0.05f, 0), 1);
 
                 Debug.DrawRay(PositionRef.AsReadOnly().Value, Vector3.up, Color.cyan);
             }
