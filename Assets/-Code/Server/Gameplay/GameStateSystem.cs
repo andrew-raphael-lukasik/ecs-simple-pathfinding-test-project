@@ -55,10 +55,14 @@ namespace Server.Gameplay
             {
                 case EGameState.EDIT:
                     state.EntityManager.AddComponent<GameState.EDIT_STARTED_EVENT>(state.SystemHandle);
+                    Shader.DisableKeyword("_GAME_STATE_PLAY");
+                    Shader.EnableKeyword("_GAME_STATE_EDIT");
                     Debug.Log($"{state.DebugName}: {GameState.EDIT_STARTED_EVENT.DebugName} created");
                     break;
                 case EGameState.PLAY:
                     state.EntityManager.AddComponent<GameState.PLAY_STARTED_EVENT>(state.SystemHandle);
+                    Shader.DisableKeyword("_GAME_STATE_EDIT");
+                    Shader.EnableKeyword("_GAME_STATE_PLAY");
                     Debug.Log($"{state.DebugName}: {GameState.PLAY_STARTED_EVENT.DebugName} created");
                     break;
                 default:
