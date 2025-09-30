@@ -5,6 +5,7 @@ using Unity.Transforms;
 using Unity.Collections;
 using Unity.Jobs;
 
+using Client.Input;
 using ServerAndClient.Input;
 using ServerAndClient.Gameplay;
 using ServerAndClient;
@@ -15,7 +16,7 @@ namespace Client.Presentation
     [UpdateInGroup(typeof(GamePresentationSystemGroup))]
     [RequireMatchingQueriesForUpdate]
     [Unity.Burst.BurstCompile]
-    public partial struct CursorUpdateSystem : ISystem
+    public partial struct CursorPositionSystem : ISystem
     {
         NativeReference<float3> _positionRef;
 
@@ -23,7 +24,7 @@ namespace Client.Presentation
         void ISystem.OnCreate(ref SystemState state)
         {
             _positionRef = new (Allocator.Persistent);
-            state.RequireForUpdate<PointerPositionData>();
+            state.RequireForUpdate<PlayerInputSingleton>();
         }
 
         [Unity.Burst.BurstCompile]
@@ -35,37 +36,33 @@ namespace Client.Presentation
         // [Unity.Burst.BurstCompile]
         void ISystem.OnUpdate(ref SystemState state)
         {
-            var camera = Camera.main;
-            if (camera!=null)
+            var playerInput = SystemAPI.GetSingleton<PlayerInputSingleton>();
+            var ray = playerInput.PointerRay;
+
+            if (SystemAPI.TryGetSingleton<GeneratedMapData>(out var mapData))
             {
-                var pointerData = SystemAPI.GetSingleton<PointerPositionData>();
-                var ray = camera.ScreenPointToRay(pointerData.Value);
+                var mapSettings = SystemAPI.GetSingleton<MapSettingsSingleton>();
 
-                if (SystemAPI.TryGetSingleton<GeneratedMapData>(out var mapData))
+                state.Dependency = new RaycastGridJob{
+                    RayValue = ray,
+                    MapSettings = mapSettings,
+                    PositionArray = mapData.PositionArray,
+                    PositionRef = _positionRef,
+                }.Schedule(state.Dependency);
+
+                state.Dependency = new SetCursorPositionJob{
+                    PositionRef = _positionRef,
+                }.ScheduleParallel(state.Dependency);
+            }
+            else
+            {
+                var plane = new Plane(Vector3.up, Vector3.zero);
+                if (plane.Raycast(ray, out float dist))
                 {
-                    var mapSettings = SystemAPI.GetSingleton<MapSettingsData>();
-
-                    state.Dependency = new RaycastGridJob{
-                        RayValue = ray,
-                        MapSettings = mapSettings,
-                        PositionArray = mapData.PositionArray,
-                        PositionRef = _positionRef,
-                    }.Schedule(state.Dependency);
-
+                    _positionRef.Value = ray.origin + ray.direction * dist;
                     state.Dependency = new SetCursorPositionJob{
                         PositionRef = _positionRef,
                     }.ScheduleParallel(state.Dependency);
-                }
-                else
-                {
-                    var plane = new Plane(Vector3.up, Vector3.zero);
-                    if (plane.Raycast(ray, out float dist))
-                    {
-                        _positionRef.Value = ray.origin + ray.direction * dist;
-                        state.Dependency = new SetCursorPositionJob{
-                            PositionRef = _positionRef,
-                        }.ScheduleParallel(state.Dependency);
-                    }
                 }
             }
 
@@ -79,7 +76,7 @@ namespace Client.Presentation
         partial struct RaycastGridJob : IJob
         {
             public Ray RayValue;
-            public MapSettingsData MapSettings;
+            public MapSettingsSingleton MapSettings;
             [ReadOnly] public NativeArray<float3> PositionArray;
             [WriteOnly] public NativeReference<float3> PositionRef;
             void IJob.Execute()
@@ -88,17 +85,12 @@ namespace Client.Presentation
                 if (plane.Raycast(RayValue, out float dist))
                 {
                     float3 hit = RayValue.origin + RayValue.direction * dist;
-                    float3 localPos = hit - (float3) MapSettings.Offset;
+                    float3 localPos = hit - (float3) MapSettings.Origin;
 
-                    int2 coordRaw = (int2)(new float2(localPos.x, localPos.z) / new float2(MapSettingsData.CellSize, MapSettingsData.CellSize));
-                    int2 coordClamped = math.clamp(coordRaw, 0, new int2(MapSettings.Size.x, MapSettings.Size.y)-1);
+                    uint2 coord = (uint2)(new float2(localPos.x, localPos.z) / new float2(MapSettingsSingleton.CellSize, MapSettingsSingleton.CellSize));
+                    coord = math.min(coord, MapSettings.Size-1);// clamp to map size
 
-                    int i = coordClamped.y * MapSettings.Size.x + coordClamped.x;
-                    if (i<0 || i>=PositionArray.Length)
-                    {
-                        Debug.LogError($"BŁĄÐ, i: {i}, PositionArray.Length: {PositionArray.Length},  coordRaw: {coordRaw}, coordClamped: {coordClamped}, MapSettings.Size: {MapSettings.Size}");
-                        return;
-                    }
+                    int i = (int)(coord.y * MapSettings.Size.x + coord.x);
                     PositionRef.Value = PositionArray[i];
                 }
             }

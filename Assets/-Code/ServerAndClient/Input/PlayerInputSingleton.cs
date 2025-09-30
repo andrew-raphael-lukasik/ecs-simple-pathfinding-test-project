@@ -4,10 +4,13 @@ using Unity.Mathematics;
 
 namespace ServerAndClient.Input
 {
-    public struct PlayerInputData : IComponentData
+    public struct PlayerInputSingleton : IComponentData
     {
         public float2 Move;
         public float2 Look;
-        public bool Attack;
+        public byte Attack;
+        public byte AttackStart;
+
+        public Ray PointerRay;
     }
 }

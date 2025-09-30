@@ -8,7 +8,7 @@ namespace Client.Input
 {
     [WorldSystemFilter(WorldSystemFilterFlags.Default | WorldSystemFilterFlags.LocalSimulation | WorldSystemFilterFlags.ClientSimulation)]
     [UpdateInGroup(typeof(GameInitializationSystemGroup))]
-    public partial class PlayerInputActionsSystem : SystemBase
+    public partial class PlayerInputSystem : SystemBase
     {
         PlayerInputActions _actions;
 
@@ -18,8 +18,7 @@ namespace Client.Input
             _actions.UI.Enable();
             _actions.Player.Enable();
 
-            EntityManager.CreateSingleton<PointerPositionData>();
-            EntityManager.CreateSingleton<PlayerInputData>();
+            EntityManager.CreateSingleton<PlayerInputSingleton>();
         }
 
         protected override void OnDestroy()
@@ -33,15 +32,21 @@ namespace Client.Input
             Vector2 point = _actions.UI.Point.ReadValue<Vector2>();
             Vector2 move = _actions.Player.Move.ReadValue<Vector2>();
             Vector2 look = _actions.Player.Look.ReadValue<Vector2>();
-            bool attack = _actions.Player.Attack.ReadValue<float>()!=0;
+            byte attack = _actions.Player.Attack.IsPressed() ? (byte) 1 : (byte) 0;
+            byte attackStart = _actions.Player.Attack.WasPressedThisFrame() ? (byte) 1 : (byte) 0;
+            Ray ray = default;
+            {
+                var camera = Camera.main;
+                if (camera!=null)
+                    ray = camera.ScreenPointToRay(point);
+            }
 
-            SystemAPI.SetSingleton(new PointerPositionData{
-                Value = point
-            });
-            SystemAPI.SetSingleton(new PlayerInputData{
+            SystemAPI.SetSingleton(new PlayerInputSingleton{
+                PointerRay = ray,
                 Move = move,
                 Look = look,
                 Attack = attack,
+                AttackStart = attackStart,
             });
         }
     }

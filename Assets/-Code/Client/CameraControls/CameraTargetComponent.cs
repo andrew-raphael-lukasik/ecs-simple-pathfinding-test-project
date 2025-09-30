@@ -18,7 +18,7 @@ namespace Client.CameraControls
             {
                 var entityManager = world.EntityManager;
                 _entity = entityManager.CreateEntity();
-                entityManager.AddComponent<IsCameraTarget>(_entity);
+                entityManager.AddComponent<IsCameraLookAtTarget>(_entity);
                 entityManager.AddComponentObject(_entity, transform);
             }
         }
@@ -33,6 +33,4 @@ namespace Client.CameraControls
             }
         }
     }
-
-    public struct IsCameraTarget : IComponentData {}
 }

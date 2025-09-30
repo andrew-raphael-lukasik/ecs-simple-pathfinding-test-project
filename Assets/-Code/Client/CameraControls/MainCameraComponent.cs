@@ -1,14 +1,12 @@
 using UnityEngine;
 using Unity.Entities;
-using Unity.Collections;
-using Unity.Jobs;
 
 namespace Client.CameraControls
 {
     [DisallowMultipleComponent]
     [RequireComponent(typeof(Camera))]
     [AddComponentMenu("Game/Hybrid/Main Camera")]
-    public class MainCameraTransformComponent : MonoBehaviour
+    public class MainCameraComponent : MonoBehaviour
     {
         Entity _entity;
 
