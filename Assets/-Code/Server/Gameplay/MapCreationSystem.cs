@@ -241,7 +241,6 @@ namespace Server.Gameplay
                     }
 
                     Entity e = ECB.Instantiate(prefab);
-
                     ECB.AddComponent(e, new MapCoord{
                         Value = new uint2((uint) x, (uint) y)
                     });
@@ -319,7 +318,7 @@ namespace Server.Gameplay
                         if (CellArray[i]==EMapCell.Traversable)
                         {
                             Entity e = ECB.Instantiate(PrefabEnemy);
-                            ECB.AddComponent(e, new MapCoord{
+                            ECB.AddComponent(e, new UnitCoord{
                                 Value = coord
                             });
 
