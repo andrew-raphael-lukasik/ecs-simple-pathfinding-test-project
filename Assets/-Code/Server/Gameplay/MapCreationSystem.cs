@@ -241,7 +241,7 @@ namespace Server.Gameplay
                     }
 
                     Entity e = ECB.Instantiate(prefab);
-                    ECB.AddComponent(e, new MapCoord{
+                    ECB.AddComponent(e, new FloorCoord{
                         Value = new uint2((uint) x, (uint) y)
                     });
 
@@ -339,7 +339,7 @@ namespace Server.Gameplay
             }
         }
 
-        [WithAll(typeof(MapCoord))]
+        [WithAll(typeof(FloorCoord))]
         [Unity.Burst.BurstCompile]
         partial struct DestroyExistingMapCellEntitiesJob : IJobEntity
         {
