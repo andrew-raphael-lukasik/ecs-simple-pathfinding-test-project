@@ -17,7 +17,25 @@ namespace ServerAndClient
         {
             state.EntityManager.AddComponent<Request>(state.SystemHandle);
             state.EntityManager.AddComponent<RequestBufferMeta>(state.SystemHandle);
+            SystemAPI.SetComponent(state.SystemHandle, new RequestBufferMeta{
+                Dependency = new (Allocator.Persistent)
+            });
+            
             state.RequireForUpdate<PrefabSystem.Prefabs>();
+        }
+
+        [Unity.Burst.BurstCompile]
+        void ISystem.OnDestroy(ref SystemState state)
+        {
+            if (SystemAPI.HasComponent<RequestBufferMeta>(state.SystemHandle))
+            {
+                var singleton = SystemAPI.GetComponent<RequestBufferMeta>(state.SystemHandle);
+                if (singleton.Dependency.IsCreated)
+                {
+                    singleton.Dependency.AsReadOnly().Value.Complete();
+                    singleton.Dependency.Dispose();
+                }
+            }
         }
 
         [Unity.Burst.BurstCompile]
@@ -29,7 +47,11 @@ namespace ServerAndClient
 
             var ecb = new EntityCommandBuffer(Allocator.TempJob);
             var prefabs = SystemAPI.GetSingleton<PrefabSystem.Prefabs>();
-            state.Dependency = JobHandle.CombineDependencies(state.Dependency, prefabs.Dependency, SystemAPI.GetComponent<RequestBufferMeta>(state.SystemHandle).Dependency);
+            state.Dependency = JobHandle.CombineDependencies(
+                state.Dependency,
+                prefabs.Dependency,
+                SystemAPI.GetComponent<RequestBufferMeta>(state.SystemHandle).Dependency.AsReadOnly().Value
+            );
 
             state.Dependency = new InstantiateJob{
                 DeltaTime       = SystemAPI.Time.DeltaTime,
@@ -45,11 +67,7 @@ namespace ServerAndClient
             // var ecbss = SystemAPI.GetSingleton<EndInitializationECBSystem.Singleton>();
             // ecbss.Append(ecb, state.Dependency);
 
-            // prefabs.Dependency = state.Dependency;
-            // SystemAPI.SetSingleton(prefabs);
-            // SystemAPI.SetComponent(state.SystemHandle, new RequestBufferMeta{
-            //     Dependency = prefabs.Dependency
-            // });
+            // prefabs.Dependency.value = state.Dependency;
 
             state.Dependency.Complete();
             if(ecb.ShouldPlayback) ecb.Playback(state.EntityManager);
@@ -62,7 +80,7 @@ namespace ServerAndClient
         }
         public struct RequestBufferMeta : IComponentData
         {
-            public JobHandle Dependency;
+            public NativeReference<JobHandle> Dependency;
         }
 
         [Unity.Burst.BurstCompile]
