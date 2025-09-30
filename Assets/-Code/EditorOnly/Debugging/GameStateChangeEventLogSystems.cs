@@ -2,12 +2,13 @@ using UnityEngine;
 using Unity.Entities;
 using Unity.Collections;
 
+using ServerAndClient;
 using ServerAndClient.Gameplay;
 
 namespace EditorOnly.Debugging
 {
-    [WorldSystemFilter(WorldSystemFilterFlags.Default)]
-    [UpdateInGroup(typeof(InitializationSystemGroup), OrderLast = true)]
+    [WorldSystemFilter(WorldSystemFilterFlags.Default | WorldSystemFilterFlags.ServerSimulation | WorldSystemFilterFlags.ClientSimulation | WorldSystemFilterFlags.ThinClientSimulation)]
+    [UpdateInGroup(typeof(GameInitializationSystemGroup), OrderLast = true)]
     [RequireMatchingQueriesForUpdate]
     [Unity.Burst.BurstCompile]
     public partial struct EditGameStateBeginsLogSystem : ISystem
@@ -25,8 +26,8 @@ namespace EditorOnly.Debugging
         }
     }
 
-    [WorldSystemFilter(WorldSystemFilterFlags.Default)]
-    [UpdateInGroup(typeof(InitializationSystemGroup), OrderLast = true)]
+    [WorldSystemFilter(WorldSystemFilterFlags.Default | WorldSystemFilterFlags.ServerSimulation | WorldSystemFilterFlags.ClientSimulation | WorldSystemFilterFlags.ThinClientSimulation)]
+    [UpdateInGroup(typeof(GameInitializationSystemGroup), OrderLast = true)]
     [RequireMatchingQueriesForUpdate]
     [Unity.Burst.BurstCompile]
     public partial struct PlayGameStateBeginsLogSystem : ISystem
