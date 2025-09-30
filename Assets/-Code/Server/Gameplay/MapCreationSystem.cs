@@ -45,9 +45,9 @@ namespace Server.Gameplay
 
             // clear existing map:
             {
-                state.Dependency = new DestroyExistingMapCellEntitiesJob{
+                new DestroyExistingMapEntitiesJob{
                     ECBPW = ecb.AsParallelWriter(),
-                }.Schedule(state.Dependency);
+                }.Schedule(state.Dependency).Complete();
 
                 if (SystemAPI.TryGetSingletonEntity<GeneratedMapData>(out Entity mapDataEntity))
                 {
@@ -339,9 +339,9 @@ namespace Server.Gameplay
             }
         }
 
-        [WithAll(typeof(FloorCoord))]
+        [WithAny(typeof(FloorCoord), typeof(UnitCoord))]
         [Unity.Burst.BurstCompile]
-        partial struct DestroyExistingMapCellEntitiesJob : IJobEntity
+        partial struct DestroyExistingMapEntitiesJob : IJobEntity
         {
             public EntityCommandBuffer.ParallelWriter ECBPW;
             void Execute(in Entity entity, [EntityIndexInQuery] int index)
