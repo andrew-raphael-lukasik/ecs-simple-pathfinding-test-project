@@ -5,22 +5,26 @@ using Unity.Entities;
 using ServerAndClient;
 using ServerAndClient.Gameplay;
 
-namespace Client.Presentation
+namespace Client.UIToolkit
 {
-    [RequireComponent(typeof(UIDocument))]
+    [RequireComponent(typeof(UIDocumentLocalization))]
     public class PlayStateUIController : MonoBehaviour
     {
         [SerializeField] UIDocument _UIDocument;
 
         void OnEnable()
         {
-            var root = _UIDocument.rootVisualElement;
+            GetComponent<UIDocumentLocalization>().onCompleted += Bind;
+        }
 
-            root.For<Button>("enter-edit-mode", (button) => {
+        void Bind(VisualElement root)
+        {
+            root.For<Button>("enter-edit-mode-button", (button) => {
                 button.clicked += () => {
                     Debug.Log("Button clicked -> requesting switch to edit");
                     var world = World.DefaultGameObjectInjectionWorld;
                     var entityManager = world.EntityManager;
+                    
                     entityManager.CreateSingleton(new GameState.ChangeRequest{
                         State = EGameState.EDIT
                     });

@@ -23,11 +23,6 @@ Label {
     text-shadow: 3px 3px 0 rgb(36, 36, 31);
 }
 
-.label-title {
-    font-size: 24px;
-    -unity-font-style: bold;
-}
-
 .unity-base-field {
     border-width: 0;
     border-radius: 2px;
