@@ -13,9 +13,9 @@ namespace Server.Simulation
     [UpdateInGroup(typeof(GameInitializationSystemGroup), OrderFirst = true)]
     [RequireMatchingQueriesForUpdate]
     [Unity.Burst.BurstCompile]
-    public partial struct FloorCoordsSystem : ISystem
+    public partial struct FloorEntitiesSystem : ISystem
     {
-        public static FixedString64Bytes DebugName {get;} = nameof(FloorCoordsSystem);
+        public static FixedString64Bytes DebugName {get;} = nameof(FloorEntitiesSystem);
 
         byte _initialized;
 
@@ -25,8 +25,8 @@ namespace Server.Simulation
             state.RequireForUpdate<MapSettingsSingleton>();
             state.RequireForUpdate<FloorCoord>();
 
-            state.EntityManager.AddComponent<FloorCoordsSingleton>(state.SystemHandle);
-            SystemAPI.SetSingleton(new FloorCoordsSingleton{
+            state.EntityManager.AddComponent<FloorsSingleton>(state.SystemHandle);
+            SystemAPI.SetSingleton(new FloorsSingleton{
                 Lookup = new (32*32, Allocator.Persistent),
                 Dependency = new (Allocator.Persistent),
             });
@@ -35,7 +35,7 @@ namespace Server.Simulation
         [Unity.Burst.BurstCompile]
         void ISystem.OnUpdate(ref SystemState state)
         {
-            var singleton = SystemAPI.GetSingleton<FloorCoordsSingleton>();
+            var singleton = SystemAPI.GetSingleton<FloorsSingleton>();
             var mapSettings = SystemAPI.GetSingleton<MapSettingsSingleton>();
 
             if (_initialized==0)
@@ -113,7 +113,7 @@ namespace Server.Simulation
         }
     }
 
-    public struct FloorCoordsSingleton : IComponentData
+    public struct FloorsSingleton : IComponentData
     {
         public NativeHashMap<uint2, Entity> Lookup;
         public NativeReference<JobHandle> Dependency;

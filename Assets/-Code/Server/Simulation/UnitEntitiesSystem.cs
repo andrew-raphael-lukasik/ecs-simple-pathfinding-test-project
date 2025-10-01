@@ -13,9 +13,9 @@ namespace Server.Simulation
     [UpdateInGroup(typeof(GameInitializationSystemGroup), OrderFirst = true)]
     [RequireMatchingQueriesForUpdate]
     [Unity.Burst.BurstCompile]
-    public partial struct UnitCoordsSystem : ISystem
+    public partial struct UnitEntitiesSystem : ISystem
     {
-        public static FixedString64Bytes DebugName {get;} = nameof(UnitCoordsSystem);
+        public static FixedString64Bytes DebugName {get;} = nameof(UnitEntitiesSystem);
 
         byte _initialized;
 
@@ -25,8 +25,8 @@ namespace Server.Simulation
             state.RequireForUpdate<MapSettingsSingleton>();
             state.RequireForUpdate<UnitCoord>();
 
-            state.EntityManager.AddComponent<UnitCoordsSingleton>(state.SystemHandle);
-            SystemAPI.SetSingleton(new UnitCoordsSingleton{
+            state.EntityManager.AddComponent<UnitsSingleton>(state.SystemHandle);
+            SystemAPI.SetSingleton(new UnitsSingleton{
                 Lookup = new (32*32, Allocator.Persistent),
                 Dependency = new (Allocator.Persistent),
             });
@@ -35,7 +35,7 @@ namespace Server.Simulation
         [Unity.Burst.BurstCompile]
         void ISystem.OnDestroy(ref SystemState state)
         {
-            if (SystemAPI.TryGetSingleton<UnitCoordsSingleton>(out var singleton))
+            if (SystemAPI.TryGetSingleton<UnitsSingleton>(out var singleton))
             {
                 if (singleton.Dependency.IsCreated)
                 {
@@ -49,7 +49,7 @@ namespace Server.Simulation
         [Unity.Burst.BurstCompile]
         void ISystem.OnUpdate(ref SystemState state)
         {
-            var singleton = SystemAPI.GetSingleton<UnitCoordsSingleton>();
+            var singleton = SystemAPI.GetSingleton<UnitsSingleton>();
             var mapSettings = SystemAPI.GetSingleton<MapSettingsSingleton>();
 
             if (_initialized==0)
@@ -127,7 +127,7 @@ namespace Server.Simulation
         }
     }
 
-    public struct UnitCoordsSingleton : IComponentData
+    public struct UnitsSingleton : IComponentData
     {
         public NativeHashMap<uint2, Entity> Lookup;
         public NativeReference<JobHandle> Dependency;

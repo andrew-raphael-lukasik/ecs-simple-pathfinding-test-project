@@ -53,7 +53,7 @@ namespace Server.Gameplay
                 {
                     var mapData = SystemAPI.GetComponent<GeneratedMapData>(mapDataEntity);
                     
-                    new DeallocateNativeArrayJob<EMapCell>(mapData.CellArray)
+                    new DeallocateNativeArrayJob<EFloorType>(mapData.CellArray)
                         .Schedule(state.Dependency);
                     new DeallocateNativeArrayJob<float3>(mapData.PositionArray)
                         .Schedule(state.Dependency);
@@ -81,7 +81,7 @@ namespace Server.Gameplay
                 if (!GetPrefabSafe("enemy-unit", prefabs.Lookup, state.EntityManager, out Entity prefabEnemy)) goto map_generation_canceled;
 
                 state.Dependency = new GenerateMapDataJob{
-                    Settings = mapSettings,
+                    MapSettings = mapSettings,
                     PositionArray = mapData.PositionArray,
                     CellData = mapData.CellArray,
                 }.Schedule(state.Dependency);
@@ -150,24 +150,24 @@ namespace Server.Gameplay
         [Unity.Burst.BurstCompile]
         partial struct GenerateMapDataJob : IJob
         {
-            public MapSettingsSingleton Settings;
+            public MapSettingsSingleton MapSettings;
             [WriteOnly] public NativeArray<float3> PositionArray;
-            public NativeArray<EMapCell> CellData;
+            public NativeArray<EFloorType> CellData;
             void IJob.Execute()
             {
-                Assert.IsTrue(Settings.Size.x>0);
-                Assert.IsTrue(Settings.Size.y>0);
-                Assert.IsTrue(Settings.Seed>0);
+                Assert.IsTrue(MapSettings.Size.x>0);
+                Assert.IsTrue(MapSettings.Size.y>0);
+                Assert.IsTrue(MapSettings.Seed>0);
 
-                uint2 size = new uint2(Settings.Size.x, Settings.Size.y);
-                float3 origin = Settings.Origin;
-                Random rnd = new (math.max(Settings.Seed, 1));
+                uint2 size = new uint2(MapSettings.Size.x, MapSettings.Size.y);
+                float3 origin = MapSettings.Origin;
+                Random rnd = new (math.max(MapSettings.Seed, 1));
                 float2 elevOrigin = rnd.NextFloat2();
 
                 for (int y = 0; y < size.y; y++)
                 for (int x = 0; x < size.x; x++)
                 {
-                    int i = (int)(y * Settings.Size.x + x);
+                    int i = GameGrid.ToIndex(x, y, MapSettings.Size);
 
                     float elevation = noise.srnoise(elevOrigin + new float2(x, y)*0.1f);
                     float3 pos = origin + new float3(x, elevation, y)*MapSettingsSingleton.CellSize + new float3(0.5f, 0, 0.5f)*MapSettingsSingleton.CellSize;
@@ -177,7 +177,7 @@ namespace Server.Gameplay
                 uint mapCellArea = size.x * size.y;
                 for (int i = 0; i < mapCellArea; i++)
                 {
-                    CellData[i] = EMapCell.Traversable;
+                    CellData[i] = EFloorType.Traversable;
                 }
 
                 {
@@ -188,9 +188,9 @@ namespace Server.Gameplay
                     for (; instances < dst && attempts<mapCellArea*2; attempts++)
                     {
                         int i = (int) rnd.NextUInt(0, mapCellArea);
-                        if (CellData[i]==EMapCell.Traversable)
+                        if (CellData[i]==EFloorType.Traversable)
                         {
-                            CellData[i] = EMapCell.Obstacle;
+                            CellData[i] = EFloorType.Obstacle;
                             instances++;
                         }
                     }
@@ -204,9 +204,9 @@ namespace Server.Gameplay
                     for (; instances < dst && attempts<mapCellArea*2; attempts++)
                     {
                         int i = (int) rnd.NextUInt(0, mapCellArea);
-                        if (CellData[i]==EMapCell.Traversable)
+                        if (CellData[i]==EFloorType.Traversable)
                         {
-                            CellData[i] = EMapCell.Cover;
+                            CellData[i] = EFloorType.Cover;
                             instances++;
                         }
                     }
@@ -221,7 +221,7 @@ namespace Server.Gameplay
             public EntityCommandBuffer ECB;
             public Entity PrefabTraversable, PrefabCover, PrefabObstacle;
             [ReadOnly] public NativeArray<float3> PositionArray;
-            [ReadOnly] public NativeArray<EMapCell> CellArray;
+            [ReadOnly] public NativeArray<EFloorType> CellArray;
             void IJob.Execute()
             {
                 uint2 size = new uint2(MapSettings.Size.x, MapSettings.Size.y);
@@ -229,14 +229,14 @@ namespace Server.Gameplay
                 for (int y = 0; y < size.y; y++)
                 for (int x = 0; x < size.x; x++)
                 {
-                    int i = (int)(y * MapSettings.Size.x + x);
+                    int i = GameGrid.ToIndex(x, y, MapSettings.Size);
 
                     Entity prefab;
                     switch (CellArray[i])
                     {
-                        case EMapCell.Traversable: prefab = PrefabTraversable; break;
-                        case EMapCell.Obstacle: prefab = PrefabObstacle; break;
-                        case EMapCell.Cover: prefab = PrefabCover; break;
+                        case EFloorType.Traversable: prefab = PrefabTraversable; break;
+                        case EFloorType.Obstacle: prefab = PrefabObstacle; break;
+                        case EFloorType.Cover: prefab = PrefabCover; break;
                         default: throw new System.NotImplementedException($"implement: {CellArray[i]}");
                     }
 
@@ -265,7 +265,7 @@ namespace Server.Gameplay
             public EntityCommandBuffer ECB;
             public Entity PrefabPlayer, PrefabEnemy;
             [ReadOnly] public NativeArray<float3> PositionArray;
-            [ReadOnly] public NativeArray<EMapCell> CellArray;
+            [ReadOnly] public NativeArray<EFloorType> CellArray;
             void IJob.Execute()
             {
                 Assert.IsTrue(MapSettings.Size.x>0);
@@ -285,8 +285,8 @@ namespace Server.Gameplay
                     for (; instances < dst && attempts<mapCellArea*2; attempts++)
                     {
                         uint2 coord = rnd.NextUInt2(0, size);
-                        int i = (int)(coord.y * size.x + coord.x);
-                        if (CellArray[i]==EMapCell.Traversable)
+                        int i = GameGrid.ToIndex(coord, MapSettings.Size);
+                        if (CellArray[i]==EFloorType.Traversable)
                         {
                             Entity e = ECB.Instantiate(PrefabPlayer);
                             ECB.AddComponent(e, new UnitCoord{
@@ -314,8 +314,8 @@ namespace Server.Gameplay
                     for (; instances < dst && attempts<mapCellArea*2; attempts++)
                     {
                         uint2 coord = rnd.NextUInt2(0, size);
-                        int i = (int)(coord.y * size.x + coord.x);
-                        if (CellArray[i]==EMapCell.Traversable)
+                        int i = GameGrid.ToIndex(coord, MapSettings.Size);
+                        if (CellArray[i]==EFloorType.Traversable)
                         {
                             Entity e = ECB.Instantiate(PrefabEnemy);
                             ECB.AddComponent(e, new UnitCoord{

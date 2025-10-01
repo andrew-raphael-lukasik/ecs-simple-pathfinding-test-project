@@ -21,7 +21,7 @@ namespace Server.Gameplay
         {
             state.RequireForUpdate<PlayerInputSingleton>();
             state.RequireForUpdate<MapSettingsSingleton>();
-            state.RequireForUpdate<FloorCoordsSingleton>();
+            state.RequireForUpdate<FloorsSingleton>();
 
             state.EntityManager.AddComponent<SelectedFloorSingleton>(state.SystemHandle);
         }
@@ -35,9 +35,9 @@ namespace Server.Gameplay
                 var mapSettings = SystemAPI.GetSingleton<MapSettingsSingleton>();
                 if (GameGrid.Raycast(ray: playerInput.PointerRay, mapOrigin: mapSettings.Origin, mapSize: mapSettings.Size, out uint2 coord))
                 {
-                    var floorCoords = SystemAPI.GetSingleton<FloorCoordsSingleton>();
-                    floorCoords.Dependency.AsReadOnly().Value.Complete();
-                    if (floorCoords.Lookup.TryGetValue(coord, out Entity entity))
+                    var floors = SystemAPI.GetSingleton<FloorsSingleton>();
+                    floors.Dependency.AsReadOnly().Value.Complete();
+                    if (floors.Lookup.TryGetValue(coord, out Entity entity))
                     {
                         SystemAPI.SetSingleton(new SelectedFloorSingleton{
                             Selected = entity

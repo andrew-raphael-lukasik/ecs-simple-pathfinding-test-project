@@ -21,7 +21,7 @@ namespace Server.Gameplay
         {
             state.RequireForUpdate<PlayerInputSingleton>();
             state.RequireForUpdate<MapSettingsSingleton>();
-            state.RequireForUpdate<UnitCoordsSingleton>();
+            state.RequireForUpdate<UnitsSingleton>();
 
             state.EntityManager.AddComponent<SelectedUnitSingleton>(state.SystemHandle);
         }
@@ -36,9 +36,9 @@ namespace Server.Gameplay
 
                 if (GameGrid.Raycast(ray: playerInput.PointerRay, mapOrigin: mapSettings.Origin, mapSize: mapSettings.Size, out uint2 coord))
                 {
-                    var unitCoords = SystemAPI.GetSingleton<UnitCoordsSingleton>();
-                    unitCoords.Dependency.AsReadOnly().Value.Complete();
-                    if (unitCoords.Lookup.TryGetValue(coord, out Entity entity))
+                    var units = SystemAPI.GetSingleton<UnitsSingleton>();
+                    units.Dependency.AsReadOnly().Value.Complete();
+                    if (units.Lookup.TryGetValue(coord, out Entity entity))
                     {
                         SystemAPI.SetSingleton(new SelectedUnitSingleton{
                             Selected = entity
