@@ -8,10 +8,18 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 27817912423541555, guid: 7106ca9426f7fdf069e8a05238947276, type: 3}
+      propertyPath: m_Layer
+      value: 5
+      objectReference: {fileID: 0}
     - target: {fileID: 321177567922598384, guid: 7106ca9426f7fdf069e8a05238947276, type: 3}
       propertyPath: 'm_Materials.Array.data[0]'
       value: 
       objectReference: {fileID: 2100000, guid: 8a9cda77c4868db1b8e89f333fb2b8bd, type: 2}
+    - target: {fileID: 722753020425219393, guid: 7106ca9426f7fdf069e8a05238947276, type: 3}
+      propertyPath: m_RenderingLayerMask
+      value: 128
+      objectReference: {fileID: 0}
     - target: {fileID: 722753020425219393, guid: 7106ca9426f7fdf069e8a05238947276, type: 3}
       propertyPath: m_Materials.Array.size
       value: 3
@@ -43,6 +51,10 @@ PrefabInstance:
     - target: {fileID: 1851647400118133837, guid: 7106ca9426f7fdf069e8a05238947276, type: 3}
       propertyPath: m_Name
       value: enemy-unit
+      objectReference: {fileID: 0}
+    - target: {fileID: 1851647400118133837, guid: 7106ca9426f7fdf069e8a05238947276, type: 3}
+      propertyPath: m_Layer
+      value: 5
       objectReference: {fileID: 0}
     - target: {fileID: 2060779835573152658, guid: 7106ca9426f7fdf069e8a05238947276, type: 3}
       propertyPath: m_LocalPosition.x
@@ -94,11 +106,11 @@ PrefabInstance:
       objectReference: {fileID: 2100000, guid: 8a9cda77c4868db1b8e89f333fb2b8bd, type: 2}
     - target: {fileID: 2919930127199312907, guid: 7106ca9426f7fdf069e8a05238947276, type: 3}
       propertyPath: m_Layer
-      value: 0
+      value: 5
       objectReference: {fileID: 0}
     - target: {fileID: 7501064737555037636, guid: 7106ca9426f7fdf069e8a05238947276, type: 3}
       propertyPath: m_Layer
-      value: 0
+      value: 5
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
