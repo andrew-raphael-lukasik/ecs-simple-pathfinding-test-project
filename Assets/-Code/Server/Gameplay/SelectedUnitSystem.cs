@@ -34,16 +34,8 @@ namespace Server.Gameplay
             {
                 var mapSettings = SystemAPI.GetSingleton<MapSettingsSingleton>();
 
-                var plane = new Plane(Vector3.up, Vector3.zero);
-                var ray = playerInput.PointerRay;
-                if (plane.Raycast(ray, out float dist))
+                if (GameGrid.Raycast(ray: playerInput.PointerRay, mapOrigin: mapSettings.Origin, mapSize: mapSettings.Size, out uint2 coord))
                 {
-                    float3 hit = ray.origin + ray.direction * dist;
-                    float3 localPos = hit - mapSettings.Origin;
-
-                    uint2 coord = (uint2)(new float2(localPos.x, localPos.z) / new float2(MapSettingsSingleton.CellSize, MapSettingsSingleton.CellSize));
-                    coord = math.min(coord, mapSettings.Size-1);// clamp to map size
-
                     var unitCoords = SystemAPI.GetSingleton<UnitCoordsSingleton>();
                     unitCoords.Dependency.AsReadOnly().Value.Complete();
                     if (unitCoords.Lookup.TryGetValue(coord, out Entity entity))
