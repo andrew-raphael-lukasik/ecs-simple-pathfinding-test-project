@@ -3,20 +3,21 @@
 // #endregion
 // namespace UnityEngine.UIElements.Experimental;
 
+using System.Runtime.CompilerServices;
 using Unity.Mathematics;
 
 public static class Easing
 {
 
-    public static float Step(float t) => (!(t < 0.5f)) ? 1 : 0;
-    public static float Linear(float t) => t;
-    public static float InSine(float t) => math.sin(math.PIHALF * (t - 1f)) + 1f;
-    public static float OutSine(float t) => math.sin(t * math.PIHALF);
-    public static float InOutSine(float t) => (math.sin(math.PI * (t - 0.5f)) + 1f) * 0.5f;
-    public static float InQuad(float t) => t * t;
-    public static float OutQuad(float t) => t * (2f - t);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static float Step(float t) => (!(t < 0.5f)) ? 1 : 0;
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static float Linear(float t) => t;
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static float InSine(float t) => math.sin(math.PIHALF * (t - 1f)) + 1f;
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static float OutSine(float t) => math.sin(t * math.PIHALF);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static float InOutSine(float t) => (math.sin(math.PI * (t - 0.5f)) + 1f) * 0.5f;
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static float InQuad(float t) => t * t;
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static float OutQuad(float t) => t * (2f - t);
 
-    public static float InOutQuad(float t)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static float InOutQuad(float t)
     {
         t *= 2f;
         if (t < 1f)
@@ -25,18 +26,18 @@ public static class Easing
         return -0.5f * ((t - 1f) * (t - 3f) - 1f);
     }
 
-    public static float InCubic(float t) => InPower(t, 3);
-    public static float OutCubic(float t) => OutPower(t, 3);
-    public static float InOutCubic(float t) => InOutPower(t, 3);
-    public static float InPower(float t, int power) => math.pow(t, power);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static float InCubic(float t) => InPower(t, 3);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static float OutCubic(float t) => OutPower(t, 3);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static float InOutCubic(float t) => InOutPower(t, 3);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static float InPower(float t, int power) => math.pow(t, power);
 
-    public static float OutPower(float t, int power)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static float OutPower(float t, int power)
     {
         int num = ((power % 2 != 0) ? 1 : (-1));
         return (float)num * (math.pow(t - 1f, power) + (float)num);
     }
 
-    public static float InOutPower(float t, int power)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static float InOutPower(float t, int power)
     {
         t *= 2f;
         if (t < 1f)
@@ -46,9 +47,9 @@ public static class Easing
         return (float)num * 0.5f * (math.pow(t - 2f, power) + (float)(num * 2));
     }
 
-    public static float InBounce(float t) => 1f - OutBounce(1f - t);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static float InBounce(float t) => 1f - OutBounce(1f - t);
 
-    public static float OutBounce(float t)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static float OutBounce(float t)
     {
         if (t < 0.36363637f)
             return 7.5625f * t * t;
@@ -69,7 +70,7 @@ public static class Easing
         return 7.5625f * num3 * t + 63f / 64f;
     }
 
-    public static float InOutBounce(float t)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static float InOutBounce(float t)
     {
         if (t < 0.5f)
             return InBounce(t * 2f) * 0.5f;
@@ -77,7 +78,7 @@ public static class Easing
         return OutBounce((t - 0.5f) * 2f) * 0.5f + 0.5f;
     }
 
-    public static float InElastic(float t)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static float InElastic(float t)
     {
         if (t == 0f)
             return 0f;
@@ -91,7 +92,7 @@ public static class Easing
         return 0f - num3 * math.sin((t - num2) * (math.PI * 2f) / num);
     }
 
-    public static float OutElastic(float t)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static float OutElastic(float t)
     {
         if (t == 0f)
             return 0f;
@@ -104,7 +105,7 @@ public static class Easing
         return math.pow(2f, -10f * t) * math.sin((t - num2) * (math.PI * 2f) / num) + 1f;
     }
 
-    public static float InOutElastic(float t)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static float InOutElastic(float t)
     {
         if (t < 0.5f)
             return InElastic(t * 2f) * 0.5f;
@@ -112,15 +113,15 @@ public static class Easing
         return OutElastic((t - 0.5f) * 2f) * 0.5f + 0.5f;
     }
 
-    public static float InBack(float t)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static float InBack(float t)
     {
         float num = 1.70158f;
         return t * t * ((num + 1f) * t - num);
     }
 
-    public static float OutBack(float t) => 1f - InBack(1f - t);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static float OutBack(float t) => 1f - InBack(1f - t);
 
-    public static float InOutBack(float t)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static float InOutBack(float t)
     {
         if (t < 0.5f)
             return InBack(t * 2f) * 0.5f;
@@ -128,10 +129,10 @@ public static class Easing
         return OutBack((t - 0.5f) * 2f) * 0.5f + 0.5f;
     }
 
-    public static float InBack(float t, float s) => t * t * ((s + 1f) * t - s);
-    public static float OutBack(float t, float s) => 1f - InBack(1f - t, s);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static float InBack(float t, float s) => t * t * ((s + 1f) * t - s);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static float OutBack(float t, float s) => 1f - InBack(1f - t, s);
 
-    public static float InOutBack(float t, float s)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static float InOutBack(float t, float s)
     {
         if (t < 0.5f)
             return InBack(t * 2f, s) * 0.5f;
@@ -139,15 +140,15 @@ public static class Easing
         return OutBack((t - 0.5f) * 2f, s) * 0.5f + 0.5f;
     }
 
-    public static float InCirc(float t) => 0f - (math.sqrt(1f - t * t) - 1f);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static float InCirc(float t) => 0f - (math.sqrt(1f - t * t) - 1f);
 
-    public static float OutCirc(float t)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static float OutCirc(float t)
     {
         t -= 1f;
         return math.sqrt(1f - t * t);
     }
 
-    public static float InOutCirc(float t)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)] public static float InOutCirc(float t)
     {
         t *= 2f;
         if (t < 1f)

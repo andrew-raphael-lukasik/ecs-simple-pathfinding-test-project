@@ -53,7 +53,9 @@ namespace Client.Presentation
                     rot: quaternion.identity
                 );
 
+                #if UNITY_EDITOR
                 Debug.DrawRay(aabb.Center, Vector3.up, Color.cyan);
+                #endif
             }
             {
                 var unit = SystemAPI.GetSingleton<SelectedUnitSingleton>();
@@ -68,7 +70,9 @@ namespace Client.Presentation
                     rot: quaternion.identity
                 );
 
+                #if UNITY_EDITOR
                 Debug.DrawRay(aabb.Center, Vector3.up, Color.cyan);
+                #endif
             }
 
             Segments.Core.SetSegmentChanged(_segments, state.EntityManager);
