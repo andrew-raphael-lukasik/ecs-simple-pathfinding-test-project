@@ -87,13 +87,13 @@ namespace Server.Simulation
                 float3 newPosition = ltw.Position;
                 float3 localPos = newPosition - MapOrigin;
 
-                uint2 mewCoord = (uint2)(new float2(localPos.x, localPos.z) / new float2(MapSettingsSingleton.CellSize, MapSettingsSingleton.CellSize));
-                mewCoord = math.min(mewCoord, MapSize-1);// clamp to map size
+                uint2 newCoord = (uint2)(new float2(localPos.x, localPos.z) / new float2(MapSettingsSingleton.CellSize, MapSettingsSingleton.CellSize));
+                newCoord = math.min(newCoord, MapSize-1);// clamp to map size
 
-                if (math.any(coord.Value!=mewCoord))// has coord changed
+                if (math.any(coord.Value!=newCoord))// has coord changed
                 {
                     Lookup.Remove(coord);
-                    coord = mewCoord;
+                    coord = newCoord;
                     Lookup.Add(coord, entity);
                 }
             }

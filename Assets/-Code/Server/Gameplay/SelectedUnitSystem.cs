@@ -45,7 +45,7 @@ namespace Server.Gameplay
                         });
 
                         if (entity!=Entity.Null)
-                            Debug.Log($"Floor ({entity.Index}:{entity.Version}) selected");
+                            Debug.Log($"Unit ({entity.Index}:{entity.Version}) selected");
                         else
                             Debug.Log("Unit unselected");
                     }

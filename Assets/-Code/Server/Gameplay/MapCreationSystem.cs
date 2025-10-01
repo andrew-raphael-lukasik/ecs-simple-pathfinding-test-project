@@ -53,7 +53,7 @@ namespace Server.Gameplay
                 {
                     var mapData = SystemAPI.GetComponent<GeneratedMapData>(mapDataEntity);
                     
-                    new DeallocateNativeArrayJob<EFloorType>(mapData.CellArray)
+                    new DeallocateNativeArrayJob<EFloorType>(mapData.FloorArray)
                         .Schedule(state.Dependency);
                     new DeallocateNativeArrayJob<float3>(mapData.PositionArray)
                         .Schedule(state.Dependency);
@@ -67,23 +67,23 @@ namespace Server.Gameplay
                 int numMapCells = (int)(mapSettings.Size.x * mapSettings.Size.y);
                 Entity mapDataEntity = state.EntityManager.CreateSingleton(new GeneratedMapData{
                     PositionArray = new (numMapCells, Allocator.Persistent),
-                    CellArray = new (numMapCells, Allocator.Persistent),
+                    FloorArray = new (numMapCells, Allocator.Persistent),
                 });
                 var mapData = SystemAPI.GetSingleton<GeneratedMapData>();
 
                 var prefabs = SystemAPI.GetSingleton<PrefabSystem.Prefabs>();
                 state.Dependency = JobHandle.CombineDependencies(state.Dependency, prefabs.Dependency);
 
-                if (!GetPrefabSafe("cell-traversable", prefabs.Lookup, state.EntityManager, out Entity prefabTraversable)) goto map_generation_canceled;
-                if (!GetPrefabSafe("cell-obstacle", prefabs.Lookup, state.EntityManager, out Entity prefabObstacle)) goto map_generation_canceled;
-                if (!GetPrefabSafe("cell-cover", prefabs.Lookup, state.EntityManager, out Entity prefabCover)) goto map_generation_canceled;
+                if (!GetPrefabSafe("floor-traversable", prefabs.Lookup, state.EntityManager, out Entity prefabTraversable)) goto map_generation_canceled;
+                if (!GetPrefabSafe("floor-obstacle", prefabs.Lookup, state.EntityManager, out Entity prefabObstacle)) goto map_generation_canceled;
+                if (!GetPrefabSafe("floor-cover", prefabs.Lookup, state.EntityManager, out Entity prefabCover)) goto map_generation_canceled;
                 if (!GetPrefabSafe("player-unit", prefabs.Lookup, state.EntityManager, out Entity prefabPlayer)) goto map_generation_canceled;
                 if (!GetPrefabSafe("enemy-unit", prefabs.Lookup, state.EntityManager, out Entity prefabEnemy)) goto map_generation_canceled;
 
                 state.Dependency = new GenerateMapDataJob{
                     MapSettings = mapSettings,
                     PositionArray = mapData.PositionArray,
-                    CellData = mapData.CellArray,
+                    FloorArray = mapData.FloorArray,
                 }.Schedule(state.Dependency);
 
                 state.Dependency = new InstantiateMapCellsJob{
@@ -93,7 +93,7 @@ namespace Server.Gameplay
                     PrefabCover = prefabCover,
                     PrefabObstacle = prefabObstacle,
                     PositionArray = mapData.PositionArray,
-                    CellArray = mapData.CellArray,
+                    FloorArray = mapData.FloorArray,
                 }.Schedule(state.Dependency);
 
                 state.Dependency = new InstantiateUnitsJob{
@@ -102,7 +102,7 @@ namespace Server.Gameplay
                     PrefabPlayer = prefabPlayer,
                     PrefabEnemy = prefabEnemy,
                     PositionArray = mapData.PositionArray,
-                    CellArray = mapData.CellArray,
+                    FloorArray = mapData.FloorArray,
                 }.Schedule(state.Dependency);
 
                 prefabs.Dependency = state.Dependency;
@@ -152,7 +152,7 @@ namespace Server.Gameplay
         {
             public MapSettingsSingleton MapSettings;
             [WriteOnly] public NativeArray<float3> PositionArray;
-            public NativeArray<EFloorType> CellData;
+            public NativeArray<EFloorType> FloorArray;
             void IJob.Execute()
             {
                 Assert.IsTrue(MapSettings.Size.x>0);
@@ -177,7 +177,7 @@ namespace Server.Gameplay
                 uint mapCellArea = size.x * size.y;
                 for (int i = 0; i < mapCellArea; i++)
                 {
-                    CellData[i] = EFloorType.Traversable;
+                    FloorArray[i] = EFloorType.Traversable;
                 }
 
                 {
@@ -188,9 +188,9 @@ namespace Server.Gameplay
                     for (; instances < dst && attempts<mapCellArea*2; attempts++)
                     {
                         int i = (int) rnd.NextUInt(0, mapCellArea);
-                        if (CellData[i]==EFloorType.Traversable)
+                        if (FloorArray[i]==EFloorType.Traversable)
                         {
-                            CellData[i] = EFloorType.Obstacle;
+                            FloorArray[i] = EFloorType.Obstacle;
                             instances++;
                         }
                     }
@@ -204,9 +204,9 @@ namespace Server.Gameplay
                     for (; instances < dst && attempts<mapCellArea*2; attempts++)
                     {
                         int i = (int) rnd.NextUInt(0, mapCellArea);
-                        if (CellData[i]==EFloorType.Traversable)
+                        if (FloorArray[i]==EFloorType.Traversable)
                         {
-                            CellData[i] = EFloorType.Cover;
+                            FloorArray[i] = EFloorType.Cover;
                             instances++;
                         }
                     }
@@ -221,7 +221,7 @@ namespace Server.Gameplay
             public EntityCommandBuffer ECB;
             public Entity PrefabTraversable, PrefabCover, PrefabObstacle;
             [ReadOnly] public NativeArray<float3> PositionArray;
-            [ReadOnly] public NativeArray<EFloorType> CellArray;
+            [ReadOnly] public NativeArray<EFloorType> FloorArray;
             void IJob.Execute()
             {
                 uint2 size = new uint2(MapSettings.Size.x, MapSettings.Size.y);
@@ -232,12 +232,12 @@ namespace Server.Gameplay
                     int i = GameGrid.ToIndex(x, y, MapSettings.Size);
 
                     Entity prefab;
-                    switch (CellArray[i])
+                    switch (FloorArray[i])
                     {
                         case EFloorType.Traversable: prefab = PrefabTraversable; break;
                         case EFloorType.Obstacle: prefab = PrefabObstacle; break;
                         case EFloorType.Cover: prefab = PrefabCover; break;
-                        default: throw new System.NotImplementedException($"implement: {CellArray[i]}");
+                        default: throw new System.NotImplementedException($"implement: {FloorArray[i]}");
                     }
 
                     Entity e = ECB.Instantiate(prefab);
@@ -265,7 +265,7 @@ namespace Server.Gameplay
             public EntityCommandBuffer ECB;
             public Entity PrefabPlayer, PrefabEnemy;
             [ReadOnly] public NativeArray<float3> PositionArray;
-            [ReadOnly] public NativeArray<EFloorType> CellArray;
+            [ReadOnly] public NativeArray<EFloorType> FloorArray;
             void IJob.Execute()
             {
                 Assert.IsTrue(MapSettings.Size.x>0);
@@ -286,7 +286,7 @@ namespace Server.Gameplay
                     {
                         uint2 coord = rnd.NextUInt2(0, size);
                         int i = GameGrid.ToIndex(coord, MapSettings.Size);
-                        if (CellArray[i]==EFloorType.Traversable)
+                        if (FloorArray[i]==EFloorType.Traversable)
                         {
                             Entity e = ECB.Instantiate(PrefabPlayer);
                             ECB.AddComponent(e, new UnitCoord{
@@ -315,7 +315,7 @@ namespace Server.Gameplay
                     {
                         uint2 coord = rnd.NextUInt2(0, size);
                         int i = GameGrid.ToIndex(coord, MapSettings.Size);
-                        if (CellArray[i]==EFloorType.Traversable)
+                        if (FloorArray[i]==EFloorType.Traversable)
                         {
                             Entity e = ECB.Instantiate(PrefabEnemy);
                             ECB.AddComponent(e, new UnitCoord{

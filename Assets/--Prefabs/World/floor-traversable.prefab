@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 4843566905211282415}
   - component: {fileID: 8644375411071584291}
   m_Layer: 0
-  m_Name: cell-traversable
+  m_Name: floor-traversable
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 4843566905211282415}
   - component: {fileID: 8644375411071584291}
   m_Layer: 0
-  m_Name: cell-obstacle
+  m_Name: floor-cover
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -40,7 +40,7 @@ MeshFilter:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7923538082853338066}
-  m_Mesh: {fileID: -530522622437472994, guid: 62da1d022f65a71f88e7ab63813ebd73, type: 3}
+  m_Mesh: {fileID: 3766872523510208827, guid: 62da1d022f65a71f88e7ab63813ebd73, type: 3}
 --- !u!23 &8644375411071584291
 MeshRenderer:
   m_ObjectHideFlags: 0
