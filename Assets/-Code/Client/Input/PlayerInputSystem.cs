@@ -29,11 +29,16 @@ namespace Client.Input
 
         protected override void OnUpdate()
         {
-            Vector2 point = _actions.UI.Point.ReadValue<Vector2>();
-            Vector2 move = _actions.Player.Move.ReadValue<Vector2>();
-            Vector2 look = _actions.Player.Look.ReadValue<Vector2>();
-            byte attack = _actions.Player.Attack.IsPressed() ? (byte) 1 : (byte) 0;
-            byte attackStart = _actions.Player.Attack.WasPressedThisFrame() ? (byte) 1 : (byte) 0;
+            var uiActions = _actions.UI;
+            var playerActions = _actions.Player;
+
+            Vector2 point = uiActions.Point.ReadValue<Vector2>();
+            Vector2 move = playerActions.Move.ReadValue<Vector2>();
+            Vector2 look = playerActions.Look.ReadValue<Vector2>();
+            byte select = playerActions.Select.IsPressed() ? (byte) 1 : (byte) 0;
+            byte selectStart = playerActions.Select.WasPressedThisFrame() ? (byte) 1 : (byte) 0;
+            byte execute = playerActions.Execute.IsPressed() ? (byte) 1 : (byte) 0;
+            byte executeStart = playerActions.Execute.WasPressedThisFrame() ? (byte) 1 : (byte) 0;
             Ray ray = default;
             {
                 var camera = Camera.main;
@@ -45,8 +50,10 @@ namespace Client.Input
                 PointerRay = ray,
                 Move = move,
                 Look = look,
-                Attack = attack,
-                AttackStart = attackStart,
+                Select = select,
+                SelectStart = selectStart,
+                Execute = execute,
+                ExecuteStart = executeStart,
             });
         }
     }

@@ -8,8 +8,10 @@ namespace ServerAndClient.Input
     {
         public float2 Move;
         public float2 Look;
-        public byte Attack;
-        public byte AttackStart;
+        public byte Select;
+        public byte SelectStart;
+        public byte Execute;
+        public byte ExecuteStart;
 
         public Ray PointerRay;
     }
