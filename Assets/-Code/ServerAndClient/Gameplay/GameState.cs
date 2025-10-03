@@ -17,9 +17,9 @@ namespace ServerAndClient.Gameplay
         /// <summary> Consumed by <seealso cref="GameStateSystem"/>. </summary>
         public struct ChangeRequest : IComponentData
         {
-            public EGameState State;
-
             public static FixedString64Bytes DebugName {get;} = nameof(ChangeRequest);
+
+            public EGameState State;
         }
 
 

@@ -23,7 +23,9 @@ namespace Server.Gameplay
             state.RequireForUpdate<MapSettingsSingleton>();
             state.RequireForUpdate<FloorsSingleton>();
 
-            state.EntityManager.AddComponent<SelectedFloorSingleton>(state.SystemHandle);
+            state.EntityManager.CreateSingleton(new SelectedFloorSingleton{
+                Selected = Entity.Null
+            });
         }
 
         [Unity.Burst.BurstCompile]
@@ -36,18 +38,24 @@ namespace Server.Gameplay
                 if (GameGrid.Raycast(ray: playerInput.PointerRay, mapOrigin: mapSettings.Origin, mapSize: mapSettings.Size, out uint2 coord))
                 {
                     var floors = SystemAPI.GetSingleton<FloorsSingleton>();
-                    floors.Dependency.AsReadOnly().Value.Complete();
                     if (floors.Lookup.TryGetValue(coord, out Entity entity))
                     {
+                        #if UNITY_EDITOR || DEBUG
+                        UnityEngine.Assertions.Assert.IsTrue(state.EntityManager.HasComponent<FloorCoord>(entity), $"Floor {entity} has no {FloorCoord.DebugName}");
+                        #endif
+
                         SystemAPI.SetSingleton(new SelectedFloorSingleton{
                             Selected = entity
                         });
 
-                        if (entity!=Entity.Null)
-                            Debug.Log($"Floor ({entity.Index}:{entity.Version}) selected");
-                        else
-                            Debug.Log("Floor unselected");
+                        #if UNITY_EDITOR || DEBUG
+                        if (entity!=Entity.Null) Debug.Log($"Floor ({entity.Index}:{entity.Version}) selected at {coord}");
+                        else Debug.Log($"Floor unselected at {coord}");
+                        #endif
                     }
+                    #if UNITY_EDITOR || DEBUG
+                    else Debug.Log($"No floor at {coord}");
+                    #endif
                 }
             }
         }

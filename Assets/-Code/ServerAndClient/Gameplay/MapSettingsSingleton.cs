@@ -17,7 +17,5 @@ namespace ServerAndClient.Gameplay
         public const uint Size_MAX = 256;
         public const uint NumPlayerUnits_MAX = 32;
         public const uint NumEnemyUnits_MAX = 32;
-
-        public static FixedString64Bytes DebugName {get;} = nameof(MapSettingsSingleton);
     }
 }

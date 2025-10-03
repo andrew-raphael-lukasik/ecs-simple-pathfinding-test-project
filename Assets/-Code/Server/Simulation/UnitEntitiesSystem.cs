@@ -1,3 +1,4 @@
+using UnityEngine;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
@@ -9,7 +10,7 @@ using ServerAndClient.Gameplay;
 
 namespace Server.Simulation
 {
-    [WorldSystemFilter(WorldSystemFilterFlags.Default | WorldSystemFilterFlags.ServerSimulation)]
+    [WorldSystemFilter(WorldSystemFilterFlags.Default | WorldSystemFilterFlags.ServerSimulation | WorldSystemFilterFlags.Editor)]
     [UpdateInGroup(typeof(GameInitializationSystemGroup), OrderFirst = true)]
     [RequireMatchingQueriesForUpdate]
     [Unity.Burst.BurstCompile]
@@ -17,111 +18,95 @@ namespace Server.Simulation
     {
         public static FixedString64Bytes DebugName {get;} = nameof(UnitEntitiesSystem);
 
-        byte _initialized;
-
         [Unity.Burst.BurstCompile]
         void ISystem.OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<MapSettingsSingleton>();
             state.RequireForUpdate<UnitCoord>();
 
-            state.EntityManager.AddComponent<UnitsSingleton>(state.SystemHandle);
-            SystemAPI.SetSingleton(new UnitsSingleton{
+            state.EntityManager.CreateSingleton(new UnitsSingleton{
                 Lookup = new (32*32, Allocator.Persistent),
-                Dependency = new (Allocator.Persistent),
             });
         }
 
         [Unity.Burst.BurstCompile]
         void ISystem.OnDestroy(ref SystemState state)
         {
-            if (SystemAPI.TryGetSingleton<UnitsSingleton>(out var singleton))
+            if (SystemAPI.TryGetSingletonRW<UnitsSingleton>(out var singleton))
             {
-                if (singleton.Dependency.IsCreated)
-                {
-                    singleton.Dependency.AsReadOnly().Value.Complete();
-                    singleton.Dependency.Dispose();
-                }
-                if (singleton.Lookup.IsCreated) singleton.Lookup.Dispose();
+                if (singleton.ValueRW.Lookup.IsCreated) singleton.ValueRW.Lookup.Dispose();
             }
         }
 
         [Unity.Burst.BurstCompile]
         void ISystem.OnUpdate(ref SystemState state)
         {
-            var singleton = SystemAPI.GetSingleton<UnitsSingleton>();
+            var units = SystemAPI.GetSingletonRW<UnitsSingleton>();
             var mapSettings = SystemAPI.GetSingleton<MapSettingsSingleton>();
 
-            if (_initialized==0)
-            {
-                state.Dependency = new InitializationJob{
-                    Lookup = singleton.Lookup,
-                }.Schedule(state.Dependency);
-                _initialized = 1;
-            }
-
             // update entities that moved:
-            state.Dependency = new EntityMovedJob{
+            state.Dependency = new UnitMovedJob{
                 MapSize = mapSettings.Size,
                 MapOrigin = mapSettings.Origin,
-                Lookup = singleton.Lookup,
+                Units = units.ValueRW.Lookup,
             }.Schedule(state.Dependency);
 
             // remove destroyed entities:
             var ecb = SystemAPI.GetSingleton<EndInitializationEntityCommandBufferSystem.Singleton>().CreateCommandBuffer(state.WorldUnmanaged);
-            state.Dependency = new RemoveDestroyedJob{
-                Lookup = singleton.Lookup,
+            state.Dependency = new RemoveDestroyedUnitJob{
+                Units = units.ValueRW.Lookup,
                 ECB = ecb,
             }.Schedule(state.Dependency);
 
-            // update public dependency:
-            singleton.Dependency.Value = state.Dependency;
-        }
-
-        [WithPresent(typeof(Simulate))]
-        [Unity.Burst.BurstCompile]
-        partial struct InitializationJob : IJobEntity
-        {
-            public NativeHashMap<uint2, Entity> Lookup;
-            public void Execute(in UnitCoord coord, in Entity entity)
-            {
-                Lookup.Add(coord, entity);
-            }
+            units.ValueRW.Dependency = state.Dependency;
         }
 
         [WithChangeFilter(typeof(LocalToWorld))]
         [Unity.Burst.BurstCompile]
-        partial struct EntityMovedJob : IJobEntity
+        partial struct UnitMovedJob : IJobEntity
         {
+            public static FixedString64Bytes DebugName {get;} = nameof(UnitMovedJob);
             public uint2 MapSize;
             public float3 MapOrigin;
-            public NativeHashMap<uint2, Entity> Lookup;
+            public NativeHashMap<uint2, Entity> Units;
             public void Execute(ref UnitCoord coord, in LocalToWorld ltw, in Entity entity)
             {
-                float3 newPosition = ltw.Position;
-                float3 localPos = newPosition - MapOrigin;
-
-                uint2 newCoord = (uint2)(new float2(localPos.x, localPos.z) / new float2(MapSettingsSingleton.CellSize, MapSettingsSingleton.CellSize));
-                newCoord = math.min(newCoord, MapSize-1);// clamp to map size
-
-                if (math.any(coord.Value!=newCoord))// has coord changed
+                uint2 newCoord = GameGrid.ToCoord(ltw.Position, MapOrigin, MapSize);
+                if (math.any(coord!=newCoord))// coord changed
                 {
-                    Lookup.Remove(coord);
-                    coord = newCoord;
-                    Lookup.Add(coord, entity);
+                    uint2 prevCoord = coord;
+                    coord.Value = newCoord;
+
+                    if (Units.TryGetValue(prevCoord, out Entity entityAtPrevCoord) && entityAtPrevCoord==entity)
+                    {
+                        Units.Remove(prevCoord);
+                    }
+
+                    if (Units.TryGetValue(newCoord, out Entity entityAtNewCoord))// potentially detaching a different entity
+                    {
+                        Units[newCoord] = entity;
+                    }
+                    else
+                    {
+                        Units.Add(newCoord, entity);
+                    }
+                }
+                else if (!Units.ContainsKey(coord))// adding detached entity
+                {
+                    Units.Add(coord, entity);
                 }
             }
         }
 
         [WithAbsent(typeof(Simulate))]
         [Unity.Burst.BurstCompile]
-        partial struct RemoveDestroyedJob : IJobEntity
+        partial struct RemoveDestroyedUnitJob : IJobEntity
         {
             public EntityCommandBuffer ECB;
-            public NativeHashMap<uint2, Entity> Lookup;
+            public NativeHashMap<uint2, Entity> Units;
             public void Execute(in UnitCoord coord, in Entity entity)
             {
-                Lookup.Remove(coord);
+                Units.Remove(coord);
                 ECB.RemoveComponent<UnitCoord>(entity);
             }
         }
@@ -130,7 +115,7 @@ namespace Server.Simulation
     public struct UnitsSingleton : IComponentData
     {
         public NativeHashMap<uint2, Entity> Lookup;
-        public NativeReference<JobHandle> Dependency;
+        public JobHandle Dependency;
     }
 
 }

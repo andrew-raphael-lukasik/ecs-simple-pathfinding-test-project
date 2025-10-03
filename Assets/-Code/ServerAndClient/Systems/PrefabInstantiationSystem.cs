@@ -15,27 +15,9 @@ namespace ServerAndClient
         [Unity.Burst.BurstCompile]
         void ISystem.OnCreate(ref SystemState state)
         {
-            state.EntityManager.AddComponent<Request>(state.SystemHandle);
-            state.EntityManager.AddComponent<RequestBufferMeta>(state.SystemHandle);
-            SystemAPI.SetComponent(state.SystemHandle, new RequestBufferMeta{
-                Dependency = new (Allocator.Persistent)
-            });
+            state.EntityManager.CreateSingletonBuffer<Request>();
             
             state.RequireForUpdate<PrefabSystem.Prefabs>();
-        }
-
-        [Unity.Burst.BurstCompile]
-        void ISystem.OnDestroy(ref SystemState state)
-        {
-            if (SystemAPI.HasComponent<RequestBufferMeta>(state.SystemHandle))
-            {
-                var singleton = SystemAPI.GetComponent<RequestBufferMeta>(state.SystemHandle);
-                if (singleton.Dependency.IsCreated)
-                {
-                    singleton.Dependency.AsReadOnly().Value.Complete();
-                    singleton.Dependency.Dispose();
-                }
-            }
         }
 
         [Unity.Burst.BurstCompile]
@@ -46,22 +28,17 @@ namespace ServerAndClient
             if (numRequests==0) return;
 
             var ecb = new EntityCommandBuffer(Allocator.TempJob);
-            var prefabs = SystemAPI.GetSingleton<PrefabSystem.Prefabs>();
-            state.Dependency = JobHandle.CombineDependencies(
-                state.Dependency,
-                prefabs.Dependency,
-                SystemAPI.GetComponent<RequestBufferMeta>(state.SystemHandle).Dependency.AsReadOnly().Value
-            );
+            var prefabs = SystemAPI.GetSingletonRW<PrefabSystem.Prefabs>();
 
             state.Dependency = new InstantiateJob{
-                DeltaTime       = SystemAPI.Time.DeltaTime,
-                Buffer          = buffer,
+                DeltaTime = SystemAPI.Time.DeltaTime,
+                Buffer = buffer,
                 CommandBufferPW = ecb.AsParallelWriter(),
-                Prefabs         = prefabs.Lookup,
+                Prefabs = prefabs.ValueRO.Lookup,
             }.Schedule(arrayLength: buffer.Length, innerloopBatchCount: 128, state.Dependency);
 
             state.Dependency = new RemoveFullfiledAndExpiredJob{
-                Buffer          = buffer,
+                Buffer = buffer,
             }.Schedule(state.Dependency);
 
             // var ecbss = SystemAPI.GetSingleton<EndInitializationECBSystem.Singleton>();
@@ -77,10 +54,6 @@ namespace ServerAndClient
         {
             public FixedString64Bytes Key;
             public float SecondsUntileExpired;
-        }
-        public struct RequestBufferMeta : IComponentData
-        {
-            public NativeReference<JobHandle> Dependency;
         }
 
         [Unity.Burst.BurstCompile]

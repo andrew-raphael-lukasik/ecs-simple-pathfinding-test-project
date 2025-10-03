@@ -19,6 +19,8 @@ namespace Server.Gameplay
     [Unity.Burst.BurstCompile]
     public partial struct MapCreationSystem : ISystem
     {
+        public static FixedString64Bytes DebugName {get;} = nameof(MapCreationSystem);
+
         Entity _segmentEntity;
         Segments.Segment _segment;
 
@@ -118,11 +120,11 @@ namespace Server.Gameplay
                 int _ = 0;
                 _segment.Buffer.Length = 12;
                 state.Dependency = new Segments.Plot.BoxJob(
-                    segments:   _segment.Buffer.AsArray(),
-                    index:      ref _,
-                    size:       new float3(size.x, 0, size.y),
-                    pos:        offset + new float3(size.x, 0, size.y)/2,
-                    rot:        quaternion.identity
+                    segments: _segment.Buffer.AsArray(),
+                    index: ref _,
+                    size: new float3(size.x, 0, size.y),
+                    pos: offset + new float3(size.x, 0, size.y)/2,
+                    rot: quaternion.identity
                 ).Schedule(state.Dependency);
 
                 _segment.Dependency.Value = JobHandle.CombineDependencies(_segment.Dependency.Value, state.Dependency);
@@ -159,15 +161,15 @@ namespace Server.Gameplay
                 Assert.IsTrue(MapSettings.Size.y>0);
                 Assert.IsTrue(MapSettings.Seed>0);
 
-                uint2 size = new uint2(MapSettings.Size.x, MapSettings.Size.y);
+                uint2 size = MapSettings.Size;
                 float3 origin = MapSettings.Origin;
                 Random rnd = new (math.max(MapSettings.Seed, 1));
                 float2 elevOrigin = rnd.NextFloat2();
 
-                for (int y = 0; y < size.y; y++)
-                for (int x = 0; x < size.x; x++)
+                for (uint y = 0; y < size.y; y++)
+                for (uint x = 0; x < size.x; x++)
                 {
-                    int i = GameGrid.ToIndex(x, y, MapSettings.Size);
+                    int i = GameGrid.ToIndex(x, y, size);
 
                     float elevation = noise.srnoise(elevOrigin + new float2(x, y)*0.1f);
                     float3 pos = origin + new float3(x, elevation, y)*MapSettingsSingleton.CellSize + new float3(0.5f, 0, 0.5f)*MapSettingsSingleton.CellSize;
@@ -224,12 +226,13 @@ namespace Server.Gameplay
             [ReadOnly] public NativeArray<EFloorType> FloorArray;
             void IJob.Execute()
             {
-                uint2 size = new uint2(MapSettings.Size.x, MapSettings.Size.y);
+                uint2 size = MapSettings.Size;
 
-                for (int y = 0; y < size.y; y++)
-                for (int x = 0; x < size.x; x++)
+                for (uint y = 0; y < size.y; y++)
+                for (uint x = 0; x < size.x; x++)
                 {
-                    int i = GameGrid.ToIndex(x, y, MapSettings.Size);
+                    uint2 coord = new uint2(x, y);
+                    int i = GameGrid.ToIndex(coord, size);
 
                     Entity prefab;
                     switch (FloorArray[i])
@@ -242,7 +245,7 @@ namespace Server.Gameplay
 
                     Entity e = ECB.Instantiate(prefab);
                     ECB.AddComponent(e, new FloorCoord{
-                        Value = new uint2((uint) x, (uint) y)
+                        Value = coord
                     });
 
                     float azimuth = x * math.PIHALF + y * math.PIHALF;
@@ -285,7 +288,7 @@ namespace Server.Gameplay
                     for (; instances < dst && attempts<mapCellArea*2; attempts++)
                     {
                         uint2 coord = rnd.NextUInt2(0, size);
-                        int i = GameGrid.ToIndex(coord, MapSettings.Size);
+                        int i = GameGrid.ToIndex(coord, size);
                         if (FloorArray[i]==EFloorType.Traversable)
                         {
                             Entity e = ECB.Instantiate(PrefabPlayer);
@@ -314,7 +317,7 @@ namespace Server.Gameplay
                     for (; instances < dst && attempts<mapCellArea*2; attempts++)
                     {
                         uint2 coord = rnd.NextUInt2(0, size);
-                        int i = GameGrid.ToIndex(coord, MapSettings.Size);
+                        int i = GameGrid.ToIndex(coord, size);
                         if (FloorArray[i]==EFloorType.Traversable)
                         {
                             Entity e = ECB.Instantiate(PrefabEnemy);
@@ -335,7 +338,7 @@ namespace Server.Gameplay
                     }
                 }
 
-                Debug.Log($"units instantiated completed");
+                Debug.Log($"Units instantiated completed");
             }
         }
 
@@ -350,6 +353,5 @@ namespace Server.Gameplay
             }
         }
 
-        public static FixedString64Bytes DebugName {get;} = nameof(MapCreationSystem);
     }
 }

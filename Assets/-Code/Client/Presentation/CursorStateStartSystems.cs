@@ -31,7 +31,6 @@ namespace Client.Presentation
                 ecb.DestroyEntity(entity);
             }
 
-            SystemAPI.GetSingleton<PrefabInstantiationSystem.RequestBufferMeta>().Dependency.AsReadOnly().Value.Complete();
             var requests = SystemAPI.GetSingletonBuffer<PrefabInstantiationSystem.Request>();
             requests.Add(new PrefabInstantiationSystem.Request{
                 Key = "cursor-edit",
@@ -61,7 +60,6 @@ namespace Client.Presentation
                 ecb.DestroyEntity(entity);
             }
 
-            SystemAPI.GetSingleton<PrefabInstantiationSystem.RequestBufferMeta>().Dependency.AsReadOnly().Value.Complete();
             var requests = SystemAPI.GetSingletonBuffer<PrefabInstantiationSystem.Request>();
             requests.Add(new PrefabInstantiationSystem.Request{
                 Key = "cursor-play",

@@ -23,7 +23,9 @@ namespace Server.Gameplay
             state.RequireForUpdate<MapSettingsSingleton>();
             state.RequireForUpdate<UnitsSingleton>();
 
-            state.EntityManager.AddComponent<SelectedUnitSingleton>(state.SystemHandle);
+            state.EntityManager.CreateSingleton(new SelectedUnitSingleton{
+                Selected = Entity.Null
+            });
         }
 
         [Unity.Burst.BurstCompile]
@@ -37,18 +39,24 @@ namespace Server.Gameplay
                 if (GameGrid.Raycast(ray: playerInput.PointerRay, mapOrigin: mapSettings.Origin, mapSize: mapSettings.Size, out uint2 coord))
                 {
                     var units = SystemAPI.GetSingleton<UnitsSingleton>();
-                    units.Dependency.AsReadOnly().Value.Complete();
                     if (units.Lookup.TryGetValue(coord, out Entity entity))
                     {
+                        #if UNITY_EDITOR || DEBUG
+                        UnityEngine.Assertions.Assert.IsTrue(state.EntityManager.HasComponent<UnitCoord>(entity), $"Unit {entity} has no {UnitCoord.DebugName}");
+                        #endif
+
                         SystemAPI.SetSingleton(new SelectedUnitSingleton{
                             Selected = entity
                         });
 
-                        if (entity!=Entity.Null)
-                            Debug.Log($"Unit ({entity.Index}:{entity.Version}) selected");
-                        else
-                            Debug.Log("Unit unselected");
+                        #if UNITY_EDITOR || DEBUG
+                        if (entity!=Entity.Null) Debug.Log($"Unit ({entity.Index}:{entity.Version}) selected at {coord}");
+                        else Debug.Log($"Unit unselected at {coord}");
+                        #endif
                     }
+                    // #if UNITY_EDITOR || DEBUG
+                    // else Debug.Log($"No unit at {coord}");
+                    // #endif
                 }
             }
         }

@@ -1,3 +1,4 @@
+using UnityEngine;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
@@ -9,7 +10,7 @@ using ServerAndClient.Gameplay;
 
 namespace Server.Simulation
 {
-    [WorldSystemFilter(WorldSystemFilterFlags.Default | WorldSystemFilterFlags.ServerSimulation)]
+    [WorldSystemFilter(WorldSystemFilterFlags.Default | WorldSystemFilterFlags.ServerSimulation | WorldSystemFilterFlags.Editor)]
     [UpdateInGroup(typeof(GameInitializationSystemGroup), OrderFirst = true)]
     [RequireMatchingQueriesForUpdate]
     [Unity.Burst.BurstCompile]
@@ -17,98 +18,97 @@ namespace Server.Simulation
     {
         public static FixedString64Bytes DebugName {get;} = nameof(FloorEntitiesSystem);
 
-        byte _initialized;
-
         [Unity.Burst.BurstCompile]
         void ISystem.OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<MapSettingsSingleton>();
             state.RequireForUpdate<FloorCoord>();
 
-            state.EntityManager.AddComponent<FloorsSingleton>(state.SystemHandle);
-            SystemAPI.SetSingleton(new FloorsSingleton{
+            state.EntityManager.CreateSingleton(new FloorsSingleton{
                 Lookup = new (32*32, Allocator.Persistent),
-                Dependency = new (Allocator.Persistent),
             });
+        }
+
+        [Unity.Burst.BurstCompile]
+        void ISystem.OnDestroy(ref SystemState state)
+        {
+            if (SystemAPI.TryGetSingletonRW<FloorsSingleton>(out var singleton))
+            {
+                if (singleton.ValueRW.Lookup.IsCreated) singleton.ValueRW.Lookup.Dispose();
+            }
         }
 
         [Unity.Burst.BurstCompile]
         void ISystem.OnUpdate(ref SystemState state)
         {
-            var singleton = SystemAPI.GetSingleton<FloorsSingleton>();
+            var floors = SystemAPI.GetSingletonRW<FloorsSingleton>();
             var mapSettings = SystemAPI.GetSingleton<MapSettingsSingleton>();
 
-            if (_initialized==0)
-            {
-                state.Dependency = new InitializationJob{
-                    Lookup = singleton.Lookup,
-                }.Schedule(state.Dependency);
-                _initialized = 1;
-            }
-
             // update entities that moved:
-            state.Dependency = new EntityMovedJob{
+            state.Dependency = new FloorMovedJob{
                 MapSize = mapSettings.Size,
                 MapOrigin = mapSettings.Origin,
-                Lookup = singleton.Lookup,
+                Floors = floors.ValueRW.Lookup,
             }.Schedule(state.Dependency);
 
             // remove destroyed entities:
             var ecb = SystemAPI.GetSingleton<EndInitializationEntityCommandBufferSystem.Singleton>().CreateCommandBuffer(state.WorldUnmanaged);
-            state.Dependency = new RemoveDestroyedJob{
-                Lookup = singleton.Lookup,
+            state.Dependency = new RemoveDestroyedFloorJob{
+                Floors = floors.ValueRW.Lookup,
                 ECB = ecb,
             }.Schedule(state.Dependency);
 
-            // update public dependency:
-            singleton.Dependency.Value = state.Dependency;
-        }
-
-        [WithPresent(typeof(Simulate))]
-        [Unity.Burst.BurstCompile]
-        partial struct InitializationJob : IJobEntity
-        {
-            public NativeHashMap<uint2, Entity> Lookup;
-            public void Execute(in FloorCoord coord, in Entity entity)
-            {
-                Lookup.Add(coord, entity);
-            }
+            floors.ValueRW.Dependency = state.Dependency;
         }
 
         [WithChangeFilter(typeof(LocalToWorld))]
         [Unity.Burst.BurstCompile]
-        partial struct EntityMovedJob : IJobEntity
+        partial struct FloorMovedJob : IJobEntity
         {
+            public static FixedString64Bytes DebugName {get;} = nameof(FloorMovedJob);
             public uint2 MapSize;
             public float3 MapOrigin;
-            public NativeHashMap<uint2, Entity> Lookup;
+            public NativeHashMap<uint2, Entity> Floors;
             public void Execute(ref FloorCoord coord, in LocalToWorld ltw, in Entity entity)
             {
-                float3 newPosition = ltw.Position;
-                float3 localPos = newPosition - MapOrigin;
-
-                uint2 newCoord = (uint2)(new float2(localPos.x, localPos.z) / new float2(MapSettingsSingleton.CellSize, MapSettingsSingleton.CellSize));
-                newCoord = math.min(newCoord, MapSize-1);// clamp to map size
-
-                if (math.any(coord.Value!=newCoord))// has coord changed
+                uint2 newCoord = GameGrid.ToCoord(ltw.Position, MapOrigin, MapSize);
+                if (math.any(coord!=newCoord))// coord changed
                 {
-                    Lookup.Remove(coord);
-                    coord = newCoord;
-                    Lookup.Add(coord, entity);
+                    uint2 prevCoord = coord;
+                    coord.Value = newCoord;
+
+                    if (Floors.TryGetValue(prevCoord, out Entity entityAtPrevCoord) && entityAtPrevCoord==entity)
+                    {
+                        Floors.Remove(prevCoord);
+                    }
+
+                    if (Floors.TryGetValue(newCoord, out Entity entityAtNewCoord))// potentially detaching a different entity
+                    {
+                        Floors[newCoord] = entity;
+                    }
+                    else
+                    {
+                        Floors.Add(newCoord, entity);
+                    }
+                }
+                else if (!Floors.ContainsKey(coord))// adding detached entity
+                {
+                    Floors.Add(coord, entity);
                 }
             }
         }
 
         [WithAbsent(typeof(Simulate))]
         [Unity.Burst.BurstCompile]
-        partial struct RemoveDestroyedJob : IJobEntity
+        partial struct RemoveDestroyedFloorJob : IJobEntity
         {
             public EntityCommandBuffer ECB;
-            public NativeHashMap<uint2, Entity> Lookup;
+            public NativeHashMap<uint2, Entity> Floors;
             public void Execute(in FloorCoord coord, in Entity entity)
             {
-                Lookup.Remove(coord);
+                Floors.Remove(coord);
                 ECB.RemoveComponent<FloorCoord>(entity);
+                Debug.Log($"({entity.Index}:{entity.Version}) destroyed, removed at [{coord.Value.x}, {coord.Value.y}]");
             }
         }
     }
@@ -116,7 +116,7 @@ namespace Server.Simulation
     public struct FloorsSingleton : IComponentData
     {
         public NativeHashMap<uint2, Entity> Lookup;
-        public NativeReference<JobHandle> Dependency;
+        public JobHandle Dependency;
     }
 
 }
