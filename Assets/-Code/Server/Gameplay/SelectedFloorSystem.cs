@@ -37,8 +37,12 @@ namespace Server.Gameplay
                 var mapSettings = SystemAPI.GetSingleton<MapSettingsSingleton>();
                 if (GameGrid.Raycast(ray: playerInput.PointerRay, mapOrigin: mapSettings.Origin, mapSize: mapSettings.Size, out uint2 coord))
                 {
-                    var floors = SystemAPI.GetSingleton<FloorsSingleton>();
-                    if (floors.Lookup.TryGetValue(coord, out Entity entity))
+                    int index = GameGrid.ToIndex(coord, mapSettings.Size);
+                    var floorsRef = SystemAPI.GetSingletonRW<FloorsSingleton>();
+                    var floors = floorsRef.ValueRW.Lookup;
+
+                    Entity entity = floors[index];
+                    if (entity!=Entity.Null)
                     {
                         #if UNITY_EDITOR || DEBUG
                         UnityEngine.Assertions.Assert.IsTrue(state.EntityManager.HasComponent<FloorCoord>(entity), $"Floor {entity} has no {FloorCoord.DebugName}");
@@ -53,9 +57,15 @@ namespace Server.Gameplay
                         else Debug.Log($"Floor unselected at {coord}");
                         #endif
                     }
-                    #if UNITY_EDITOR || DEBUG
-                    else Debug.Log($"No floor at {coord}");
-                    #endif
+                    else
+                    {
+                        SystemAPI.SetSingleton(new SelectedUnitSingleton{
+                            Selected = Entity.Null
+                        });
+                        // #if UNITY_EDITOR || DEBUG
+                        // Debug.Log($"No floor at {coord}");
+                        // #endif
+                    }
                 }
             }
         }

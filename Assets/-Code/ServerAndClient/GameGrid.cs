@@ -28,6 +28,16 @@ namespace ServerAndClient
 
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static uint2 ToCoord (int i, uint2 mapSize)
+        {
+            uint x = (uint)(i%mapSize.x);
+            uint y = (uint)(i/mapSize.x);
+            uint2 coord = new uint2(x, y);
+            coord = math.min(coord, mapSize-1);// clamp to map size
+            return coord;
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static uint2 ToCoord (float3 point, float3 mapOrigin, uint2 mapSize)
         {
             float3 localPoint = point - mapOrigin;

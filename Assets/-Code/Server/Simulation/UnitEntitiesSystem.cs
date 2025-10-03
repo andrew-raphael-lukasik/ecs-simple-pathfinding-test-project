@@ -56,6 +56,7 @@ namespace Server.Simulation
             state.Dependency = new RemoveDestroyedUnitJob{
                 Units = units.ValueRW.Lookup,
                 ECB = ecb,
+                MapSize = mapSettings.Size,
             }.Schedule(state.Dependency);
 
             units.ValueRW.Dependency = state.Dependency;
@@ -68,32 +69,31 @@ namespace Server.Simulation
             public static FixedString64Bytes DebugName {get;} = nameof(UnitMovedJob);
             public uint2 MapSize;
             public float3 MapOrigin;
-            public NativeHashMap<uint2, Entity> Units;
+            public NativeArray<Entity> Units;
             public void Execute(ref UnitCoord coord, in LocalToWorld ltw, in Entity entity)
             {
                 uint2 newCoord = GameGrid.ToCoord(ltw.Position, MapOrigin, MapSize);
+                int newIndex = GameGrid.ToIndex(newCoord, MapSize);
+
                 if (math.any(coord!=newCoord))// coord changed
                 {
                     uint2 prevCoord = coord;
-                    coord.Value = newCoord;
+                    int prevIndex = GameGrid.ToIndex(prevCoord, MapSize);
+                    coord = newCoord;
 
-                    if (Units.TryGetValue(prevCoord, out Entity entityAtPrevCoord) && entityAtPrevCoord==entity)
-                    {
-                        Units.Remove(prevCoord);
-                    }
+                    if (Units[prevIndex]==entity)
+                        Units[prevIndex] = Entity.Null;
 
-                    if (Units.TryGetValue(newCoord, out Entity entityAtNewCoord))// potentially detaching a different entity
-                    {
-                        Units[newCoord] = entity;
-                    }
+                    if (Units[newIndex]!=Entity.Null)// potentially detaching a different entity
+                        Units[newIndex] = entity;
                     else
-                    {
-                        Units.Add(newCoord, entity);
-                    }
+                        Units[newIndex] = entity;
                 }
-                else if (!Units.ContainsKey(coord))// adding detached entity
+                else
                 {
-                    Units.Add(coord, entity);
+                    int index = GameGrid.ToIndex(coord, MapSize);
+                    if (Units[index]==Entity.Null)// adding detached entity
+                        Units[index] = entity;
                 }
             }
         }
@@ -103,12 +103,14 @@ namespace Server.Simulation
         partial struct RemoveDestroyedUnitJob : IJobEntity
         {
             public EntityCommandBuffer ECB;
-            public NativeHashMap<uint2, Entity> Units;
+            public NativeArray<Entity> Units;
+            public uint2 MapSize;
             public void Execute(in UnitCoord coord, in Entity entity)
             {
-                if (Units.TryGetValue(coord, out Entity entityAtCoordNow) && entityAtCoordNow==entity)
+                int index = GameGrid.ToIndex(coord, MapSize);
+                if (Units[index]==entity)
                 {
-                    Units.Remove(coord);
+                    Units[index] = Entity.Null;
                 }
                 ECB.RemoveComponent<UnitCoord>(entity);
             }
@@ -117,7 +119,7 @@ namespace Server.Simulation
 
     public struct UnitsSingleton : IComponentData
     {
-        public NativeHashMap<uint2, Entity> Lookup;
+        public NativeArray<Entity> Lookup;
         public JobHandle Dependency;
     }
 

@@ -4,14 +4,15 @@ using UnityEngine.UIElements;
 using Unity.Entities;
 using Unity.Mathematics;
 
+using ServerAndClient;
 using ServerAndClient.Gameplay;
 
 namespace EditorOnly.Debugging
 {
     public abstract class GridDebugger : EditorWindow
     {
-        protected abstract bool CreateItem(uint2 coord, out VisualElement item);
-        protected abstract bool Initialize(EntityManager em, out string errorMessage);
+        protected abstract bool CreateItem(int index, uint2 coord, out VisualElement item);
+        protected abstract bool Initialize(EntityManager em, MapSettingsSingleton mapSettings, out string errorMessage);
 
         public void CreateGUI()
         {
@@ -73,6 +74,8 @@ namespace EditorOnly.Debugging
                         }
                         for (uint x = 0; x < size.x; x++)
                         {
+                            int index = GameGrid.ToIndex(x, y, mapSettings.Size);
+
                             var cell = new VisualElement();
                             {
                                 var style = cell.style;
@@ -84,8 +87,10 @@ namespace EditorOnly.Debugging
                                 style.backgroundColor = new Color(((float)x/size.x)*0.25f, ((float)y/size.y)*0.25f, 0);
                             }
                             {
+                                cell.tooltip = $"Coord: [{x}, {y}]";
+
                                 uint2 coord = new uint2(x, y);
-                                if (CreateItem(coord, out var item))
+                                if (CreateItem(index, coord, out var item))
                                     cell.Add(item);
                             }
                             column.Add(cell);
@@ -130,7 +135,7 @@ namespace EditorOnly.Debugging
             }
             mapSettings = mapSettingsQuery.GetSingletonRW<MapSettingsSingleton>().ValueRO;
 
-            if (!Initialize(em, out errorMessage))
+            if (!Initialize(em, mapSettings, out errorMessage))
             {
                 return false;
             }

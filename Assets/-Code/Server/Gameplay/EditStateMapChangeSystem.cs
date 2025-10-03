@@ -43,12 +43,22 @@ namespace Server.Gameplay
                 var mapSettings = SystemAPI.GetSingleton<MapSettingsSingleton>();
                 if (GameGrid.Raycast(ray: playerInput.PointerRay, mapOrigin: mapSettings.Origin, mapSize: mapSettings.Size, out uint2 dstCoord))
                 {
+                    int dstIndex = GameGrid.ToIndex(dstCoord, mapSettings.Size);
                     var em = state.EntityManager;
                     var mapDataRef = SystemAPI.GetSingletonRW<GeneratedMapData>();
                     var floorsRef = SystemAPI.GetSingletonRW<FloorsSingleton>();
                     var unitsRef = SystemAPI.GetSingletonRW<UnitsSingleton>();
                     Entity srcFloor = SystemAPI.GetSingleton<SelectedFloorSingleton>().Selected;
                     Entity srcUnit = SystemAPI.GetSingleton<SelectedUnitSingleton>().Selected;
+
+                    if (!em.Exists(srcFloor))
+                    {
+                        #if UNITY_EDITOR || DEBUG
+                        Debug.Log($"{DebugName}: no src floor entity, swap won't happen");
+                        #endif
+
+                        return;
+                    }
 
                     JobHandle.CompleteAll(
                         ref mapDataRef.ValueRW.Dependency,
@@ -60,13 +70,14 @@ namespace Server.Gameplay
                     var units = unitsRef.ValueRO.Lookup;
 
                     #if UNITY_EDITOR || DEBUG
-                    Assert.IsTrue(em.Exists(srcFloor), $"{DebugName} can't execute swap action without a src floor entity - it is a source of srcCoord");
-                    Assert.IsTrue(floors.ContainsKey(dstCoord), $"{DebugName} can't execute swap action without a floors lookup having an entity at {dstCoord}");
+                    // Assert.IsTrue(em.Exists(srcFloor), $"{DebugName} can't execute swap action without a src floor entity - it is a source of srcCoord");
+                    Assert.IsTrue(floors[dstIndex]!=Entity.Null, $"{DebugName} can't execute swap action without a floors lookup having an entity at {dstCoord}");
                     #endif
 
                     uint2 srcCoord = em.GetComponentData<FloorCoord>(srcFloor);
+                    int srcIndex = GameGrid.ToIndex(srcCoord, mapSettings.Size);
                     if (math.all(srcCoord==dstCoord)) return;// ignore, src and dst are the same
-                    Entity dstFloor = floors[dstCoord];
+                    Entity dstFloor = floors[dstIndex];
 
                     #if UNITY_EDITOR || DEBUG
                     if (em.Exists(srcFloor)) Assert.IsTrue(em.HasComponent<FloorCoord>(srcFloor), $"Floor {srcFloor} has no {FloorCoord.DebugName}");
@@ -81,8 +92,6 @@ namespace Server.Gameplay
                         em.SetComponentData(srcFloor, dstLtw);
                         em.SetComponentData(dstFloor, srcLtw);
                         {
-                            int srcIndex = GameGrid.ToIndex(srcCoord, mapSettings.Size);
-                            int dstIndex = GameGrid.ToIndex(dstCoord, mapSettings.Size);
                             var floorTypesRW = mapDataRef.ValueRW.FloorArray;
                             EFloorType srcType = floorTypesRW[srcIndex];
                             floorTypesRW[srcIndex] = floorTypesRW[dstIndex];;
@@ -96,8 +105,10 @@ namespace Server.Gameplay
 
                     // swap units:
                     {
+                        Entity dstEntity = units[dstIndex];
+
                         bool srcEntityExists = em.Exists(srcUnit);
-                        bool dstEntityExists = units.TryGetValue(dstCoord, out Entity dstEntity);
+                        bool dstEntityExists = dstEntity!=Entity.Null;
 
                         if (srcEntityExists || dstEntityExists)
                         {

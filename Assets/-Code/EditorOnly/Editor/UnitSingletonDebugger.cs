@@ -5,6 +5,8 @@ using UnityEngine.UIElements;
 using Unity.Entities;
 using Unity.Mathematics;
 
+using ServerAndClient;
+using ServerAndClient.Gameplay;
 using Server.Simulation;
 
 namespace EditorOnly.Debugging
@@ -19,11 +21,13 @@ namespace EditorOnly.Debugging
             window.titleContent = new GUIContent("Unit Singleton Debugger");
         }
 
-        Dictionary<uint2, string> _lookup = new ();
+        Entity[] _entities;
+        System.Text.StringBuilder sb = new ();
 
-        protected override bool CreateItem(uint2 coord, out VisualElement ve)
+        protected override bool CreateItem(int index, uint2 coord, out VisualElement ve)
         {
-            if (_lookup.TryGetValue(coord, out string text))
+            Entity entity = _entities[index];
+            if (entity!=Entity.Null)
             {
                 var label = new Label();
                 {
@@ -35,8 +39,13 @@ namespace EditorOnly.Debugging
                     style.color = Color.cyan;
                 }
                 {
-                    label.text = text;
-                    label.tooltip = $"Entity {text}\nCoord: [{coord.x}, {coord.y}]";
+                    sb.Clear();
+                    sb.AppendFormat("({0}:{1})", entity.Index, entity.Version);
+                    label.text = sb.ToString();
+
+                    sb.Clear();
+                    sb.AppendFormat("Entity ({0}:{1})\nCoord: [{2}, {3}]", entity.Index, entity.Version, coord.x, coord.y);
+                    label.tooltip = sb.ToString();
                 }
                 ve = label;
                 return true;
@@ -46,7 +55,7 @@ namespace EditorOnly.Debugging
             return false;
         }
 
-        protected override bool Initialize(EntityManager em, out string errorMessage)
+        protected override bool Initialize(EntityManager em, MapSettingsSingleton mapSettings, out string errorMessage)
         {
             var singletonQuery = em.CreateEntityQuery(typeof(UnitsSingleton));
             if (singletonQuery.CalculateEntityCount()==0)
@@ -56,23 +65,16 @@ namespace EditorOnly.Debugging
             }
             var singletonRef = singletonQuery.GetSingletonRW<UnitsSingleton>();
             singletonRef.ValueRW.Dependency.Complete();
-            System.Text.StringBuilder sb = new ();
-            _lookup.Clear();
-            foreach (var kv in singletonRef.ValueRO.Lookup)
-            {
-                sb.Clear();
-                sb.AppendFormat($"({0}:{1})", kv.Value.Index, kv.Value.Version);
-                _lookup.Add(kv.Key, sb.ToString());
-            }
 
             var lookup = singletonRef.ValueRO.Lookup;
-            if (lookup.Count==0)
+            if (lookup.Length==0)
             {
                 errorMessage = $"{nameof(UnitsSingleton)} is empty";
                 return false;
             }
 
-            errorMessage = $"{nameof(UnitsSingleton)} has {lookup.Count} entries";
+            _entities = lookup.ToArray();
+            errorMessage = $"{nameof(UnitsSingleton)} has {lookup.Length} entries";
             return true;
         }
 

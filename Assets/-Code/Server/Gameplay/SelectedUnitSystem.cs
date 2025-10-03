@@ -38,8 +38,12 @@ namespace Server.Gameplay
 
                 if (GameGrid.Raycast(ray: playerInput.PointerRay, mapOrigin: mapSettings.Origin, mapSize: mapSettings.Size, out uint2 coord))
                 {
-                    var units = SystemAPI.GetSingleton<UnitsSingleton>();
-                    if (units.Lookup.TryGetValue(coord, out Entity entity))
+                    var unitsRef = SystemAPI.GetSingletonRW<UnitsSingleton>();
+                    var units = unitsRef.ValueRW.Lookup;
+
+                    int index = GameGrid.ToIndex(coord, mapSettings.Size);
+                    Entity entity = units[index];
+                    if (entity!=Entity.Null)
                     {
                         #if UNITY_EDITOR || DEBUG
                         UnityEngine.Assertions.Assert.IsTrue(state.EntityManager.HasComponent<UnitCoord>(entity), $"Unit {entity} has no {UnitCoord.DebugName}");
@@ -54,9 +58,15 @@ namespace Server.Gameplay
                         else Debug.Log($"Unit unselected at {coord}");
                         #endif
                     }
-                    // #if UNITY_EDITOR || DEBUG
-                    // else Debug.Log($"No unit at {coord}");
-                    // #endif
+                    else
+                    {
+                        SystemAPI.SetSingleton(new SelectedUnitSingleton{
+                            Selected = Entity.Null
+                        });
+                        // #if UNITY_EDITOR || DEBUG
+                        // Debug.Log($"No unit at {coord}");
+                        // #endif
+                    }
                 }
             }
         }

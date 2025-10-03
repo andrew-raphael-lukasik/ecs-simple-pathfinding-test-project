@@ -56,6 +56,7 @@ namespace Server.Simulation
             state.Dependency = new RemoveDestroyedFloorJob{
                 Floors = floors.ValueRW.Lookup,
                 ECB = ecb,
+                MapSize = mapSettings.Size,
             }.Schedule(state.Dependency);
 
             floors.ValueRW.Dependency = state.Dependency;
@@ -68,32 +69,31 @@ namespace Server.Simulation
             public static FixedString64Bytes DebugName {get;} = nameof(FloorMovedJob);
             public uint2 MapSize;
             public float3 MapOrigin;
-            public NativeHashMap<uint2, Entity> Floors;
+            public NativeArray<Entity> Floors;
             public void Execute(ref FloorCoord coord, in LocalToWorld ltw, in Entity entity)
             {
                 uint2 newCoord = GameGrid.ToCoord(ltw.Position, MapOrigin, MapSize);
+                int newIndex = GameGrid.ToIndex(newCoord, MapSize);
+
                 if (math.any(coord!=newCoord))// coord changed
                 {
                     uint2 prevCoord = coord;
-                    coord.Value = newCoord;
+                    int prevIndex = GameGrid.ToIndex(prevCoord, MapSize);
+                    coord = newCoord;
 
-                    if (Floors.TryGetValue(prevCoord, out Entity entityAtPrevCoord) && entityAtPrevCoord==entity)
-                    {
-                        Floors.Remove(prevCoord);
-                    }
+                    if (Floors[prevIndex]==entity)
+                        Floors[prevIndex] = Entity.Null;
 
-                    if (Floors.TryGetValue(newCoord, out Entity entityAtNewCoord))// potentially detaching a different entity
-                    {
-                        Floors[newCoord] = entity;
-                    }
+                    if (Floors[newIndex]!=Entity.Null)// potentially detaching a different entity
+                        Floors[newIndex] = entity;
                     else
-                    {
-                        Floors.Add(newCoord, entity);
-                    }
+                        Floors[newIndex] = entity;
                 }
-                else if (!Floors.ContainsKey(coord))// adding detached entity
+                else
                 {
-                    Floors.Add(coord, entity);
+                    int index = GameGrid.ToIndex(coord, MapSize);
+                    if (Floors[index]==Entity.Null)// adding detached entity
+                        Floors[index] = entity;
                 }
             }
         }
@@ -103,12 +103,14 @@ namespace Server.Simulation
         partial struct RemoveDestroyedFloorJob : IJobEntity
         {
             public EntityCommandBuffer ECB;
-            public NativeHashMap<uint2, Entity> Floors;
+            public NativeArray<Entity> Floors;
+            public uint2 MapSize;
             public void Execute(in FloorCoord coord, in Entity entity)
             {
-                if (Floors.TryGetValue(coord, out Entity entityAtCoordNow) && entityAtCoordNow==entity)
+                int index = GameGrid.ToIndex(coord, MapSize);
+                if (Floors[index]==entity)
                 {
-                    Floors.Remove(coord);
+                    Floors[index] = Entity.Null;
                 }
                 ECB.RemoveComponent<FloorCoord>(entity);
             }
@@ -117,7 +119,7 @@ namespace Server.Simulation
 
     public struct FloorsSingleton : IComponentData
     {
-        public NativeHashMap<uint2, Entity> Lookup;
+        public NativeArray<Entity> Lookup;
         public JobHandle Dependency;
     }
 
