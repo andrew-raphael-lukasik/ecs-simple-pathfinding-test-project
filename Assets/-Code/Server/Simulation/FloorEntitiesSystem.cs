@@ -106,9 +106,11 @@ namespace Server.Simulation
             public NativeHashMap<uint2, Entity> Floors;
             public void Execute(in FloorCoord coord, in Entity entity)
             {
-                Floors.Remove(coord);
+                if (Floors.TryGetValue(coord, out Entity entityAtCoordNow) && entityAtCoordNow==entity)
+                {
+                    Floors.Remove(coord);
+                }
                 ECB.RemoveComponent<FloorCoord>(entity);
-                Debug.Log($"({entity.Index}:{entity.Version}) destroyed, removed at [{coord.Value.x}, {coord.Value.y}]");
             }
         }
     }

@@ -106,7 +106,10 @@ namespace Server.Simulation
             public NativeHashMap<uint2, Entity> Units;
             public void Execute(in UnitCoord coord, in Entity entity)
             {
-                Units.Remove(coord);
+                if (Units.TryGetValue(coord, out Entity entityAtCoordNow) && entityAtCoordNow==entity)
+                {
+                    Units.Remove(coord);
+                }
                 ECB.RemoveComponent<UnitCoord>(entity);
             }
         }
