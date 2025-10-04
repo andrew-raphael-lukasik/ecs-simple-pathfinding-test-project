@@ -280,6 +280,7 @@ namespace Server.Gameplay
                 uint mapCellArea = size.x * size.y;
                 Random rnd = new (math.max(MapSettings.Seed, 1));
 
+                NativeHashSet<uint2> takenUnitCoords = new ((int)(MapSettings.NumPlayerUnits + MapSettings.NumEnemyUnits), Allocator.Temp);
                 // instantiate player units:
                 {
                     uint dst = MapSettings.NumPlayerUnits;
@@ -290,6 +291,7 @@ namespace Server.Gameplay
                         uint2 coord = rnd.NextUInt2(0, size);
                         int i = GameGrid.ToIndex(coord, size);
                         if (FloorArray[i]==EFloorType.Traversable)
+                        if (!takenUnitCoords.Contains(coord))
                         {
                             Entity e = ECB.Instantiate(PrefabPlayer);
                             ECB.AddComponent(e, new UnitCoord{
@@ -304,6 +306,7 @@ namespace Server.Gameplay
                                 Scale = 1,
                             });
 
+                            takenUnitCoords.Add(coord);
                             instances++;
                         }
                     }
@@ -319,6 +322,7 @@ namespace Server.Gameplay
                         uint2 coord = rnd.NextUInt2(0, size);
                         int i = GameGrid.ToIndex(coord, size);
                         if (FloorArray[i]==EFloorType.Traversable)
+                        if (!takenUnitCoords.Contains(coord))
                         {
                             Entity e = ECB.Instantiate(PrefabEnemy);
                             ECB.AddComponent(e, new UnitCoord{
@@ -333,6 +337,7 @@ namespace Server.Gameplay
                                 Scale = 1,
                             });
 
+                            takenUnitCoords.Add(coord);
                             instances++;
                         }
                     }
