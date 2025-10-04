@@ -51,7 +51,7 @@ namespace Server.Gameplay
                     Entity srcFloor = SystemAPI.GetSingleton<SelectedFloorSingleton>().Selected;
                     Entity srcUnit = SystemAPI.GetSingleton<SelectedUnitSingleton>().Selected;
 
-                    if (!em.Exists(srcFloor))
+                    if (!(srcFloor!=Entity.Null && em.Exists(srcFloor)))
                     {
                         #if UNITY_EDITOR || DEBUG
                         Debug.Log($"{DebugName}: no src floor entity, swap won't happen");
