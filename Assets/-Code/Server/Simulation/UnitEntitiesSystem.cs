@@ -84,10 +84,7 @@ namespace Server.Simulation
                     if (Units[prevIndex]==entity)
                         Units[prevIndex] = Entity.Null;
 
-                    if (Units[newIndex]!=Entity.Null)// potentially detaching a different entity
-                        Units[newIndex] = entity;
-                    else
-                        Units[newIndex] = entity;
+                    Units[newIndex] = entity;// potentially detaching a different entity
                 }
                 else
                 {
