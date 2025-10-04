@@ -23,12 +23,15 @@ namespace EditorOnly.Debugging
 
         Entity[] _entities;
         System.Text.StringBuilder sb = new ();
+        EntityManager _entityManager;
 
         protected override bool CreateItem(int index, uint2 coord, out VisualElement ve)
         {
             Entity entity = _entities[index];
             if (entity!=Entity.Null)
             {
+                bool entityExists = _entityManager.Exists(entity);
+
                 var label = new Label();
                 {
                     var style = label.style;
@@ -36,7 +39,7 @@ namespace EditorOnly.Debugging
                     style.unityTextAlign = TextAnchor.MiddleCenter;
                     style.overflow = Overflow.Hidden;
                     // style.unityTextAutoSize = new StyleTextAutoSize(new TextAutoSize(TextAutoSizeMode.BestFit, new Length(8), new Length(128)));
-                    style.color = Color.cyan;
+                    style.color = entityExists ? Color.cyan : Color.red;
                 }
                 {
                     sb.Clear();
@@ -44,7 +47,9 @@ namespace EditorOnly.Debugging
                     label.text = sb.ToString();
 
                     sb.Clear();
-                    sb.AppendFormat("Entity ({0}:{1})\nCoord: [{2}, {3}]", entity.Index, entity.Version, coord.x, coord.y);
+                    sb.AppendFormat("Entity ({0}:{1})", entity.Index, entity.Version);
+                    if (!entityExists) sb.Append(" (does not exist)");
+                    sb.AppendFormat("\nCoord: [{0}, {1}]", coord.x, coord.y);
                     label.tooltip = sb.ToString();
                 }
                 ve = label;
@@ -73,6 +78,7 @@ namespace EditorOnly.Debugging
                 return false;
             }
 
+            _entityManager = em;
             _entities = lookup.ToArray();
             errorMessage = $"{nameof(UnitsSingleton)} has {lookup.Length} entries";
             return true;
