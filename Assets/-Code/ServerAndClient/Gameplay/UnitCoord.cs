@@ -13,4 +13,7 @@ namespace ServerAndClient.Gameplay
         public static implicit operator uint2 (UnitCoord value) => value.Value;
         public static implicit operator UnitCoord  (uint2 value) => new UnitCoord{Value = value};
     }
+
+    public struct IsUnit : IComponentData, IEnableableComponent {}
+    public struct IsUnitCoordValid : IComponentData, IEnableableComponent {}
 }

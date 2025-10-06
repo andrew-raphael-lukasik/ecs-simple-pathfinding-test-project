@@ -21,26 +21,35 @@ namespace Server.Gameplay
     {
         public static FixedString64Bytes DebugName {get;} = nameof(MapCreationSystem);
 
-        Entity _segmentEntity;
-        Segments.Segment _segment;
-
-        // [Unity.Burst.BurstCompile]
+        [Unity.Burst.BurstCompile]
         void ISystem.OnCreate(ref SystemState state)
         {
-            Segments.Core.Create(out _segmentEntity);
-            _segment = Segments.Core.GetSegment(_segmentEntity, state.EntityManager);
-
             state.RequireForUpdate<PrefabSystem.Prefabs>();
+            state.RequireForUpdate<MapSettingsSingleton>();
             state.RequireForUpdate<GenerateMapEntitiesRequest>();
         }
 
         [Unity.Burst.BurstCompile]
         void ISystem.OnUpdate(ref SystemState state)
         {
+            var prefabsRef = SystemAPI.GetSingletonRW<PrefabSystem.Prefabs>();
+            prefabsRef.ValueRW.Dependency.Complete();
+            var lookupRO = prefabsRef.ValueRO.Lookup;
+            if (
+                    !GetPrefabSafe("floor-traversable", lookupRO, state.EntityManager, out Entity prefabTraversable)
+                ||  !GetPrefabSafe("floor-obstacle", lookupRO, state.EntityManager, out Entity prefabObstacle)
+                ||  !GetPrefabSafe("floor-cover", lookupRO, state.EntityManager, out Entity prefabCover)
+                ||  !GetPrefabSafe("player-unit", lookupRO, state.EntityManager, out Entity prefabPlayer)
+                ||  !GetPrefabSafe("enemy-unit", lookupRO, state.EntityManager, out Entity prefabEnemy)
+            )
+            {
+                return;
+            }
+
             Entity mapSettingsSingleton = SystemAPI.GetSingletonEntity<MapSettingsSingleton>();
-            Debug.Log($"{DebugName}: {GenerateMapEntitiesRequest.DebugName} {mapSettingsSingleton} found, creating a map...");
             var mapSettings = SystemAPI.GetComponent<MapSettingsSingleton>(mapSettingsSingleton);
             var ecb = SystemAPI.GetSingleton<EndInitializationEntityCommandBufferSystem.Singleton>().CreateCommandBuffer(state.WorldUnmanaged);
+            Debug.Log($"{DebugName}: {GenerateMapEntitiesRequest.DebugName} {mapSettingsSingleton} found, creating a map. Map size: {mapSettings.Size}");
 
             // destroy request:
             state.EntityManager.RemoveComponent<GenerateMapEntitiesRequest>(mapSettingsSingleton);
@@ -73,15 +82,6 @@ namespace Server.Gameplay
                 });
                 var mapData = SystemAPI.GetSingleton<GeneratedMapData>();
 
-                var prefabs = SystemAPI.GetSingleton<PrefabSystem.Prefabs>();
-                state.Dependency = JobHandle.CombineDependencies(state.Dependency, prefabs.Dependency);
-
-                if (!GetPrefabSafe("floor-traversable", prefabs.Lookup, state.EntityManager, out Entity prefabTraversable)) goto map_generation_canceled;
-                if (!GetPrefabSafe("floor-obstacle", prefabs.Lookup, state.EntityManager, out Entity prefabObstacle)) goto map_generation_canceled;
-                if (!GetPrefabSafe("floor-cover", prefabs.Lookup, state.EntityManager, out Entity prefabCover)) goto map_generation_canceled;
-                if (!GetPrefabSafe("player-unit", prefabs.Lookup, state.EntityManager, out Entity prefabPlayer)) goto map_generation_canceled;
-                if (!GetPrefabSafe("enemy-unit", prefabs.Lookup, state.EntityManager, out Entity prefabEnemy)) goto map_generation_canceled;
-
                 state.Dependency = new GenerateMapDataJob{
                     MapSettings = mapSettings,
                     PositionArray = mapData.PositionArray,
@@ -106,29 +106,6 @@ namespace Server.Gameplay
                     PositionArray = mapData.PositionArray,
                     FloorArray = mapData.FloorArray,
                 }.Schedule(state.Dependency);
-
-                prefabs.Dependency = state.Dependency;
-                SystemAPI.SetSingleton(prefabs);
-            }
-            map_generation_canceled:
-
-            // draw map boundaries
-            if (Application.isPlaying)// editor-only
-            {
-                uint2 size = mapSettings.Size;
-                float3 offset = mapSettings.Origin;
-                int _ = 0;
-                _segment.Buffer.Length = 12;
-                state.Dependency = new Segments.Plot.BoxJob(
-                    segments: _segment.Buffer.AsArray(),
-                    index: ref _,
-                    size: new float3(size.x, 0, size.y),
-                    pos: offset + new float3(size.x, 0, size.y)/2,
-                    rot: quaternion.identity
-                ).Schedule(state.Dependency);
-
-                _segment.Dependency.Value = JobHandle.CombineDependencies(_segment.Dependency.Value, state.Dependency);
-                Segments.Core.SetSegmentChanged(_segmentEntity, state.EntityManager);
             }
         }
 

@@ -89,14 +89,18 @@ namespace Server.Gameplay
 
                     // swap floors:
                     {
-                        em.SetComponentData(srcFloor, dstLtw);
-                        em.SetComponentData(dstFloor, srcLtw);
                         {
                             var floorTypesRW = mapDataRef.ValueRW.FloorArray;
                             EFloorType srcType = floorTypesRW[srcIndex];
                             floorTypesRW[srcIndex] = floorTypesRW[dstIndex];;
                             floorTypesRW[dstIndex] = srcType;
                         }
+
+                        em.SetComponentData(srcFloor, dstLtw);
+                        SystemAPI.SetComponentEnabled<IsFloorCoordValid>(srcFloor, false);
+
+                        em.SetComponentData(dstFloor, srcLtw);
+                        SystemAPI.SetComponentEnabled<IsFloorCoordValid>(dstFloor, false);
 
                         SystemAPI.SetSingleton(new SelectedFloorSingleton{
                             Selected = Entity.Null
@@ -105,15 +109,18 @@ namespace Server.Gameplay
 
                     // swap units:
                     {
-                        Entity dstEntity = units[dstIndex];
+                        Entity dstUnit = units[dstIndex];
 
-                        bool srcEntityExists = em.Exists(srcUnit);
-                        bool dstEntityExists = dstEntity!=Entity.Null;
-
-                        if (srcEntityExists || dstEntityExists)
+                        if (em.Exists(srcUnit))
                         {
-                            if (srcEntityExists) em.SetComponentData(srcUnit, dstLtw);
-                            if (dstEntityExists) em.SetComponentData(dstEntity, srcLtw);
+                            em.SetComponentData(srcUnit, dstLtw);
+                            SystemAPI.SetComponentEnabled<IsUnitCoordValid>(srcUnit, false);
+                        }
+
+                        if (em.Exists(dstUnit))
+                        {
+                            em.SetComponentData(dstUnit, srcLtw);
+                            SystemAPI.SetComponentEnabled<IsUnitCoordValid>(dstUnit, false);
                         }
 
                         SystemAPI.SetSingleton(new SelectedUnitSingleton{

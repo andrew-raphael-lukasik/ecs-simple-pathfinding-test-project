@@ -22,6 +22,7 @@ namespace EditorOnly.Debugging
         }
 
         Entity[] _entities;
+        Entity _selected;
         System.Text.StringBuilder sb = new ();
         EntityManager _entityManager;
 
@@ -40,6 +41,10 @@ namespace EditorOnly.Debugging
                     style.overflow = Overflow.Hidden;
                     // style.unityTextAutoSize = new StyleTextAutoSize(new TextAutoSize(TextAutoSizeMode.BestFit, new Length(8), new Length(128)));
                     style.color = entityExists ? Color.cyan : Color.red;
+                    if (entity==_selected)
+                    {
+                        style.backgroundColor = Color.blue;
+                    }
                 }
                 {
                     sb.Clear();
@@ -77,6 +82,11 @@ namespace EditorOnly.Debugging
                 errorMessage = $"{nameof(FloorsSingleton)} is empty";
                 return false;
             }
+
+            var selectedFloorQuery = em.CreateEntityQuery(typeof(SelectedFloorSingleton));
+            _selected = selectedFloorQuery.CalculateEntityCount()!=0
+                ? selectedFloorQuery.GetSingleton<SelectedFloorSingleton>().Selected
+                : Entity.Null;
 
             _entityManager = em;
             _entities = lookup.ToArray();

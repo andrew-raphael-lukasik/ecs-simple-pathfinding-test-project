@@ -13,4 +13,7 @@ namespace ServerAndClient.Gameplay
         public static implicit operator uint2 (FloorCoord value) => value.Value;
         public static implicit operator FloorCoord  (uint2 value) => new FloorCoord{Value = value};
     }
+
+    public struct IsFloor : IComponentData, IEnableableComponent {}
+    public struct IsFloorCoordValid : IComponentData, IEnableableComponent {}
 }

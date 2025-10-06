@@ -16,8 +16,6 @@ namespace Server.Simulation
     [Unity.Burst.BurstCompile]
     public partial struct UnitEntitiesSystem : ISystem
     {
-        public static FixedString64Bytes DebugName {get;} = nameof(UnitEntitiesSystem);
-
         [Unity.Burst.BurstCompile]
         void ISystem.OnCreate(ref SystemState state)
         {
@@ -41,67 +39,112 @@ namespace Server.Simulation
         [Unity.Burst.BurstCompile]
         void ISystem.OnUpdate(ref SystemState state)
         {
-            var units = SystemAPI.GetSingletonRW<UnitsSingleton>();
+            var unitsRef = SystemAPI.GetSingletonRW<UnitsSingleton>();
             var mapSettings = SystemAPI.GetSingleton<MapSettingsSingleton>();
-
-            // update entities that moved:
-            state.Dependency = new UnitMovedJob{
-                MapSize = mapSettings.Size,
-                MapOrigin = mapSettings.Origin,
-                Units = units.ValueRW.Lookup,
-            }.Schedule(state.Dependency);
-
-            // remove destroyed entities:
             var ecb = SystemAPI.GetSingleton<EndInitializationEntityCommandBufferSystem.Singleton>().CreateCommandBuffer(state.WorldUnmanaged);
-            state.Dependency = new RemoveDestroyedUnitJob{
-                Units = units.ValueRW.Lookup,
+
+            state.Dependency = JobHandle.CombineDependencies(state.Dependency, unitsRef.ValueRW.Dependency);
+
+            int requiredBufferLength = (int)(mapSettings.Size.x * mapSettings.Size.y);
+            if (unitsRef.ValueRO.Lookup.Length!=requiredBufferLength)
+            {
+                unitsRef.ValueRW.Dependency.Complete();
+                unitsRef.ValueRW.Lookup.Dispose();
+                unitsRef.ValueRW.Lookup = new NativeArray<Entity>(requiredBufferLength, Allocator.Persistent);
+
+                state.Dependency = new InvalidateAllUnitsJob{
+                    ECB = ecb,
+                }.Schedule(state.Dependency);
+            }
+
+            state.Dependency = new UnitEntityDestroyedJob{
                 ECB = ecb,
                 MapSize = mapSettings.Size,
+                Units = unitsRef.ValueRW.Lookup,
             }.Schedule(state.Dependency);
 
-            units.ValueRW.Dependency = state.Dependency;
+            state.Dependency = new AddValidityTagJob{
+                ECB = ecb,
+            }.Schedule(state.Dependency);
+
+            state.Dependency = new UnitInvalidCoordJob{
+                ECB = ecb,
+                MapSize = mapSettings.Size,
+                MapOrigin = mapSettings.Origin,
+                Units = unitsRef.ValueRW.Lookup,
+            }.Schedule(state.Dependency);
+
+            #if UNITY_EDITOR || DEBUG
+            state.Dependency = new AssertionsJob{
+                Units = unitsRef.ValueRO.Lookup,
+            }.Schedule(state.Dependency);
+            #endif
+
+            unitsRef.ValueRW.Dependency = state.Dependency;
         }
 
-        [WithChangeFilter(typeof(LocalToWorld))]
+        [WithPresent(typeof(UnitCoord), typeof(LocalToWorld))]
+        [WithAbsent(typeof(IsUnitCoordValid))]
         [Unity.Burst.BurstCompile]
-        partial struct UnitMovedJob : IJobEntity
+        partial struct AddValidityTagJob : IJobEntity
         {
-            public static FixedString64Bytes DebugName {get;} = nameof(UnitMovedJob);
+            public EntityCommandBuffer ECB;
+            public void Execute(in Entity entity)
+            {
+                ECB.AddComponent<IsUnitCoordValid>(entity);
+                ECB.SetComponentEnabled<IsUnitCoordValid>(entity, false);
+            }
+        }
+
+        [WithPresent(typeof(IsUnitCoordValid))]
+        [Unity.Burst.BurstCompile]
+        partial struct InvalidateAllUnitsJob : IJobEntity
+        {
+            public EntityCommandBuffer ECB;
+            public void Execute(in Entity entity)
+            {
+                ECB.SetComponentEnabled<IsUnitCoordValid>(entity, false);
+            }
+        }
+
+        [WithDisabled(typeof(IsUnitCoordValid))]
+        [Unity.Burst.BurstCompile]
+        partial struct UnitInvalidCoordJob : IJobEntity
+        {
+            public EntityCommandBuffer ECB;
             public uint2 MapSize;
             public float3 MapOrigin;
             public NativeArray<Entity> Units;
             public void Execute(ref UnitCoord coord, in LocalToWorld ltw, in Entity entity)
             {
+                UnityEngine.Assertions.Assert.IsTrue(Units.Length==MapSize.x*MapSize.y, $"These do not match: Units.Length is {Units.Length} while MapSize is {MapSize}");
+
+                uint2 prevCoord = coord;
+                int prevIndex = GameGrid.ToIndex(prevCoord, MapSize);
+                if (Units[prevIndex]==entity)
+                {
+                    Units[prevIndex] = Entity.Null;// detached self
+                }
+
                 uint2 newCoord = GameGrid.ToCoord(ltw.Position, MapOrigin, MapSize);
                 int newIndex = GameGrid.ToIndex(newCoord, MapSize);
-
-                if (math.any(coord!=newCoord))// coord changed
-                {
-                    uint2 prevCoord = coord;
-                    int prevIndex = GameGrid.ToIndex(prevCoord, MapSize);
-                    coord = newCoord;
-
-                    if (Units[prevIndex]==entity)
-                        Units[prevIndex] = Entity.Null;
-
-                    Units[newIndex] = entity;// potentially detaching a different entity
-                }
-                else
-                {
-                    int index = GameGrid.ToIndex(coord, MapSize);
-                    if (Units[index]==Entity.Null)// adding detached entity
-                        Units[index] = entity;
-                }
+                // if (Units[newIndex]!=Entity.Null && Units[newIndex]!=entity)
+                // {
+                //     Entity other = Units[newIndex];// detached other
+                // }
+                Units[newIndex] = entity;
+                coord = newCoord;
+                ECB.SetComponentEnabled<IsUnitCoordValid>(entity, true);
             }
         }
 
-        [WithAbsent(typeof(Simulate))]
+        [WithAbsent(typeof(LocalToWorld))]
         [Unity.Burst.BurstCompile]
-        partial struct RemoveDestroyedUnitJob : IJobEntity
+        partial struct UnitEntityDestroyedJob : IJobEntity
         {
             public EntityCommandBuffer ECB;
-            public NativeArray<Entity> Units;
             public uint2 MapSize;
+            public NativeArray<Entity> Units;
             public void Execute(in UnitCoord coord, in Entity entity)
             {
                 int index = GameGrid.ToIndex(coord, MapSize);
@@ -112,6 +155,21 @@ namespace Server.Simulation
                 ECB.RemoveComponent<UnitCoord>(entity);
             }
         }
+
+        #if UNITY_EDITOR || DEBUG
+        [WithPresent(typeof(UnitCoord), typeof(LocalToWorld))]
+        [WithAll(typeof(IsUnitCoordValid))]
+        [Unity.Burst.BurstCompile]
+        partial struct AssertionsJob : IJobEntity
+        {
+            public NativeArray<Entity> Units;
+            public void Execute(in Entity entity)
+            {
+                UnityEngine.Assertions.Assert.IsTrue(Units.Contains(entity), $"Unit {entity} is detached");
+            }
+        }
+        #endif
+
     }
 
     public struct UnitsSingleton : IComponentData
