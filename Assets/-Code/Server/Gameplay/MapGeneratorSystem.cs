@@ -17,9 +17,9 @@ namespace Server.Gameplay
     [UpdateInGroup(typeof(GameInitializationSystemGroup))]
     [RequireMatchingQueriesForUpdate]
     [Unity.Burst.BurstCompile]
-    public partial struct MapCreationSystem : ISystem
+    public partial struct MapGeneratorSystem : ISystem
     {
-        public static FixedString64Bytes DebugName {get;} = nameof(MapCreationSystem);
+        public static FixedString64Bytes DebugName {get;} = nameof(MapGeneratorSystem);
 
         [Unity.Burst.BurstCompile]
         void ISystem.OnCreate(ref SystemState state)

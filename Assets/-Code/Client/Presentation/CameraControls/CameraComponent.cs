@@ -3,12 +3,12 @@ using Unity.Entities;
 
 [assembly: RegisterUnityEngineComponentType(typeof(Camera))]
 
-namespace Client.CameraControls
+namespace Client.Presentation.CameraControls
 {
     [DisallowMultipleComponent]
     [RequireComponent(typeof(Camera))]
-    [AddComponentMenu("Game/Hybrid/Main Camera")]
-    public class MainCameraComponent : MonoBehaviour
+    [AddComponentMenu("Game/Hybrid/Camera")]
+    public class CameraComponent : MonoBehaviour
     {
         Entity _entity;
 

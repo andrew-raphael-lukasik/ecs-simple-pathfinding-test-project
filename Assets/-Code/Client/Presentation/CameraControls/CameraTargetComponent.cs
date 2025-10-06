@@ -3,7 +3,7 @@ using Unity.Entities;
 using Unity.Collections;
 using Unity.Jobs;
 
-namespace Client.CameraControls
+namespace Client.Presentation.CameraControls
 {
     [DisallowMultipleComponent]
     [AddComponentMenu("Game/Hybrid/Camera Target Transform")]

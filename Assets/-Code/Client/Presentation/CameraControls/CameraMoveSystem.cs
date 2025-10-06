@@ -10,7 +10,7 @@ using ServerAndClient.Input;
 using ServerAndClient.Gameplay;
 using ServerAndClient;
 
-namespace Client.CameraControls
+namespace Client.Presentation.CameraControls
 {
     [WorldSystemFilter(WorldSystemFilterFlags.Presentation)]
     [UpdateInGroup(typeof(GamePresentationSystemGroup))]
