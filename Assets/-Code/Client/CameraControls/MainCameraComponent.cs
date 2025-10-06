@@ -1,6 +1,8 @@
 using UnityEngine;
 using Unity.Entities;
 
+[assembly: RegisterUnityEngineComponentType(typeof(Camera))]
+
 namespace Client.CameraControls
 {
     [DisallowMultipleComponent]
@@ -15,10 +17,10 @@ namespace Client.CameraControls
             var world = World.DefaultGameObjectInjectionWorld;
             if (world!=null && world.IsCreated)
             {
-                var entityManager = world.EntityManager;
-                _entity = entityManager.CreateEntity();
-                entityManager.AddComponent<IsMainCamera>(_entity);
-                entityManager.AddComponentObject(_entity, GetComponent<Camera>());
+                var em = world.EntityManager;
+                _entity = em.CreateEntity();
+                em.AddComponent<IsMainCamera>(_entity);
+                em.AddComponentObject(_entity, GetComponent<Camera>());
             }
         }
 
@@ -27,8 +29,8 @@ namespace Client.CameraControls
             var world = World.DefaultGameObjectInjectionWorld;
             if (world!=null && world.IsCreated)
             {
-                var entityManager = world.EntityManager;
-                entityManager.DestroyEntity(_entity);
+                var em = world.EntityManager;
+                em.DestroyEntity(_entity);
             }
         }
     }
