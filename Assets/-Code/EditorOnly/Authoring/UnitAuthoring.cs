@@ -18,7 +18,7 @@ namespace EditorOnly.Authoring
         {
             public override void Bake(UnitAuthoring authoring)
             {
-                Entity entity = GetEntity(authoring, TransformUsageFlags.WorldSpace);
+                Entity entity = GetEntity(authoring, TransformUsageFlags.WorldSpace | TransformUsageFlags.Dynamic);
                 
                 AddComponent<IsUnit>(entity);
 
