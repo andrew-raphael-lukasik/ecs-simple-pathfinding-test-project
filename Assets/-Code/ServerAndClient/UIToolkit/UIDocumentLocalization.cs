@@ -29,6 +29,7 @@ using UnityEditor.UIElements;
 [HelpURL("https://gist.github.com/andrew-raphael-lukasik/72a4d3d14dd547a1d61ae9dc4c4513da")]
 [DisallowMultipleComponent]
 [RequireComponent(typeof(UIDocument))]
+[DefaultExecutionOrder(1000)]
 public class UIDocumentLocalization : MonoBehaviour
 {
 
@@ -36,7 +37,7 @@ public class UIDocumentLocalization : MonoBehaviour
     UIDocument _uiDocument;
 
     /// <summary> Executed after hierarchy is cloned fresh and localized. </summary>
-    public event System.Action<VisualElement> onCompleted = ( VisualElement root ) =>
+    public event System.Action<VisualElement> onCompleted =(VisualElement root) =>
     {
 #if DEBUG
         Debug.Log($"{nameof(UIDocumentLocalization)}: {nameof(UIDocument)} localized");
@@ -44,30 +45,30 @@ public class UIDocumentLocalization : MonoBehaviour
     };
 
 
-    void OnEnable ()
+    void OnEnable()
     {
-        if( _uiDocument == null )
+        if (_uiDocument==null)
             _uiDocument = GetComponent<UIDocument>();
         _table.TableChanged += OnTableChanged;
     }
 
-    void OnDisable ()
+    void OnDisable()
     {
         _table.TableChanged -= OnTableChanged;
     }
 
 
-    void OnTableChanged ( StringTable table )
+    void OnTableChanged(StringTable table)
     {
         _uiDocument.rootVisualElement.Clear();
         _uiDocument.visualTreeAsset.CloneTree(_uiDocument.rootVisualElement);
 
 #if DEBUG
-        Debug.Log($"{nameof(UIDocumentLocalization)}: {nameof(StringTable)} changed, {nameof(VisualTreeAsset)} has been cloned anew" , _uiDocument);
+        Debug.Log($"{nameof(UIDocumentLocalization)}: {nameof(StringTable)} changed, {nameof(VisualTreeAsset)} has been cloned anew", _uiDocument);
 #endif
 
         var op = _table.GetTableAsync();
-        if( op.IsDone )
+        if (op.IsDone)
         {
             OnTableLoaded(op);
         }
@@ -78,44 +79,44 @@ public class UIDocumentLocalization : MonoBehaviour
         }
     }
 
-    void OnTableLoaded ( AsyncOperationHandle<StringTable> op )
+    void OnTableLoaded(AsyncOperationHandle<StringTable> op)
     {
         StringTable table = op.Result;
-        LocalizeChildrenRecursively(_uiDocument.rootVisualElement , table);
+        LocalizeChildrenRecursively(_uiDocument.rootVisualElement, table);
         _uiDocument.rootVisualElement.MarkDirtyRepaint();
         onCompleted(_uiDocument.rootVisualElement);
     }
 
-    void LocalizeChildrenRecursively ( VisualElement element , StringTable table )
+    void LocalizeChildrenRecursively(VisualElement element, StringTable table)
     {
         VisualElement.Hierarchy elementHierarchy = element.hierarchy;
         int numChildren = elementHierarchy.childCount;
-        for( int i = 0 ; i < numChildren ; i++ )
+        for (int i = 0; i < numChildren; i++)
         {
             VisualElement child = elementHierarchy.ElementAt(i);
-            Localize(child , table);
+            Localize(child, table);
         }
-        for( int i = 0 ; i < numChildren ; i++ )
+        for (int i = 0; i < numChildren; i++)
         {
             VisualElement child = elementHierarchy.ElementAt(i);
             VisualElement.Hierarchy childHierarchy = child.hierarchy;
             int numGrandChildren = childHierarchy.childCount;
-            if( numGrandChildren != 0 )
-                LocalizeChildrenRecursively(child , table);
+            if (numGrandChildren!=0)
+                LocalizeChildrenRecursively(child, table);
         }
     }
 
-    void Localize ( VisualElement next , StringTable table )
+    void Localize(VisualElement next, StringTable table)
     {
-        if( typeof(TextElement).IsInstanceOfType(next) )
+        if (typeof(TextElement).IsInstanceOfType(next))
         {
             TextElement textElement = (TextElement)next;
             string key = textElement.text;
-            if( !string.IsNullOrEmpty(key) && key[0] == '#' )
+            if (!string.IsNullOrEmpty(key) && key[0]=='#')
             {
                 key = key.TrimStart('#');
                 StringTableEntry entry = table[key];
-                if( entry != null )
+                if (entry!=null)
                     textElement.text = entry.LocalizedValue;
                 else
                     Debug.LogWarning($"No {table.LocaleIdentifier.Code} translation for key: '{key}'");
@@ -127,23 +128,23 @@ public class UIDocumentLocalization : MonoBehaviour
     [CustomEditor(typeof(UIDocumentLocalization))]
     public class MyEditor : Editor
     {
-        public override VisualElement CreateInspectorGUI ()
+        public override VisualElement CreateInspectorGUI()
         {
-            var ROOT = new VisualElement();
+            var root = new VisualElement();
 
-            var LABEL = new Label($"- Remember -<br> Use <color=\"yellow\">{nameof(onCompleted)}</color> event instead of <color=\"yellow\">OnEnable()</color><br>to localize and bind this document correctly.");
+            var label = new Label($"- Remember -<br> Use <color=\"yellow\">{nameof(onCompleted)}</color> event instead of <color=\"yellow\">OnEnable()</color><br>to localize and bind this document correctly.");
             {
-                var style = LABEL.style;
+                var style = label.style;
                 style.minHeight = EditorGUIUtility.singleLineHeight * 3;
-                style.backgroundColor = new Color(1f , 0.121f , 0 , 0.2f);
+                style.backgroundColor = new Color(1f, 0.121f, 0, 0.2f);
                 style.borderBottomLeftRadius = style.borderBottomRightRadius = style.borderTopLeftRadius = style.borderTopRightRadius = 6;
                 style.unityTextAlign = TextAnchor.MiddleCenter;
             }
-            ROOT.Add(LABEL);
+            root.Add(label);
 
-            InspectorElement.FillDefaultInspector(ROOT , this.serializedObject , this);
+            InspectorElement.FillDefaultInspector(root, this.serializedObject, this);
 
-            return ROOT;
+            return root;
         }
     }
 #endif

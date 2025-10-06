@@ -32,7 +32,7 @@ namespace Server.Gameplay
         void ISystem.OnUpdate(ref SystemState state)
         {
             var playerInput = SystemAPI.GetSingleton<PlayerInputSingleton>();
-            if (playerInput.SelectStart==1)
+            if (playerInput.SelectStart==1 && playerInput.IsPointerOverUI==0)
             {
                 var mapSettings = SystemAPI.GetSingleton<MapSettingsSingleton>();
 

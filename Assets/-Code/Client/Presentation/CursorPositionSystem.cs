@@ -42,6 +42,8 @@ namespace Client.Presentation
             var playerInput = SystemAPI.GetSingleton<PlayerInputSingleton>();
             var ray = playerInput.PointerRay;
 
+            if (playerInput.IsPointerOverUI==1) return;
+
             if (SystemAPI.TryGetSingleton<GeneratedMapData>(out var mapData))
             {
                 var mapSettings = SystemAPI.GetSingleton<MapSettingsSingleton>();

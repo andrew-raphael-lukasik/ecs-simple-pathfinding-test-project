@@ -6,7 +6,7 @@ using Unity.Jobs;
 namespace Client.Presentation.CameraControls
 {
     [DisallowMultipleComponent]
-    [AddComponentMenu("Game/Hybrid/Camera Target Transform")]
+    [AddComponentMenu("Game/Camera/Camera Target Transform")]
     public class CameraTargetComponent : MonoBehaviour
     {
         Entity _entity;

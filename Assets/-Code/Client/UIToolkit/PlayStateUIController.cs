@@ -7,17 +7,9 @@ using ServerAndClient.Gameplay;
 
 namespace Client.UIToolkit
 {
-    [RequireComponent(typeof(UIDocumentLocalization))]
-    public class PlayStateUIController : MonoBehaviour
+    public class PlayStateUIController : BaseUIController
     {
-        [SerializeField] UIDocument _UIDocument;
-
-        void OnEnable()
-        {
-            GetComponent<UIDocumentLocalization>().onCompleted += Bind;
-        }
-
-        void Bind(VisualElement root)
+        protected override void Bind(VisualElement root)
         {
             root.For<Button>("enter-edit-mode-button", (button) => {
                 button.clicked += () => {

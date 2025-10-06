@@ -7,20 +7,24 @@ namespace Client.Presentation.CameraControls
 {
     [DisallowMultipleComponent]
     [RequireComponent(typeof(Camera))]
-    [AddComponentMenu("Game/Hybrid/Camera")]
-    public class CameraComponent : MonoBehaviour
+    [AddComponentMenu("Game/Camera/Main Camera")]
+    public class MainCameraComponent : MonoBehaviour
     {
+        public static Camera MainCamera;
         Entity _entity;
 
         void OnEnable()
         {
+            UnityEngine.Assertions.Assert.IsNull(MainCamera);
+            MainCamera = GetComponent<Camera>();
+
             var world = World.DefaultGameObjectInjectionWorld;
             if (world!=null && world.IsCreated)
             {
                 var em = world.EntityManager;
                 _entity = em.CreateEntity();
                 em.AddComponent<IsMainCamera>(_entity);
-                em.AddComponentObject(_entity, GetComponent<Camera>());
+                em.AddComponentObject(_entity, MainCamera);
             }
         }
 
@@ -32,6 +36,8 @@ namespace Client.Presentation.CameraControls
                 var em = world.EntityManager;
                 em.DestroyEntity(_entity);
             }
+
+            MainCamera = null;
         }
     }
 

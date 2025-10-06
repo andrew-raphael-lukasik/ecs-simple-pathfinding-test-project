@@ -38,7 +38,7 @@ namespace Server.Gameplay
             if (gameState.State!=EGameState.EDIT) return;// EDIT state only
 
             var playerInput = SystemAPI.GetSingleton<PlayerInputSingleton>();
-            if (playerInput.ExecuteStart==1)
+            if (playerInput.ExecuteStart==1 && playerInput.IsPointerOverUI==0)
             {
                 var mapSettings = SystemAPI.GetSingleton<MapSettingsSingleton>();
                 if (GameGrid.Raycast(ray: playerInput.PointerRay, mapOrigin: mapSettings.Origin, mapSize: mapSettings.Size, out uint2 dstCoord))

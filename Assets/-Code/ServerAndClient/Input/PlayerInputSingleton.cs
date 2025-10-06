@@ -14,5 +14,6 @@ namespace ServerAndClient.Input
         public byte ExecuteStart;
 
         public Ray PointerRay;
+        public byte IsPointerOverUI;
     }
 }

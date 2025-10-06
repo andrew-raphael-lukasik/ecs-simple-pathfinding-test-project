@@ -881,7 +881,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7bbd79c451839b577901d71282cc16d6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Client.Presentation.EditStateUIController
-  _UIDocument: {fileID: 868777113}
+  _document: {fileID: 868777113}
+  _localization: {fileID: 868777117}
 --- !u!114 &868777117
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1028,7 +1029,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ca4478e04d7966926aa5dfb62a80aedf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Client.Presentation.PlayStateUIController
-  _UIDocument: {fileID: 1021312466}
+  _document: {fileID: 1021312466}
+  _localization: {fileID: 1021312470}
 --- !u!114 &1021312470
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1449,7 +1451,7 @@ MonoBehaviour:
   m_ShadowLayerMask: 1
   m_ShadowRenderingLayers: 1
   m_LightCookieSize: {x: 111, y: 111}
-  m_LightCookieOffset: {x: 25.418785, y: 20.652761}
+  m_LightCookieOffset: {x: 4.159879, y: 3.3799014}
   m_SoftShadowQuality: 0
 --- !u!108 &2078836690
 Light:

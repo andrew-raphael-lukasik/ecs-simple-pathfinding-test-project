@@ -1,33 +1,67 @@
 using UnityEngine;
 using UnityEngine.UIElements;
+using UnityEngine.EventSystems;
 using Unity.Entities;
 using Unity.Mathematics;
+using Unity.Transforms;
 
 using ServerAndClient;
 using ServerAndClient.Gameplay;
+using Client.Presentation.CameraControls;
 
 namespace Client.UIToolkit
 {
-    [RequireComponent(typeof(UIDocumentLocalization))]
-    public class EditStateUIController : MonoBehaviour
+    public class EditStateUIController : BaseUIController
     {
-        [SerializeField] UIDocument _UIDocument;
         MapSettingsSingleton _mapSettings;
         Entity _mapSettingsEntity;
         EntityQuery _queryMapSettings;
+        EntityManager _em;
+        #region selected unit
+        EntityQuery _selectedUnitQuery;
+        VisualElement _selectedUnitUi;
+        #endregion
 
-        void OnEnable()
+        void Start()
         {
-            GetComponent<UIDocumentLocalization>().onCompleted += Bind;
+            var world = World.DefaultGameObjectInjectionWorld;
+            _em = world.EntityManager;
+            _selectedUnitQuery = _em.CreateEntityQuery(typeof(SelectedUnitSingleton));
+        } 
+
+        void Update()
+        {
+            if (_selectedUnitUi!=null)
+            #if UNITY_EDITOR
+            if (_selectedUnitUi.panel!=null)
+            #endif
+            {
+                var style = _selectedUnitUi.style;
+                if (
+                        _selectedUnitQuery.TryGetSingleton<SelectedUnitSingleton>(out var selectedUnitSingleton)
+                    &&  selectedUnitSingleton.Selected!=Entity.Null
+                    &&  _em.Exists(selectedUnitSingleton.Selected)
+                    &&  _em.HasComponent<LocalToWorld>(selectedUnitSingleton.Selected)
+                )
+                {
+                    var ltw = _em.GetComponentData<LocalToWorld>(selectedUnitSingleton.Selected);
+                    Vector2 guiPoint = RuntimePanelUtils.CameraTransformWorldToPanel(_selectedUnitUi.panel, ltw.Position, MainCameraComponent.MainCamera);
+                    style.left = guiPoint.x + 30;
+                    style.top = guiPoint.y;
+
+                    if (style.visibility==Visibility.Hidden) style.visibility = Visibility.Visible;
+                }
+                else if (style.visibility==Visibility.Visible) style.visibility = Visibility.Hidden;
+            }
         }
 
-        void Bind(VisualElement root)
+        protected override void Bind(VisualElement root)
         {
             var world = World.DefaultGameObjectInjectionWorld;
             if (world!=null && world.IsCreated)
             {
-                var em = world.EntityManager;
-                _queryMapSettings = em.CreateEntityQuery(ComponentType.ReadWrite<MapSettingsSingleton>());
+                _em = world.EntityManager;
+                _queryMapSettings = _em.CreateEntityQuery(ComponentType.ReadWrite<MapSettingsSingleton>());
                 _queryMapSettings.TryGetSingleton(out _mapSettings);
             }
 
@@ -81,20 +115,22 @@ namespace Client.UIToolkit
                     GenerateMapAnew();
                 });
             });
+
+            _selectedUnitUi = root.For<VisualElement>("selected-unit-view-root", (ve)=>{
+                ve.style.visibility = Visibility.Hidden;
+            });
         }
 
         void GenerateMapAnew ()
         {
-            var em = World.DefaultGameObjectInjectionWorld.EntityManager;
             _mapSettingsEntity = _queryMapSettings.GetSingletonEntity();
-            em.SetComponentData(_mapSettingsEntity, _mapSettings);
-            em.AddComponent<GenerateMapEntitiesRequest>(_mapSettingsEntity);
+            _em.SetComponentData(_mapSettingsEntity, _mapSettings);
+            _em.AddComponent<GenerateMapEntitiesRequest>(_mapSettingsEntity);
         }
 
         void StartGame ()
         {
-            var em = World.DefaultGameObjectInjectionWorld.EntityManager;
-            em.CreateSingleton(new GameState.ChangeRequest{
+            _em.CreateSingleton(new GameState.ChangeRequest{
                 State = EGameState.PLAY
             });
         }
