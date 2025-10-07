@@ -109,9 +109,37 @@ namespace Client.UIToolkit
                 });
             });
 
+            Label unitMoveRangeSliderLabel = root.Find<Label>("selected-unit-move-range-display");
+            SliderInt unitMoveRangeSlider = root.For<SliderInt>("selected-unit-move-range", (slider) => {
+                slider.RegisterValueChangedCallback((e) => {
+                    var selectedUnitSingleton = _selectedUnitQuery.GetSingleton<SelectedUnitSingleton>();
+                    UnityEngine.Assertions.Assert.IsTrue(_em.Exists(selectedUnitSingleton.Selected));
+
+                    _em.SetComponentData(selectedUnitSingleton.Selected, new UnitMoveData{
+                        MoveRange = (ushort) e.newValue
+                    });
+
+                    unitMoveRangeSliderLabel.text = e.newValue.ToString();
+                });
+            });
+
+            Label unitAttackRangeSliderLabel = root.Find<Label>("selected-unit-attack-range-display");
+            SliderInt unitAttackRangeSlider = root.For<SliderInt>("selected-unit-attack-range", (slider) => {
+                slider.RegisterValueChangedCallback((e) => {
+                    var selectedUnitSingleton = _selectedUnitQuery.GetSingleton<SelectedUnitSingleton>();
+                    UnityEngine.Assertions.Assert.IsTrue(_em.Exists(selectedUnitSingleton.Selected));
+
+                    _em.SetComponentData(selectedUnitSingleton.Selected, new UnitAttackData{
+                        AttackRange = (ushort) e.newValue
+                    });
+
+                    unitAttackRangeSliderLabel.text = e.newValue.ToString();
+                });
+            });
+
             _selectedUnitUi = root.For<VisualElement>("selected-unit-view-root", (panel) => {
                 panel.style.visibility = Visibility.Hidden;
-                Debug.Log("panel.RegisterCallback<GeometryChangedEvent>()");
+
                 panel.RegisterCallback<GeometryChangedEvent>((e) => {
                     _selectedUnitQuery.TryGetSingleton<SelectedUnitSingleton>(out var selectedUnitSingleton);
                     if (selectedUnitSingleton.Selected!=Entity.Null && _em.Exists(selectedUnitSingleton.Selected))
@@ -119,33 +147,15 @@ namespace Client.UIToolkit
                         var unitMove = _em.GetComponentData<UnitMoveData>(selectedUnitSingleton.Selected);
                         var unitAttack = _em.GetComponentData<UnitAttackData>(selectedUnitSingleton.Selected);
 
-                        Label moveRangeDisplay = root.For<Label>("selected-unit-move-range-display", (label) => {
-                            label.text = unitMove.MoveRange.ToString();
-                        });
-                        root.For<SliderInt>("selected-unit-move-range", (slider) => {
-                            slider.value = unitMove.MoveRange;
-                            slider.RegisterValueChangedCallback((e) => {
-                                moveRangeDisplay.text = e.newValue.ToString();
-                                _em.SetComponentData(selectedUnitSingleton.Selected, new UnitMoveData{
-                                    MoveRange = (ushort) e.newValue
-                                });
-                                Debug.Log($"\t UnitMoveData updated to {e.newValue}");
-                            });
-                        });
-
-                        Label attackRangeDisplay = root.For<Label>("selected-unit-attack-range-display", (label) => {
-                            label.text = unitAttack.AttackRange.ToString();
-                        });
-                        root.For<SliderInt>("selected-unit-attack-range", (slider) => {
-                            slider.value = unitAttack.AttackRange;
-                            slider.RegisterValueChangedCallback((e) => {
-                                attackRangeDisplay.text = e.newValue.ToString();
-                                _em.SetComponentData(selectedUnitSingleton.Selected, new UnitAttackData{
-                                    AttackRange = (ushort) e.newValue
-                                });
-                                Debug.Log($"\t UnitAttackData updated to {e.newValue}");
-                            });
-                        });
+                        unitMoveRangeSlider.SetValueWithoutNotify(unitMove.MoveRange);
+                        unitAttackRangeSlider.SetValueWithoutNotify(unitAttack.AttackRange);
+                        unitMoveRangeSliderLabel.text = unitMove.MoveRange.ToString();
+                        unitAttackRangeSliderLabel.text = unitAttack.AttackRange.ToString();
+                    }
+                    else
+                    {
+                        unitMoveRangeSliderLabel.text = "?";
+                        unitAttackRangeSliderLabel.text = "?";
                     }
                 });
             });
