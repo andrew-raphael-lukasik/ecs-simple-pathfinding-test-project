@@ -13,10 +13,14 @@ namespace Client.UIToolkit
 {
     public class EditStateUIController : BaseUIController
     {
+        EntityManager _em;
+
+        #region map settings
         MapSettingsSingleton _mapSettings;
         Entity _mapSettingsEntity;
         EntityQuery _queryMapSettings;
-        EntityManager _em;
+        #endregion
+        
         #region selected unit
         EntityQuery _selectedUnitQuery;
         VisualElement _selectedUnitUi;
@@ -114,7 +118,7 @@ namespace Client.UIToolkit
                     {
                         var unitMove = _em.GetComponentData<UnitMoveData>(selectedUnitSingleton.Selected);
                         var unitAttack = _em.GetComponentData<UnitAttackData>(selectedUnitSingleton.Selected);
-                        
+
                         Label moveRangeDisplay = root.For<Label>("selected-unit-move-range-display", (label) => {
                             label.text = unitMove.MoveRange.ToString();
                         });
