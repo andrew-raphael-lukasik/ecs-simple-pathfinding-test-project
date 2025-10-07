@@ -46,6 +46,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::EditorOnly.Authoring.GameStartSettingsAuthoring
   _mapSize: {x: 32, y: 32}
   _mapOrigin: {x: 0, y: 0, z: 0}
-  _numPlayerUnits: 3
-  _numEnemyUnits: 4
-  _seed: 743
+  _numPlayerUnits: 1
+  _numEnemyUnits: 3
+  _seed: 674

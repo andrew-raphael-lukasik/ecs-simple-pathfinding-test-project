@@ -16,7 +16,7 @@ namespace ServerAndClient
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int ToIndex (uint2 coord, uint2 mapSize)
         {
-            coord = math.min(coord, mapSize-1);// clamp to map size
+            coord = Clamp(coord, mapSize);
             return (int)(coord.y * mapSize.x + coord.x);
         }
 
@@ -33,7 +33,7 @@ namespace ServerAndClient
             uint x = (uint)(i%mapSize.x);
             uint y = (uint)(i/mapSize.x);
             uint2 coord = new uint2(x, y);
-            coord = math.min(coord, mapSize-1);// clamp to map size
+            coord = Clamp(coord, mapSize);
             return coord;
         }
         
@@ -42,8 +42,14 @@ namespace ServerAndClient
         {
             float3 localPoint = point - mapOrigin;
             uint2 coord = (uint2)(new float2(localPoint.x, localPoint.z) / new float2(MapSettingsSingleton.CellSize, MapSettingsSingleton.CellSize));
-            coord = math.min(coord, mapSize-1);// clamp to map size
+            coord = Clamp(coord, mapSize);
             return coord;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static uint2 Clamp (uint2 coord, uint2 mapSize)
+        {
+            return math.min(coord, mapSize-1);// clamp to map size
         }
 
 
