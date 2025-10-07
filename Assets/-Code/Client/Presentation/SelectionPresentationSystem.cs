@@ -24,7 +24,8 @@ namespace Client.Presentation
         // [Unity.Burst.BurstCompile]
         void ISystem.OnCreate(ref SystemState state)
         {
-            Segments.Core.Create(out _segments);
+            var lineMat = Resources.Load<Material>("game-selection-lines");
+            Segments.Core.Create(out _segments, lineMat);
         }
 
         [Unity.Burst.BurstCompile]
