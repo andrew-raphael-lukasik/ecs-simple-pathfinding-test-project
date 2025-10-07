@@ -43,6 +43,18 @@ MonoBehaviour:
     m_Key: enter-edit-mode-button
     m_Metadata:
       m_Items: []
+  - m_Id: 2159163616583680
+    m_Key: selected-unit-view-label
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2159432270143488
+    m_Key: selected-unit-move-range
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2159881454936064
+    m_Key: selected-unit-attack-range
+    m_Metadata:
+      m_Items: []
   m_Metadata:
     m_Items: []
   m_KeyGenerator:

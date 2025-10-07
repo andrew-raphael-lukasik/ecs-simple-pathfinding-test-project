@@ -46,6 +46,18 @@ MonoBehaviour:
     m_Localized: EDIT
     m_Metadata:
       m_Items: []
+  - m_Id: 2159881454936064
+    m_Localized: Attack range
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2159432270143488
+    m_Localized: Move range
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2159163616583680
+    m_Localized: Edit
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []

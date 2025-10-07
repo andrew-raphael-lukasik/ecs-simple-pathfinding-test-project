@@ -46,6 +46,18 @@ MonoBehaviour:
     m_Localized: EDE
     m_Metadata:
       m_Items: []
+  - m_Id: 2159163616583680
+    m_Localized: Ede
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2159432270143488
+    m_Localized: "Spatium\_motus"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2159881454936064
+    m_Localized: "Spatium\_impetus"
+    m_Metadata:
+      m_Items: []
   references:
     version: 2
     RefIds: []
