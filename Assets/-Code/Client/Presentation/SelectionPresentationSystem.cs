@@ -39,11 +39,13 @@ namespace Client.Presentation
         {
             var segments = Segments.Core.GetSegment(_segments, state.EntityManager);
             segments.Dependency.AsReadOnly().Value.Complete();
+            bool preExistingLines = segments.Buffer.Length!=0;
             segments.Buffer.Length = 0;
 
+            var selectedFloor = SystemAPI.GetSingleton<SelectedFloorSingleton>();
+            if (selectedFloor.Selected!=Entity.Null && state.EntityManager.Exists(selectedFloor.Selected))
             {
-                var floor = SystemAPI.GetSingleton<SelectedFloorSingleton>();
-                var aabb = GetTotalRenderBounds(state.EntityManager, floor.Selected);
+                var aabb = GetTotalRenderBounds(state.EntityManager, selectedFloor.Selected);
                 
                 segments.Buffer.Length += 12;
                 
@@ -58,9 +60,11 @@ namespace Client.Presentation
                 Debug.DrawRay(aabb.Center, Vector3.up, Color.cyan);
                 #endif
             }
+
+            var selectedUnit = SystemAPI.GetSingleton<SelectedUnitSingleton>();
+            if (selectedUnit.Selected!=Entity.Null && state.EntityManager.Exists(selectedUnit.Selected))
             {
-                var unit = SystemAPI.GetSingleton<SelectedUnitSingleton>();
-                var aabb = GetTotalRenderBounds(state.EntityManager, unit.Selected);
+                var aabb = GetTotalRenderBounds(state.EntityManager, selectedUnit.Selected);
                 
                 segments.Buffer.Length += 12;
                 
@@ -76,8 +80,15 @@ namespace Client.Presentation
                 #endif
             }
 
-            Segments.Core.SetSegmentChanged(_segments, state.EntityManager);
-            segments.Dependency.Value = state.Dependency;
+            if (segments.Buffer.Length!=0)
+            {
+                Segments.Core.SetSegmentChanged(_segments, state.EntityManager);
+                segments.Dependency.Value = state.Dependency;
+            }
+            else if (preExistingLines)
+            {
+                Segments.Core.SetSegmentChanged(_segments, state.EntityManager);
+            }
         }
 
         AABB GetTotalRenderBounds(EntityManager entityManager, Entity entity)
