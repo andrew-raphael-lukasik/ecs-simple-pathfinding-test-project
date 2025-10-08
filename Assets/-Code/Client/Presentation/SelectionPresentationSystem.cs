@@ -80,15 +80,8 @@ namespace Client.Presentation
                 #endif
             }
 
-            if (segments.Buffer.Length!=0)
-            {
+            if (segments.Buffer.Length!=0 || preExistingLines)
                 Segments.Core.SetSegmentChanged(_segments, state.EntityManager);
-                segments.Dependency.Value = state.Dependency;
-            }
-            else if (preExistingLines)
-            {
-                Segments.Core.SetSegmentChanged(_segments, state.EntityManager);
-            }
         }
 
         AABB GetTotalRenderBounds(EntityManager entityManager, Entity entity)
