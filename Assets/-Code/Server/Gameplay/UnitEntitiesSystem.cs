@@ -8,21 +8,21 @@ using Unity.Collections;
 using ServerAndClient;
 using ServerAndClient.Gameplay;
 
-namespace Server.Simulation
+namespace Server.Gameplay
 {
     [WorldSystemFilter(WorldSystemFilterFlags.Default | WorldSystemFilterFlags.ServerSimulation | WorldSystemFilterFlags.Editor)]
     [UpdateInGroup(typeof(GameInitializationSystemGroup), OrderFirst = true)]
     [RequireMatchingQueriesForUpdate]
     [Unity.Burst.BurstCompile]
-    public partial struct FloorEntitiesSystem : ISystem
+    public partial struct UnitEntitiesSystem : ISystem
     {
         [Unity.Burst.BurstCompile]
         void ISystem.OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<MapSettingsSingleton>();
-            state.RequireForUpdate<FloorCoord>();
+            state.RequireForUpdate<UnitCoord>();
 
-            state.EntityManager.CreateSingleton(new FloorsSingleton{
+            state.EntityManager.CreateSingleton(new UnitsSingleton{
                 Lookup = new (32*32, Allocator.Persistent),
             });
         }
@@ -30,7 +30,7 @@ namespace Server.Simulation
         [Unity.Burst.BurstCompile]
         void ISystem.OnDestroy(ref SystemState state)
         {
-            if (SystemAPI.TryGetSingletonRW<FloorsSingleton>(out var singleton))
+            if (SystemAPI.TryGetSingletonRW<UnitsSingleton>(out var singleton))
             {
                 if (singleton.ValueRW.Lookup.IsCreated) singleton.ValueRW.Lookup.Dispose();
             }
@@ -39,142 +39,140 @@ namespace Server.Simulation
         [Unity.Burst.BurstCompile]
         void ISystem.OnUpdate(ref SystemState state)
         {
-            var floorsRef = SystemAPI.GetSingletonRW<FloorsSingleton>();
+            var unitsRef = SystemAPI.GetSingletonRW<UnitsSingleton>();
             var mapSettings = SystemAPI.GetSingleton<MapSettingsSingleton>();
             var ecb = SystemAPI.GetSingleton<EndInitializationEntityCommandBufferSystem.Singleton>().CreateCommandBuffer(state.WorldUnmanaged);
 
-            state.Dependency = JobHandle.CombineDependencies(state.Dependency, floorsRef.ValueRW.Dependency);
+            state.Dependency = JobHandle.CombineDependencies(state.Dependency, unitsRef.ValueRW.Dependency);
 
             int requiredBufferLength = (int)(mapSettings.Size.x * mapSettings.Size.y);
-            if (floorsRef.ValueRO.Lookup.Length!=requiredBufferLength)
+            if (unitsRef.ValueRO.Lookup.Length!=requiredBufferLength)
             {
-                floorsRef.ValueRW.Dependency.Complete();
-                floorsRef.ValueRW.Lookup.Dispose();
-                floorsRef.ValueRW.Lookup = new NativeArray<Entity>(requiredBufferLength, Allocator.Persistent);
+                unitsRef.ValueRW.Dependency.Complete();
+                unitsRef.ValueRW.Lookup.Dispose();
+                unitsRef.ValueRW.Lookup = new NativeArray<Entity>(requiredBufferLength, Allocator.Persistent);
 
-                state.Dependency = new InvalidateAllFloorsJob{
+                state.Dependency = new InvalidateAllUnitsJob{
                     ECB = ecb,
                 }.Schedule(state.Dependency);
             }
 
-            state.Dependency = new FloorEntityDestroyedJob{
+            state.Dependency = new UnitEntityDestroyedJob{
                 ECB = ecb,
                 MapSize = mapSettings.Size,
-                Floors = floorsRef.ValueRW.Lookup,
+                Units = unitsRef.ValueRW.Lookup,
             }.Schedule(state.Dependency);
 
             state.Dependency = new AddValidityTagJob{
                 ECB = ecb,
             }.Schedule(state.Dependency);
 
-            state.Dependency = new FloorInvalidCoordJob{
+            state.Dependency = new UnitInvalidCoordJob{
                 ECB = ecb,
                 MapSize = mapSettings.Size,
                 MapOrigin = mapSettings.Origin,
-                Floors = floorsRef.ValueRW.Lookup,
+                Units = unitsRef.ValueRW.Lookup,
             }.Schedule(state.Dependency);
 
             #if UNITY_EDITOR || DEBUG
             state.Dependency = new AssertionsJob{
-                Floors = floorsRef.ValueRO.Lookup,
+                Units = unitsRef.ValueRO.Lookup,
             }.Schedule(state.Dependency);
             #endif
 
-            floorsRef.ValueRW.Dependency = state.Dependency;
+            unitsRef.ValueRW.Dependency = state.Dependency;
         }
 
-        [WithPresent(typeof(FloorCoord), typeof(LocalToWorld))]
-        [WithAbsent(typeof(IsFloorCoordValid))]
+        [WithPresent(typeof(UnitCoord), typeof(LocalToWorld))]
+        [WithAbsent(typeof(IsUnitCoordValid))]
         [Unity.Burst.BurstCompile]
         partial struct AddValidityTagJob : IJobEntity
         {
             public EntityCommandBuffer ECB;
             public void Execute(in Entity entity)
             {
-                ECB.AddComponent<IsFloorCoordValid>(entity);
-                ECB.SetComponentEnabled<IsFloorCoordValid>(entity, false);
+                ECB.AddComponent<IsUnitCoordValid>(entity);
+                ECB.SetComponentEnabled<IsUnitCoordValid>(entity, false);
             }
         }
 
-        [WithPresent(typeof(IsFloorCoordValid))]
+        [WithPresent(typeof(IsUnitCoordValid))]
         [Unity.Burst.BurstCompile]
-        partial struct InvalidateAllFloorsJob : IJobEntity
+        partial struct InvalidateAllUnitsJob : IJobEntity
         {
             public EntityCommandBuffer ECB;
             public void Execute(in Entity entity)
             {
-                ECB.SetComponentEnabled<IsFloorCoordValid>(entity, false);
+                ECB.SetComponentEnabled<IsUnitCoordValid>(entity, false);
             }
         }
 
-        [WithDisabled(typeof(IsFloorCoordValid))]
+        [WithDisabled(typeof(IsUnitCoordValid))]
         [Unity.Burst.BurstCompile]
-        partial struct FloorInvalidCoordJob : IJobEntity
+        partial struct UnitInvalidCoordJob : IJobEntity
         {
             public EntityCommandBuffer ECB;
             public uint2 MapSize;
             public float3 MapOrigin;
-            public NativeArray<Entity> Floors;
-            public void Execute(ref FloorCoord coord, in LocalToWorld ltw, in Entity entity)
+            public NativeArray<Entity> Units;
+            public void Execute(ref UnitCoord coord, in LocalToWorld ltw, in Entity entity)
             {
+                UnityEngine.Assertions.Assert.IsTrue(Units.Length==MapSize.x*MapSize.y, $"These do not match: Units.Length is {Units.Length} while MapSize is {MapSize}");
+
                 uint2 prevCoord = coord;
                 int prevIndex = GameGrid.ToIndex(prevCoord, MapSize);
-                if (Floors[prevIndex]==entity)
+                if (Units[prevIndex]==entity)
                 {
-                    Floors[prevIndex] = Entity.Null;// detached self
+                    Units[prevIndex] = Entity.Null;// detached self
                 }
 
                 uint2 newCoord = GameGrid.ToCoord(ltw.Position, MapOrigin, MapSize);
                 int newIndex = GameGrid.ToIndex(newCoord, MapSize);
-                // if (Floors[newIndex]!=Entity.Null && Floors[newIndex]!=entity)
+                // if (Units[newIndex]!=Entity.Null && Units[newIndex]!=entity)
                 // {
-                //     Entity other = Floors[newIndex];// detached other
+                //     Entity other = Units[newIndex];// detached other
                 // }
-                Floors[newIndex] = entity;
+                Units[newIndex] = entity;
                 coord = newCoord;
-                ECB.SetComponentEnabled<IsFloorCoordValid>(entity, true);
+                ECB.SetComponentEnabled<IsUnitCoordValid>(entity, true);
             }
         }
 
         [WithAbsent(typeof(LocalToWorld))]
         [Unity.Burst.BurstCompile]
-        partial struct FloorEntityDestroyedJob : IJobEntity
+        partial struct UnitEntityDestroyedJob : IJobEntity
         {
             public EntityCommandBuffer ECB;
             public uint2 MapSize;
-            public NativeArray<Entity> Floors;
-            public void Execute(in FloorCoord coord, in Entity entity)
+            public NativeArray<Entity> Units;
+            public void Execute(in UnitCoord coord, in Entity entity)
             {
                 int index = GameGrid.ToIndex(coord, MapSize);
-                if (
-                        index<Floors.Length// map size changed singe job started
-                    &&  Floors[index]==entity
-                )
+                if (Units[index]==entity)
                 {
-                    Floors[index] = Entity.Null;
+                    Units[index] = Entity.Null;
                 }
-                ECB.RemoveComponent<FloorCoord>(entity);
+                ECB.RemoveComponent<UnitCoord>(entity);
             }
         }
 
-        
         #if UNITY_EDITOR || DEBUG
-        [WithPresent(typeof(FloorCoord), typeof(LocalToWorld))]
-        [WithAll(typeof(IsFloorCoordValid))]
+        [WithPresent(typeof(UnitCoord), typeof(LocalToWorld))]
+        [WithAll(typeof(IsUnitCoordValid))]
         [Unity.Burst.BurstCompile]
         partial struct AssertionsJob : IJobEntity
         {
-            public NativeArray<Entity> Floors;
+            public NativeArray<Entity> Units;
             public void Execute(in Entity entity)
             {
-                UnityEngine.Assertions.Assert.IsTrue(Floors.Contains(entity), $"{entity} is detached");
+                UnityEngine.Assertions.Assert.IsTrue(Units.Contains(entity), $"Unit {entity} is detached");
             }
         }
         #endif
 
     }
 
-    public struct FloorsSingleton : IComponentData
+    public struct UnitsSingleton : IComponentData
     {
         public NativeArray<Entity> Lookup;
         public JobHandle Dependency;

@@ -6,9 +6,9 @@ using Unity.Collections;
 using ServerAndClient;
 using ServerAndClient.Gameplay;
 using ServerAndClient.Input;
-using Server.Simulation;
+using Server.Gameplay;
 
-namespace Server.Gameplay
+namespace Server.GameEdit
 {
     [WorldSystemFilter(WorldSystemFilterFlags.Default | WorldSystemFilterFlags.ServerSimulation)]
     [UpdateInGroup(typeof(GameSimulationSystemGroup), OrderFirst = true)]
@@ -22,6 +22,7 @@ namespace Server.Gameplay
             state.RequireForUpdate<PlayerInputSingleton>();
             state.RequireForUpdate<MapSettingsSingleton>();
             state.RequireForUpdate<FloorsSingleton>();
+            state.RequireForUpdate<GameState.EDIT>();
 
             state.EntityManager.CreateSingleton(new SelectedFloorSingleton{
                 Selected = Entity.Null

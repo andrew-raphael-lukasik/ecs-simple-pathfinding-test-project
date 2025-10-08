@@ -8,11 +8,11 @@ using Unity.Jobs;
 using ServerAndClient;
 using ServerAndClient.Gameplay;
 using ServerAndClient.Input;
-using Server.Simulation;
+using Server.Gameplay;
 
 using Assert = UnityEngine.Assertions.Assert;
 
-namespace Server.Gameplay
+namespace Server.GameEdit
 {
     [WorldSystemFilter(WorldSystemFilterFlags.Default | WorldSystemFilterFlags.ServerSimulation)]
     [UpdateInGroup(typeof(GameInitializationSystemGroup), OrderFirst = true)]
@@ -28,15 +28,12 @@ namespace Server.Gameplay
             state.RequireForUpdate<PlayerInputSingleton>();
             state.RequireForUpdate<MapSettingsSingleton>();
             state.RequireForUpdate<GeneratedMapData>();
-            state.RequireForUpdate<GameState>();
+            state.RequireForUpdate<GameState.EDIT>();
         }
 
         [Unity.Burst.BurstCompile]
         void ISystem.OnUpdate(ref SystemState state)
         {
-            var gameState = SystemAPI.GetSingleton<GameState>();
-            if (gameState.State!=EGameState.EDIT) return;// EDIT state only
-
             var playerInput = SystemAPI.GetSingleton<PlayerInputSingleton>();
             if (playerInput.ExecuteStart==1 && playerInput.IsPointerOverUI==0)
             {

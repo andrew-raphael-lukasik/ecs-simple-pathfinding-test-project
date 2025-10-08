@@ -25,14 +25,12 @@ namespace Client.Input
             state.RequireForUpdate<MapSettingsSingleton>();
             state.RequireForUpdate<PlayerInputSingleton>();
             state.RequireForUpdate<SelectedUnitSingleton>();
+            state.RequireForUpdate<GameState.PLAY>();
         }
 
         [Unity.Burst.BurstCompile]
         void ISystem.OnUpdate(ref SystemState state)
         {
-            var gameState = SystemAPI.GetSingleton<GameState>();
-            if (gameState.State!=EGameState.PLAY) return;// PLAY state only
-
             var mapSettings = SystemAPI.GetSingleton<MapSettingsSingleton>();
             var playerInput = SystemAPI.GetSingleton<PlayerInputSingleton>();
             var selectedUnit = SystemAPI.GetSingleton<SelectedUnitSingleton>();

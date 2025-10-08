@@ -7,7 +7,7 @@ using Unity.Mathematics;
 
 using ServerAndClient;
 using ServerAndClient.Gameplay;
-using Server.Simulation;
+using Server.Gameplay;
 
 namespace EditorOnly.Debugging
 {
