@@ -21,7 +21,7 @@ namespace Server.Gameplay
         {
             state.RequireForUpdate<MapSettingsSingleton>();
             state.RequireForUpdate<GeneratedMapData>();
-            state.RequireForUpdate<CalculatePathResult>();
+            state.RequireForUpdate<PathfindingQueryResult>();
 
             var lineMat = Resources.Load<Material>("game-selection-lines");
             Segments.Core.Create(out _segments, lineMat);
@@ -38,7 +38,7 @@ namespace Server.Gameplay
             bool preExistingLines = buffer.Length!=0;
             buffer.Length = 0;
 
-            foreach (var pathResults in SystemAPI.Query<CalculatePathResult>())
+            foreach (var pathResults in SystemAPI.Query<PathfindingQueryResult>())
             if (pathResults.Success==1)
             {
                 int length = pathResults.Path.Length;

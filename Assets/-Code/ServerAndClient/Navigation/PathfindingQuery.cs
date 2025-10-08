@@ -3,7 +3,7 @@ using Unity.Mathematics;
 
 namespace ServerAndClient.Navigation
 {
-    public struct CalculatePathRequest : IComponentData
+    public struct PathfindingQuery : IComponentData
     {
         public uint2 Src, Dst;
     }

@@ -23,7 +23,7 @@ namespace Server.Gameplay
         {
             state.RequireForUpdate<MapSettingsSingleton>();
             state.RequireForUpdate<GeneratedMapData>();
-            state.RequireForUpdate<CalculatePathRequest>();
+            state.RequireForUpdate<PathfindingQuery>();
         }
 
         [Unity.Burst.BurstCompile]
@@ -33,7 +33,7 @@ namespace Server.Gameplay
 
             if (SystemAPI.TryGetSingleton<MapSettingsSingleton>(out var mapSettings))
             if (SystemAPI.TryGetSingleton<GeneratedMapData>(out var mapData))
-            foreach (var (request, entity) in SystemAPI.Query<CalculatePathRequest>().WithEntityAccess())
+            foreach (var (request, entity) in SystemAPI.Query<PathfindingQuery>().WithEntityAccess())
             {
                 NativeList<uint2> results = new (Allocator.Persistent);
                 var job = new GameNavigation.AStarJob(
@@ -49,17 +49,17 @@ namespace Server.Gameplay
                 job.Schedule().Complete();
                 job.Dispose();
 
-                if (SystemAPI.HasComponent<CalculatePathResult>(entity))
+                if (SystemAPI.HasComponent<PathfindingQueryResult>(entity))
                 {
-                    var prevPathResults = SystemAPI.GetComponent<CalculatePathResult>(entity);
+                    var prevPathResults = SystemAPI.GetComponent<PathfindingQueryResult>(entity);
                     if (prevPathResults.Path.IsCreated) prevPathResults.Path.Dispose();
-                    ecb.RemoveComponent<CalculatePathResult>(entity);
+                    ecb.RemoveComponent<PathfindingQueryResult>(entity);
                 }
 
                 if (job.results.Length!=0)
                 {
                     Debug.Log($"Pathfinding succeeded! Path length:{job.results.Length}");
-                    ecb.AddComponent(entity, new CalculatePathResult{
+                    ecb.AddComponent(entity, new PathfindingQueryResult{
                         Success = 1,
                         Path = job.results.AsArray(),
                     });
@@ -79,14 +79,14 @@ namespace Server.Gameplay
                 else
                 {
                     Debug.Log("Pathfinding found no sulution");
-                    ecb.AddComponent(entity, new CalculatePathResult{
+                    ecb.AddComponent(entity, new PathfindingQueryResult{
                         Success = 0,
                         Path = default,
                     });
                     job.results.Dispose();
                 }
 
-                ecb.RemoveComponent<CalculatePathRequest>(entity);
+                ecb.RemoveComponent<PathfindingQuery>(entity);
             }
         }
     }

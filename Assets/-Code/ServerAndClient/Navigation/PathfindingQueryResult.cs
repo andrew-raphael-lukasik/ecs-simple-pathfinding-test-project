@@ -4,7 +4,7 @@ using Unity.Collections;
 
 namespace ServerAndClient.Navigation
 {
-    public struct CalculatePathResult : IComponentData
+    public struct PathfindingQueryResult : IComponentData
     {
         public byte Success;
         public NativeArray<uint2> Path;
