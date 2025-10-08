@@ -112,7 +112,7 @@ namespace ServerAndClient.Navigation
                     _PM_Initialization.End();
 
                     _PM_Neighbours.Begin();
-                    var enumerator = new NeighbourEnumerator(coord:currentCoord, mapSize:MapSize.x);
+                    var enumerator = new NeighbourEnumerator(coord:currentCoord, mapSize:MapSize);
                     while (enumerator.MoveNext(out uint2 neighbourCoord))
                     {
                         int neighbourIndex = GameGrid.ToIndex(neighbourCoord, MapSize);
