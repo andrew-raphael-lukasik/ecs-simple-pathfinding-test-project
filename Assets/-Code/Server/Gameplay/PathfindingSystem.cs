@@ -114,4 +114,5 @@ namespace Server.Gameplay
         public byte Success;
         public NativeArray<uint2> Path;
     }
+
 }

@@ -1,4 +1,3 @@
-using System.Runtime.CompilerServices;
 using UnityEngine;
 using UnityEngine.Assertions;
 using Unity.Mathematics;
@@ -166,7 +165,6 @@ namespace ServerAndClient.Navigation
                 _PM_Trace.End();
             }
 
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public static float EuclideanHeuristic(uint2 a, uint2 b) => math.length((int2) a - (int2) b);
 
             public void Dispose()
@@ -181,6 +179,7 @@ namespace ServerAndClient.Navigation
             {
                 public uint2 mapSize;
                 public Comparer(uint2 mapSize) => this.mapSize = mapSize;
+
                 public int Compare(uint2 lhs, uint2 rhs, NativeSlice<half> comparables)
                 {
                     float lhsValue = comparables[GameGrid.ToIndex(lhs, mapSize)];
@@ -190,7 +189,7 @@ namespace ServerAndClient.Navigation
             }
         }
  
-        public static bool BacktrackToPath
+        static bool BacktrackToPath
         (
             NativeArray<uint2> solution,
             uint2 mapSize,
@@ -221,7 +220,7 @@ namespace ServerAndClient.Navigation
             return wasDestinationReached;
         }
 
-        public static void ReverseArray <T>(NativeArray<T> array) where T : unmanaged
+        static void ReverseArray <T>(NativeArray<T> array) where T : unmanaged
         {
             int length = array.Length;
             int lengthHalf = length / 2;
@@ -234,7 +233,7 @@ namespace ServerAndClient.Navigation
             }
         }
 
-        public struct NeighbourEnumerator
+        struct NeighbourEnumerator
         {
             readonly int2 _coord;
             readonly uint _xMax, _yMax;
