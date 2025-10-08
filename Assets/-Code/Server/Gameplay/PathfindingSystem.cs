@@ -56,12 +56,12 @@ namespace Server.Gameplay
                     ecb.RemoveComponent<CalculatePathResult>(entity);
                 }
 
-                if (job.Results.Length!=0)
+                if (job.results.Length!=0)
                 {
-                    Debug.Log($"Pathfinding succeeded! Path length:{job.Results.Length}");
+                    Debug.Log($"Pathfinding succeeded! Path length:{job.results.Length}");
                     ecb.AddComponent(entity, new CalculatePathResult{
                         Success = 1,
-                        Path = job.Results.AsArray(),
+                        Path = job.results.AsArray(),
                     });
 
                     DynamicBuffer<DisposeNativeArrayOnDestroyed> cleanupBuffer;
@@ -72,7 +72,7 @@ namespace Server.Gameplay
                             cleanupBuffer = ecb.AddBuffer<DisposeNativeArrayOnDestroyed>(entity);
 
                         cleanupBuffer.Add(
-                            DisposeNativeArrayOnDestroyed.Factory(job.Results.AsArray())
+                            DisposeNativeArrayOnDestroyed.Factory(job.results.AsArray())
                         );
                     }
                 }
@@ -83,7 +83,7 @@ namespace Server.Gameplay
                         Success = 0,
                         Path = default,
                     });
-                    job.Results.Dispose();
+                    job.results.Dispose();
                 }
 
                 ecb.RemoveComponent<CalculatePathRequest>(entity);

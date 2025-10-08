@@ -15,23 +15,21 @@ namespace ServerAndClient.Navigation
         [Unity.Burst.BurstCompile]
         public struct AStarJob : IJob, System.IDisposable
         {
-            public NativeList<uint2> Results;
+            public NativeList<uint2> results;
 
-            public readonly uint2 Src;
-            public readonly uint2 Dst;
-            [ReadOnly] public readonly NativeArray<EFloorType> MoveCost;
-            public readonly uint2 MapSize;
-            public readonly float HMultiplier;
-            public readonly uint StepBudget;
-            public readonly bool ResultsStartAtIndexZero;
+            readonly uint2 _src, _dst;
+            [ReadOnly] readonly NativeArray<EFloorType> _moveCost;
+            readonly uint2 _mapSize;
+            readonly float _hMultiplier;
+            readonly uint _stepBudget;
+            readonly bool _resultsStartAtIndexZero;
 
-            public NativeArray<half> G;
-            public NativeArray<half> F;
-            public NativeArray<uint2> Solution;
-            public NativeMinHeap<uint2,half,Comparer> Frontier;
-            public NativeHashSet<uint2> Visited;
+            NativeArray<half> _g, _f;
+            NativeArray<uint2> _solution;
+            NativeMinHeap<uint2,half,Comparer> _frontier;
+            NativeHashSet<uint2> _visited;
 
-            ProfilerMarker _PM_Initialization, _PM_Search, _PM_Neighbours, _PM_FrontierPush, _PM_FrontierPop, _PM_UpdateFG, _PM_Trace;
+            ProfilerMarker __initialization, __search, __neighbours, __frontier_push, __frontier_pop, __update_fg, __trace;
 
             public AStarJob
             (
@@ -45,114 +43,114 @@ namespace ServerAndClient.Navigation
                 bool resultsStartAtIndexZero = true
             )
             {
-                this.Src = start;
-                this.Dst = destination;
-                this.MoveCost = moveCost;
-                this.MapSize = mapSize;
-                this.Results = results;
-                this.HMultiplier = hMultiplier;
-                this.StepBudget = stepBudget;
-                this.ResultsStartAtIndexZero = resultsStartAtIndexZero;
+                this._src = start;
+                this._dst = destination;
+                this._moveCost = moveCost;
+                this._mapSize = mapSize;
+                this.results = results;
+                this._hMultiplier = hMultiplier;
+                this._stepBudget = stepBudget;
+                this._resultsStartAtIndexZero = resultsStartAtIndexZero;
 
                 int length = moveCost.Length;
-                this.G = new (length, Allocator.TempJob, NativeArrayOptions.UninitializedMemory);
-                this.F = new (length, Allocator.TempJob, NativeArrayOptions.UninitializedMemory);
-                this.Solution = new (length, Allocator.TempJob);
-                this.Frontier = new (length, Allocator.TempJob, new Comparer(mapSize), this.F);
-                this.Visited = new (length, Allocator.TempJob);
+                this._g = new (length, Allocator.TempJob, NativeArrayOptions.UninitializedMemory);
+                this._f = new (length, Allocator.TempJob, NativeArrayOptions.UninitializedMemory);
+                this._solution = new (length, Allocator.TempJob);
+                this._frontier = new (length, Allocator.TempJob, new Comparer(mapSize), this._f);
+                this._visited = new (length, Allocator.TempJob);
 
-                this._PM_Initialization = new ("initialization");
-                this._PM_Search = new ("search");
-                this._PM_Neighbours = new ("scan neighbors");
-                this._PM_FrontierPush = new ("frontier.push");
-                this._PM_FrontierPop = new ("frontier.pop");
-                this._PM_UpdateFG = new ("update f & g");
-                this._PM_Trace = new ("trace path");
+                this.__initialization = new ("initialization");
+                this.__search = new ("search");
+                this.__neighbours = new ("scan neighbors");
+                this.__frontier_push = new ("frontier.push");
+                this.__frontier_pop = new ("frontier.pop");
+                this.__update_fg = new ("update f & g");
+                this.__trace = new ("trace path");
             }
             public void Execute()
             {
-                _PM_Initialization.Begin();
-                int srcIndex = GameGrid.ToIndex(Src, MapSize);
-                int dstIndex = GameGrid.ToIndex(Dst, MapSize);
+                __initialization.Begin();
+                int srcIndex = GameGrid.ToIndex(_src, _mapSize);
+                int dstIndex = GameGrid.ToIndex(_dst, _mapSize);
                 {
-                    if (MoveCost[srcIndex]!=EFloorType.Traversable) return;
-                    if (MoveCost[dstIndex]!=EFloorType.Traversable) return;
+                    if (_moveCost[srcIndex]!=EFloorType.Traversable) return;
+                    if (_moveCost[dstIndex]!=EFloorType.Traversable) return;
                 }
                 {
-                    for (int i=G.Length-1 ; i!=-1 ; i--)
-                        G[i] = (half) half.MaxValue;
-                    G[srcIndex] = half.zero;
+                    for (int i=_g.Length-1 ; i!=-1 ; i--)
+                        _g[i] = (half) half.MaxValue;
+                    _g[srcIndex] = half.zero;
                 }
                 {
-                    for (int i=F.Length-1 ; i!=-1 ; i--)
-                        F[i] = (half) half.MaxValue;
-                    F[srcIndex] = half.zero;
+                    for (int i=_f.Length-1 ; i!=-1 ; i--)
+                        _f[i] = (half) half.MaxValue;
+                    _f[srcIndex] = half.zero;
                 }
-                Solution[srcIndex] = Src;
-                Frontier.Push(Src);
-                Visited.Add(Src);
-                _PM_Initialization.End();
+                _solution[srcIndex] = _src;
+                _frontier.Push(_src);
+                _visited.Add(_src);
+                __initialization.End();
 
-                _PM_Search.Begin();
+                __search.Begin();
                 uint2 currentCoord = new uint2(uint.MaxValue, uint.MaxValue);
                 uint numSearchSteps = 0;
                 bool destinationReached = false;
                 while (
-                        Frontier.Length!=0
+                        _frontier.Length!=0
                     &&  !destinationReached
-                    &&  numSearchSteps++<StepBudget
+                    &&  numSearchSteps++<_stepBudget
                 )
                 {
-                    _PM_Initialization.Begin();
-                    _PM_FrontierPop.Begin();
-                    currentCoord = Frontier.Pop();
-                    _PM_FrontierPop.End();
-                    int currentIndex = GameGrid.ToIndex(currentCoord, MapSize);
-                    float node_g = G[currentIndex];
-                    _PM_Initialization.End();
+                    __initialization.Begin();
+                    __frontier_pop.Begin();
+                    currentCoord = _frontier.Pop();
+                    __frontier_pop.End();
+                    int currentIndex = GameGrid.ToIndex(currentCoord, _mapSize);
+                    float node_g = _g[currentIndex];
+                    __initialization.End();
 
-                    _PM_Neighbours.Begin();
-                    var enumerator = new NeighbourEnumerator(coord:currentCoord, mapSize:MapSize);
+                    __neighbours.Begin();
+                    var enumerator = new NeighbourEnumerator(coord:currentCoord, mapSize:_mapSize);
                     while (enumerator.MoveNext(out uint2 neighbourCoord))
                     {
-                        int neighbourIndex = GameGrid.ToIndex(neighbourCoord, MapSize);
-                        byte moveCostByte = MoveCost[neighbourIndex]==EFloorType.Traversable
+                        int neighbourIndex = GameGrid.ToIndex(neighbourCoord, _mapSize);
+                        byte moveCostByte = _moveCost[neighbourIndex]==EFloorType.Traversable
                             ? (byte) 1
                             : (byte) 255;
                         if (moveCostByte==255) continue;// 100% obstacle
                         float movecost = moveCostByte/255f;
 
                         float g = node_g +(1f + movecost);
-                        float h = EuclideanHeuristic(neighbourCoord, Dst) * HMultiplier;
+                        float h = EuclideanHeuristic(neighbourCoord, _dst) * _hMultiplier;
                         float f = g + h;
 
-                        if (g<G[neighbourIndex])
+                        if (g<_g[neighbourIndex])
                         {
-                            _PM_UpdateFG.Begin();
-                            F[neighbourIndex] = (half) f;
-                            G[neighbourIndex] = (half) g;
-                            Solution[neighbourIndex] = currentCoord;
-                            _PM_UpdateFG.End();
+                            __update_fg.Begin();
+                            _f[neighbourIndex] = (half) f;
+                            _g[neighbourIndex] = (half) g;
+                            _solution[neighbourIndex] = currentCoord;
+                            __update_fg.End();
                         }
 
-                        _PM_FrontierPush.Begin();
-                        if (!Visited.Contains(neighbourCoord))
-                            Frontier.Push(neighbourCoord);
-                        _PM_FrontierPush.End();
+                        __frontier_push.Begin();
+                        if (!_visited.Contains(neighbourCoord))
+                            _frontier.Push(neighbourCoord);
+                        __frontier_push.End();
 
-                        Visited.Add(neighbourCoord);
+                        _visited.Add(neighbourCoord);
                     }
 
-                    destinationReached = math.all(currentCoord==Dst);
+                    destinationReached = math.all(currentCoord==_dst);
 
-                    _PM_Neighbours.End();
+                    __neighbours.End();
                 }
-                _PM_Search.End();
+                __search.End();
 
-                _PM_Trace.Begin();
+                __trace.Begin();
                 if (destinationReached)
                 {
-                    bool backtrackSuccess = BacktrackToPath(Solution, MapSize, Dst, Results, ResultsStartAtIndexZero);
+                    bool backtrackSuccess = BacktrackToPath(_solution, _mapSize, _dst, results, _resultsStartAtIndexZero);
                     
                     #if UNITY_ASSERTIONS
                     Assert.IsTrue(backtrackSuccess);
@@ -160,20 +158,20 @@ namespace ServerAndClient.Navigation
                 }
                 else
                 {
-                    Results.Clear();
+                    results.Clear();
                 }
-                _PM_Trace.End();
+                __trace.End();
             }
 
             public static float EuclideanHeuristic(uint2 a, uint2 b) => math.length((int2) a - (int2) b);
 
             public void Dispose()
             {
-                this.G.Dispose();
-                this.F.Dispose();
-                this.Solution.Dispose();
-                this.Frontier.Dispose();
-                this.Visited.Dispose();
+                this._g.Dispose();
+                this._f.Dispose();
+                this._solution.Dispose();
+                this._frontier.Dispose();
+                this._visited.Dispose();
             }
             public struct Comparer : INativeMinHeapComparer<uint2,half>
             {
