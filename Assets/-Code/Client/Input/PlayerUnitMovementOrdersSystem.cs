@@ -39,12 +39,29 @@ namespace Client.Input
             if (selectedUnit.Selected!=Entity.Null && state.EntityManager.Exists(selectedUnit.Selected))
             if (GameGrid.Raycast(ray: playerInput.PointerRay, mapOrigin: mapSettings.Origin, mapSize: mapSettings.Size, out uint2 dstCoord))
             {
-                uint2 srcCoord = state.EntityManager.GetComponentData<UnitCoord>(selectedUnit.Selected);
+                bool clickedOnPathDestination = false;
+                if (SystemAPI.HasComponent<PathfindingQueryResult>(selectedUnit.Selected))
+                {
+                    var pathResult = SystemAPI.GetComponent<PathfindingQueryResult>(selectedUnit.Selected);
+                    if (pathResult.Success==1)
+                    {
+                        uint2 pathEnd = pathResult.Path[pathResult.Path.Length-1];
+                        clickedOnPathDestination = math.all(dstCoord==pathEnd);
+                    }
+                }
 
-                state.EntityManager.AddComponentData(selectedUnit.Selected, new CalculatePathRequest{
-                    Src = srcCoord,
-                    Dst = dstCoord,
-                });
+                if (clickedOnPathDestination)
+                {
+                    state.EntityManager.AddComponent<MovingAlongThePath>(selectedUnit.Selected);
+                }
+                else if(!SystemAPI.HasComponent<MovingAlongThePath>(selectedUnit.Selected))
+                {
+                    uint2 srcCoord = state.EntityManager.GetComponentData<UnitCoord>(selectedUnit.Selected);
+                    state.EntityManager.AddComponentData(selectedUnit.Selected, new PathfindingQuery{
+                        Src = srcCoord,
+                        Dst = dstCoord,
+                    });
+                }
             }
         }
 
