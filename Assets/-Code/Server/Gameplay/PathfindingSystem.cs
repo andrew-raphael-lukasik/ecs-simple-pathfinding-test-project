@@ -40,7 +40,7 @@ namespace Server.Gameplay
                     start: GameGrid.Clamp(request.Src, mapSettings.Size),
                     destination: GameGrid.Clamp(request.Dst, mapSettings.Size),
                     moveCost: mapData.FloorArray,
-                    mapSize: mapSettings.Size.x,
+                    mapSize: mapSettings.Size,
                     results: results,
                     hMultiplier: 1,
                     stepBudget: mapSettings.Size.x * mapSettings.Size.y,
