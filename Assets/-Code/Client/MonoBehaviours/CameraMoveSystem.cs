@@ -1,16 +1,12 @@
 using UnityEngine;
 using Unity.Entities;
 using Unity.Mathematics;
-using Unity.Transforms;
-using Unity.Collections;
-using Unity.Jobs;
-using Unity.Rendering;
 
 using ServerAndClient.Input;
 using ServerAndClient.Gameplay;
 using ServerAndClient;
 
-namespace Client.Presentation.CameraControls
+namespace Client.Presentation
 {
     [WorldSystemFilter(WorldSystemFilterFlags.Presentation)]
     [UpdateInGroup(typeof(GamePresentationSystemGroup))]
@@ -78,6 +74,7 @@ namespace Client.Presentation.CameraControls
         }
     }
 
+    public struct IsMainCamera : IComponentData {}
     public struct IsCameraLookAtTarget : IComponentData {}
 
 }

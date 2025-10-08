@@ -7,7 +7,7 @@ using Unity.Transforms;
 
 using ServerAndClient;
 using ServerAndClient.Gameplay;
-using Client.Presentation.CameraControls;
+using Client.Presentation.MonoBehaviours;
 
 namespace Client.UIToolkit
 {

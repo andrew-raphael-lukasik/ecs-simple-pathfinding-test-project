@@ -3,7 +3,7 @@ using Unity.Entities;
 
 [assembly: RegisterUnityEngineComponentType(typeof(Camera))]
 
-namespace Client.Presentation.CameraControls
+namespace Client.Presentation.MonoBehaviours
 {
     [DisallowMultipleComponent]
     [RequireComponent(typeof(Camera))]
@@ -40,6 +40,4 @@ namespace Client.Presentation.CameraControls
             MainCamera = null;
         }
     }
-
-    public struct IsMainCamera : IComponentData {}
 }

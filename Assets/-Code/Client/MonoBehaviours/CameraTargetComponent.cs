@@ -1,9 +1,7 @@
 using UnityEngine;
 using Unity.Entities;
-using Unity.Collections;
-using Unity.Jobs;
 
-namespace Client.Presentation.CameraControls
+namespace Client.Presentation.MonoBehaviours
 {
     [DisallowMultipleComponent]
     [AddComponentMenu("Game/Camera/Camera Target Transform")]
