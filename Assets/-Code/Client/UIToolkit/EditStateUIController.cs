@@ -26,11 +26,20 @@ namespace Client.UIToolkit
         VisualElement _selectedUnitUi;
         #endregion
 
+        bool _initialized;
+
         void Start()
         {
-            var world = World.DefaultGameObjectInjectionWorld;
-            _em = world.EntityManager;
-            _selectedUnitQuery = _em.CreateEntityQuery(typeof(SelectedUnitSingleton));
+            if (!_initialized)
+            {
+                var world = World.DefaultGameObjectInjectionWorld;
+                _em = world.EntityManager;
+                _selectedUnitQuery = _em.CreateEntityQuery(typeof(SelectedUnitSingleton));
+                _queryMapSettings = _em.CreateEntityQuery(typeof(MapSettingsSingleton));
+                _mapSettings = _queryMapSettings.GetSingleton<MapSettingsSingleton>();
+
+                _initialized = true;
+            }
         } 
 
         void Update()
@@ -58,6 +67,17 @@ namespace Client.UIToolkit
 
         protected override void Bind(VisualElement root)
         {
+            if (!_initialized)
+            {
+                var world = World.DefaultGameObjectInjectionWorld;
+                _em = world.EntityManager;
+                _selectedUnitQuery = _em.CreateEntityQuery(typeof(SelectedUnitSingleton));
+                _queryMapSettings = _em.CreateEntityQuery(typeof(MapSettingsSingleton));
+                _mapSettings = _queryMapSettings.GetSingleton<MapSettingsSingleton>();
+
+                _initialized = true;
+            }
+
             root.For<Button>("enter-play-mode-button", (button) => {
                 button.clicked += () => {
                     Debug.Log("Button clicked -> requesting switch to play");
