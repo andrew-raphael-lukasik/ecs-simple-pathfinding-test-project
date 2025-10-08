@@ -61,16 +61,7 @@ namespace Server.Gameplay
                 }.Schedule(state.Dependency).Complete();
 
                 if (SystemAPI.TryGetSingletonEntity<GeneratedMapData>(out Entity mapDataEntity))
-                {
-                    var mapData = SystemAPI.GetComponent<GeneratedMapData>(mapDataEntity);
-                    
-                    new DeallocateNativeArrayJob<EFloorType>(mapData.FloorArray)
-                        .Schedule(state.Dependency);
-                    new DeallocateNativeArrayJob<float3>(mapData.PositionArray)
-                        .Schedule(state.Dependency);
-
                     state.EntityManager.DestroyEntity(mapDataEntity);
-                }
             }
 
             // regenerate map:
@@ -81,6 +72,17 @@ namespace Server.Gameplay
                     FloorArray = new (numMapCells, Allocator.Persistent),
                 });
                 var mapData = SystemAPI.GetSingleton<GeneratedMapData>();
+
+                DynamicBuffer<DisposeNativeArrayOnDestroyed> cleanupBuffer;
+                {
+                    if (state.EntityManager.HasBuffer<DisposeNativeArrayOnDestroyed>(mapDataEntity))
+                        cleanupBuffer = state.EntityManager.GetBuffer<DisposeNativeArrayOnDestroyed>(mapDataEntity);
+                    else
+                        cleanupBuffer = state.EntityManager.AddBuffer<DisposeNativeArrayOnDestroyed>(mapDataEntity);
+
+                    cleanupBuffer.Add(DisposeNativeArrayOnDestroyed.Factory(mapData.FloorArray));
+                    cleanupBuffer.Add(DisposeNativeArrayOnDestroyed.Factory(mapData.PositionArray));
+                }
 
                 state.Dependency = new GenerateMapDataJob{
                     MapSettings = mapSettings,

@@ -64,6 +64,18 @@ namespace Server.Gameplay
                         Success = 1,
                         Path = job.Results.AsArray(),
                     });
+
+                    DynamicBuffer<DisposeNativeArrayOnDestroyed> cleanupBuffer;
+                    {
+                        if (state.EntityManager.HasBuffer<DisposeNativeArrayOnDestroyed>(entity))
+                            cleanupBuffer = state.EntityManager.GetBuffer<DisposeNativeArrayOnDestroyed>(entity);
+                        else
+                            cleanupBuffer = ecb.AddBuffer<DisposeNativeArrayOnDestroyed>(entity);
+
+                        cleanupBuffer.Add(
+                            DisposeNativeArrayOnDestroyed.Factory(job.Results.AsArray())
+                        );
+                    }
                 }
                 else
                 {
