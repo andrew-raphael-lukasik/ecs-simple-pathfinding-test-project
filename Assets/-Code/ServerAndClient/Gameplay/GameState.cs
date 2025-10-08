@@ -22,6 +22,16 @@ namespace ServerAndClient.Gameplay
             public EGameState State;
         }
 
+        public struct EDIT : IComponentData
+        {
+            public static FixedString64Bytes DebugName {get;} = nameof(EDIT);
+        }
+
+        public struct PLAY : IComponentData
+        {
+            public static FixedString64Bytes DebugName {get;} = nameof(PLAY);
+        }
+
 
         /// <summary> <seealso cref="GameStateSystem"/> emits all these events. They exist for a single update cycle. </summary>
         /// <remarks> Other systems use them to trigger gameplay stage-dependant logic. </remarks>

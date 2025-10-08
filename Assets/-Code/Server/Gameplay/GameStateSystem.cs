@@ -53,15 +53,28 @@ namespace Server.Gameplay
             switch (requestedMode)
             {
                 case EGameState.EDIT:
+                {
+                    if (SystemAPI.TryGetSingletonEntity<GameState.PLAY>(out Entity entity))
+                    {
+                        state.EntityManager.DestroyEntity(entity);
+                    }
+                    state.EntityManager.CreateSingleton<GameState.EDIT>();
                     state.EntityManager.CreateSingleton<GameState.EDIT_STARTED_EVENT>();
-                    Debug.Log($"{state.DebugName}: {GameState.EDIT_STARTED_EVENT.DebugName} created");
-                    break;
+                    Debug.Log($"{state.DebugName}: {GameState.EDIT.DebugName} & {GameState.EDIT_STARTED_EVENT.DebugName} created");
+                }
+                break;
                 case EGameState.PLAY:
+                {
+                    if (SystemAPI.TryGetSingletonEntity<GameState.EDIT>(out Entity entity))
+                    {
+                        state.EntityManager.DestroyEntity(entity);
+                    }
+                    state.EntityManager.CreateSingleton<GameState.PLAY>();
                     state.EntityManager.CreateSingleton<GameState.PLAY_STARTED_EVENT>();
-                    Debug.Log($"{state.DebugName}: {GameState.PLAY_STARTED_EVENT.DebugName} created");
-                    break;
-                default:
-                    throw new System.NotImplementedException($"{requestedMode}");
+                    Debug.Log($"{state.DebugName}: {GameState.PLAY.DebugName} & {GameState.PLAY_STARTED_EVENT.DebugName} created");
+                }
+                break;
+                default: throw new System.NotImplementedException($"{requestedMode}");
             }
 
             if (ecb.ShouldPlayback) ecb.Playback(state.EntityManager);
