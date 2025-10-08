@@ -125,7 +125,7 @@ namespace ServerAndClient.Navigation
                         float g = node_g +(1f + movecost);
                         float h = EuclideanHeuristic(neighbourCoord, Dst) * HMultiplier;
                         float f = g + h;
-                        
+
                         if (g<G[neighbourIndex])
                         {
                             _PM_UpdateFG.Begin();
@@ -177,13 +177,13 @@ namespace ServerAndClient.Navigation
             }
             public struct Comparer : INativeMinHeapComparer<uint2,half>
             {
-                public uint2 mapSize;
-                public Comparer(uint2 mapSize) => this.mapSize = mapSize;
+                public readonly uint2 _mapSize;
+                public Comparer(uint2 mapSize) => this._mapSize = mapSize;
 
                 public int Compare(uint2 lhs, uint2 rhs, NativeSlice<half> comparables)
                 {
-                    float lhsValue = comparables[GameGrid.ToIndex(lhs, mapSize)];
-                    float rhsValue = comparables[GameGrid.ToIndex(rhs, mapSize)];
+                    float lhsValue = comparables[GameGrid.ToIndex(lhs, _mapSize)];
+                    float rhsValue = comparables[GameGrid.ToIndex(rhs, _mapSize)];
                     return lhsValue.CompareTo(rhsValue);
                 }
             }
@@ -199,7 +199,6 @@ namespace ServerAndClient.Navigation
         )
         {
             results.Clear();
-            if (results.Capacity<mapSize.x*2) results.Capacity = (int)mapSize.x*2;
             int solutionLength = solution.Length;
 
             uint2 posCoord = destination;
