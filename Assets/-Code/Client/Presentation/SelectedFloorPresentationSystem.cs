@@ -13,19 +13,23 @@ using Server.Gameplay;
 
 namespace Client.Presentation
 {
-    [WorldSystemFilter(WorldSystemFilterFlags.Default | WorldSystemFilterFlags.Presentation)]
+    [WorldSystemFilter(WorldSystemFilterFlags.Presentation)]
     [UpdateInGroup(typeof(GamePresentationSystemGroup))]
     [RequireMatchingQueriesForUpdate]
     [Unity.Burst.BurstCompile]
-    public partial struct SelectionPresentationSystem : ISystem
+    public partial struct SelectedFloorPresentationSystem : ISystem
     {
         Entity _segments;
 
         // [Unity.Burst.BurstCompile]
         void ISystem.OnCreate(ref SystemState state)
         {
+            state.RequireForUpdate<SelectedFloorSingleton>();
+
             var lineMat = Resources.Load<Material>("game-selection-lines");
             Segments.Core.Create(out _segments, lineMat);
+
+            state.EntityManager.AddComponent<IsEditStateOnly>(_segments);// edit state only
         }
 
         [Unity.Burst.BurstCompile]
@@ -37,51 +41,32 @@ namespace Client.Presentation
         [Unity.Burst.BurstCompile]
         void ISystem.OnUpdate(ref SystemState state)
         {
-            var segments = Segments.Core.GetSegment(_segments, state.EntityManager);
-            segments.Dependency.AsReadOnly().Value.Complete();
-            bool preExistingLines = segments.Buffer.Length!=0;
-            segments.Buffer.Length = 0;
+            var em = state.EntityManager;
+
+            var segmentRef = SystemAPI.GetComponentRW<Segments.Segment>(_segments);
+            var buffer = segmentRef.ValueRW.Buffer;
 
             var selectedFloor = SystemAPI.GetSingleton<SelectedFloorSingleton>();
-            if (selectedFloor.Selected!=Entity.Null && state.EntityManager.Exists(selectedFloor.Selected))
+            if (selectedFloor.Selected!=Entity.Null && em.Exists(selectedFloor.Selected))
             {
-                var aabb = GetTotalRenderBounds(state.EntityManager, selectedFloor.Selected);
-                
-                segments.Buffer.Length += 12;
-                
+                buffer.Length = 0;
+                Segments.Core.SetSegmentChanged(_segments, em);
+
+                var aabb = GetTotalRenderBounds(em, selectedFloor.Selected);
+                buffer.Length += 12;
+
                 Segments.Plot.Box(
-                    segments: segments.Buffer.AsArray().Slice(segments.Buffer.Length - 12, 12),
+                    segments: buffer.AsArray().Slice(buffer.Length - 12, 12),
                     size: aabb.Size * 1.1f,
                     pos: aabb.Center,
                     rot: quaternion.identity
                 );
-
-                #if UNITY_EDITOR
-                Debug.DrawRay(aabb.Center, Vector3.up, Color.cyan);
-                #endif
             }
-
-            var selectedUnit = SystemAPI.GetSingleton<SelectedUnitSingleton>();
-            if (selectedUnit.Selected!=Entity.Null && state.EntityManager.Exists(selectedUnit.Selected))
+            else if(buffer.Length!=0)
             {
-                var aabb = GetTotalRenderBounds(state.EntityManager, selectedUnit.Selected);
-                
-                segments.Buffer.Length += 12;
-                
-                Segments.Plot.Box(
-                    segments: segments.Buffer.AsArray().Slice(segments.Buffer.Length - 12, 12),
-                    size: aabb.Size * new float3(1.4f, 1, 1.4f) + new float3(1, 0, 1)*((float) math.sin(SystemAPI.Time.ElapsedTime*5f)*0.1f),
-                    pos: aabb.Center + new float3(0, 1, 0),
-                    rot: quaternion.identity
-                );
-
-                #if UNITY_EDITOR
-                Debug.DrawRay(aabb.Center, Vector3.up, Color.cyan);
-                #endif
+                buffer.Length = 0;
+                Segments.Core.SetSegmentChanged(_segments, em);
             }
-
-            if (segments.Buffer.Length!=0 || preExistingLines)
-                Segments.Core.SetSegmentChanged(_segments, state.EntityManager);
         }
 
         AABB GetTotalRenderBounds(EntityManager entityManager, Entity entity)
