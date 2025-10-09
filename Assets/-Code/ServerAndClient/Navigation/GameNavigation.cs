@@ -25,7 +25,7 @@ namespace ServerAndClient.Navigation
 
             NativeArray<ushort> _g, _f;
             NativeArray<uint2> _solution;
-            NativeMinHeap<uint2, ushort, Comparer_uint16> _frontier;
+            NativeMinHeap<uint2, ushort, TieBreakingComparer_uint16> _frontier;
             NativeHashSet<uint2> _visited;
 
             ProfilerMarker __initialization, __search, __neighbours, __frontier_push, __frontier_pop, __update_fg, __trace;
@@ -53,7 +53,7 @@ namespace ServerAndClient.Navigation
                 this._g = new (length, Allocator.TempJob, NativeArrayOptions.UninitializedMemory);
                 this._f = new (length, Allocator.TempJob, NativeArrayOptions.UninitializedMemory);
                 this._solution = new (length, Allocator.TempJob);
-                this._frontier = new (length, Allocator.TempJob, new (mapSize), this._f);
+                this._frontier = new (length, Allocator.TempJob, new (src: start, dst: destination, mapSize: mapSize), this._f);
                 this._visited = new (length, Allocator.TempJob);
 
                 this.__initialization = new ("initialization");
@@ -205,16 +205,49 @@ namespace ServerAndClient.Navigation
             }
         }
 
-        struct Comparer_uint16 : INativeMinHeapComparer<uint2,ushort>
+        struct BasicComparer_uint16 : INativeMinHeapComparer<uint2,ushort>
         {
             public readonly uint2 _mapSize;
-            public Comparer_uint16(uint2 mapSize) => this._mapSize = mapSize;
+            public BasicComparer_uint16(uint2 mapSize) => this._mapSize = mapSize;
 
             public int Compare(uint2 lhs, uint2 rhs, NativeSlice<ushort> comparables)
             {
                 float lhsValue = comparables[GameGrid.ToIndex(lhs, _mapSize)];
                 float rhsValue = comparables[GameGrid.ToIndex(rhs, _mapSize)];
                 return lhsValue.CompareTo(rhsValue);
+            }
+        }
+
+        struct TieBreakingComparer_uint16 : INativeMinHeapComparer<uint2,ushort>
+        {
+            readonly uint2 _mapSize;
+            readonly float2 _src, _dst;
+            public TieBreakingComparer_uint16(uint2 src,uint2 dst, uint2 mapSize)
+            {
+                this._src = (float2) src;
+                this._dst = (float2) dst;
+                this._mapSize = mapSize;
+            }
+
+            public int Compare(uint2 lhs, uint2 rhs, NativeSlice<ushort> comparables)
+            {
+                float lhsF = comparables[GameGrid.ToIndex(lhs, _mapSize)];
+                float rhsF = comparables[GameGrid.ToIndex(rhs, _mapSize)];
+                int fComparison = lhsF.CompareTo(rhsF);
+                if (fComparison!=0) return fComparison;
+                float lhsD = pointSegmentDistance(_src, _dst, (float2) lhs);
+                float rhsD = pointSegmentDistance(_src, _dst, (float2) rhs);
+                return lhsD.CompareTo(rhsD);
+            }
+
+            float pointSegmentDistance(float2 a, float2 b, float2 p)
+            {
+                float2 ab = b - a;
+                float2 bp = p - b;
+                float2 ap = p - a;
+                if (math.dot(ab, bp) > 0) return math.distance(b, p);
+                else if (math.dot(ab, ap) < 0) return math.distance(a, p);
+                else return math.abs(ab.x * ap.y - ab.y * ap.x) / math.length(ab);
             }
         }
 
