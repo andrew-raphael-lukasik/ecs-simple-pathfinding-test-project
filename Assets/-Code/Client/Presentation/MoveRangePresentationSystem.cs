@@ -19,6 +19,7 @@ namespace Client.Presentation
         Entity _segments;
         NativeHashSet<uint2> _reachable;
         Entity _reachable_owner;
+        uint2 _reachable_coord;
         GameNavigation.MoveReachJob _reachable_job;
         JobHandle _reachable_dependency;
 
@@ -34,6 +35,7 @@ namespace Client.Presentation
 
             var lineMat = Resources.Load<Material>("game-move-range-lines");
             Segments.Core.Create(out _segments, lineMat);
+            state.EntityManager.AddComponent<IsPlayStateOnly>(_segments);
         }
 
         [Unity.Burst.BurstCompile]
@@ -56,6 +58,8 @@ namespace Client.Presentation
             {
                 _reachable_dependency.Complete();
                 _reachable_job.Dispose();
+                _reachable_owner = Entity.Null;
+                _reachable_coord = 0;
 
                 var segmentRef = SystemAPI.GetComponentRW<Segments.Segment>(_segments);
                 var buffer = segmentRef.ValueRW.Buffer;
@@ -84,15 +88,17 @@ namespace Client.Presentation
             }
 
             Entity selectedUnit = SystemAPI.GetSingleton<SelectedUnitSingleton>();
-            if (_reachable_owner!=selectedUnit)
+            uint2 selectedCoord = em.Exists(selectedUnit) && SystemAPI.HasComponent<UnitCoord>(selectedUnit)
+                ? em.GetComponentData<UnitCoord>(selectedUnit)
+                : uint.MaxValue;
+            if (_reachable_owner!=selectedUnit || math.any(_reachable_coord!=selectedCoord))
             {
                 if (selectedUnit!=Entity.Null && em.Exists(selectedUnit))
                 {
                     ushort moveRange = em.GetComponentData<MoveRange>(selectedUnit);
-                    uint2 coord = em.GetComponentData<UnitCoord>(selectedUnit);
 
                     _reachable_job = new GameNavigation.MoveReachJob(
-                        start: coord,
+                        start: selectedCoord,
                         range: moveRange,
                         moveCost: mapData.FloorArray,
                         mapSize: mapSettings.Size,
@@ -100,10 +106,13 @@ namespace Client.Presentation
                     );
                     _reachable_dependency = _reachable_job.Schedule(state.Dependency);
                     _reachable_owner = selectedUnit;
+                    _reachable_coord = selectedCoord;
                 }
                 else
                 {
                     _reachable_owner = Entity.Null;
+                    _reachable_coord = 0;
+
                     var segmentRef = SystemAPI.GetComponentRW<Segments.Segment>(_segments);
                     segmentRef.ValueRW.Buffer.Length = 0;
                     Segments.Core.SetSegmentChanged(_segments, state.EntityManager);
