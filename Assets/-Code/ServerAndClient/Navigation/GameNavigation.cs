@@ -25,7 +25,7 @@ namespace ServerAndClient.Navigation
 
             NativeArray<half> _g, _f;
             NativeArray<uint2> _solution;
-            NativeMinHeap<uint2, half, Comparer> _frontier;
+            NativeMinHeap<uint2, half, Comparer_fp16> _frontier;
             NativeHashSet<uint2> _visited;
 
             ProfilerMarker __initialization, __search, __neighbours, __frontier_push, __frontier_pop, __update_fg, __trace;
@@ -53,7 +53,7 @@ namespace ServerAndClient.Navigation
                 this._g = new (length, Allocator.TempJob, NativeArrayOptions.UninitializedMemory);
                 this._f = new (length, Allocator.TempJob, NativeArrayOptions.UninitializedMemory);
                 this._solution = new (length, Allocator.TempJob);
-                this._frontier = new (length, Allocator.TempJob, new Comparer(mapSize), this._f);
+                this._frontier = new (length, Allocator.TempJob, new (mapSize), this._f);
                 this._visited = new (length, Allocator.TempJob);
 
                 this.__initialization = new ("initialization");
@@ -90,7 +90,7 @@ namespace ServerAndClient.Navigation
                 __initialization.End();
 
                 __search.Begin();
-                uint2 currentCoord = new uint2(uint.MaxValue, uint.MaxValue);
+                uint2 currentCoord;
                 uint numSearchSteps = 0;
                 bool destinationReached = false;
                 while (
@@ -112,13 +112,9 @@ namespace ServerAndClient.Navigation
                     while (enumerator.MoveNext(out uint2 neighbourCoord))
                     {
                         int neighbourIndex = GameGrid.ToIndex(neighbourCoord, _mapSize);
-                        byte moveCostByte = _moveCost[neighbourIndex]==EFloorType.Traversable
-                            ? (byte) 1
-                            : (byte) 255;
-                        if (moveCostByte==255) continue;// 100% obstacle
-                        float movecost = moveCostByte/255f;
+                        if (_moveCost[neighbourIndex]!=EFloorType.Traversable) continue;// 100% obstacle
 
-                        float g = node_g +(1f + movecost);
+                        float g = node_g + 1;
                         float h = EuclideanHeuristic(neighbourCoord, _dst) * _hMultiplier;
                         float f = g + h;
 
@@ -208,10 +204,10 @@ namespace ServerAndClient.Navigation
             }
         }
 
-        struct Comparer : INativeMinHeapComparer<uint2,half>
+        struct Comparer_fp16 : INativeMinHeapComparer<uint2,half>
         {
             public readonly uint2 _mapSize;
-            public Comparer(uint2 mapSize) => this._mapSize = mapSize;
+            public Comparer_fp16(uint2 mapSize) => this._mapSize = mapSize;
 
             public int Compare(uint2 lhs, uint2 rhs, NativeSlice<half> comparables)
             {
