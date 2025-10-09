@@ -151,6 +151,105 @@ namespace ServerAndClient.Navigation
             }
         }
 
+        [Unity.Burst.BurstCompile]
+        public struct MoveReachJob : IJob, System.IDisposable
+        {
+            public NativeHashSet<uint2> reachable;
+            readonly uint2 _src;
+            [ReadOnly] readonly NativeArray<EFloorType> _moveCost;
+            readonly uint2 _mapSize;
+            readonly ushort _gmax;
+
+            [DeallocateOnJobCompletion] NativeArray<ushort> _g;
+            NativeMinHeap<uint2, ushort, BasicComparer_uint16> _frontier;
+
+            ProfilerMarker __initialization, __search, __neighbours, __frontier_push, __frontier_pop, __update_g;
+
+            public MoveReachJob
+            (
+                uint2 start,
+                ushort range,
+                NativeArray<EFloorType> moveCost,
+                uint2 mapSize,
+                NativeHashSet<uint2> reachable
+            )
+            {
+                this._src = start;
+                this._gmax = range;
+                this._moveCost = moveCost;
+                this._mapSize = mapSize;
+                this.reachable = reachable;
+
+                int length = moveCost.Length;
+                this._g = new (length, Allocator.TempJob, NativeArrayOptions.UninitializedMemory);
+                this._frontier = new (length, Allocator.TempJob, new (mapSize), _g);
+
+                this.__initialization = new ("initialization");
+                this.__search = new ("search");
+                this.__neighbours = new ("scan neighbors");
+                this.__frontier_push = new ("frontier.push");
+                this.__frontier_pop = new ("frontier.pop");
+                this.__update_g = new ("update g");
+            }
+            void IJob.Execute()
+            {
+                __initialization.Begin();
+                reachable.Clear();
+                int srcIndex = GameGrid.ToIndex(_src, _mapSize);
+                if (_moveCost[srcIndex]!=EFloorType.Traversable) return;
+                {
+                    for (int i=_g.Length-1 ; i!=-1 ; i--)
+                        _g[i] = ushort.MaxValue;
+                    _g[srcIndex] = 0;
+                }
+                _frontier.Push(_src);
+                __initialization.End();
+
+                __search.Begin();
+                uint2 coord;
+                while (_frontier.Length!=0)
+                {
+                    __initialization.Begin();
+                    __frontier_pop.Begin();
+                    coord = _frontier.Pop();
+                    __frontier_pop.End();
+                    int index = GameGrid.ToIndex(coord, _mapSize);
+                    ushort node_g = _g[index];
+                    __initialization.End();
+
+                    __neighbours.Begin();
+                    var enumerator = new NeighbourEnumerator(coord:coord, mapSize:_mapSize);
+                    while (enumerator.MoveNext(out uint2 neighbourCoord))
+                    {
+                        int neighbourIndex = GameGrid.ToIndex(neighbourCoord, _mapSize);
+                        if (_moveCost[neighbourIndex]!=EFloorType.Traversable) continue;// 100% obstacle
+
+                        ushort g = (ushort)(node_g + 1);
+                        if (g>_gmax) continue;// range limit reached
+
+                        if (g<_g[neighbourIndex])
+                        {
+                            __update_g.Begin();
+                            _g[neighbourIndex] = g;
+                            reachable.Add(neighbourCoord);
+                            __update_g.End();
+
+                            __frontier_push.Begin();
+                            _frontier.Push(neighbourCoord);
+                            __frontier_push.End();
+                        }
+                    }
+                    __neighbours.End();
+                }
+                __search.End();
+            }
+
+            public void Dispose()
+            {
+                if (this._frontier.IsCreated) this._frontier.Dispose();
+            }
+        }
+
         public static float EuclideanHeuristic(uint2 a, uint2 b) => math.length((int2) a - (int2) b);
         public static float ManhattanHeuristic(uint2 a, uint2 b) => math.csum(math.abs((int2) a - (int2) b));
  
