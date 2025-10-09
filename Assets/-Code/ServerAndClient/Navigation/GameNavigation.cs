@@ -22,11 +22,10 @@ namespace ServerAndClient.Navigation
             readonly uint2 _mapSize;
             readonly float _hMultiplier;
             readonly uint _stepBudget;
-            readonly bool _resultsStartAtIndexZero;
 
             NativeArray<half> _g, _f;
             NativeArray<uint2> _solution;
-            NativeMinHeap<uint2,half,Comparer> _frontier;
+            NativeMinHeap<uint2, half, Comparer> _frontier;
             NativeHashSet<uint2> _visited;
 
             ProfilerMarker __initialization, __search, __neighbours, __frontier_push, __frontier_pop, __update_fg, __trace;
@@ -39,8 +38,7 @@ namespace ServerAndClient.Navigation
                 uint2 mapSize,
                 NativeList<uint2> results,
                 float hMultiplier = 1,
-                uint stepBudget = uint.MaxValue,
-                bool resultsStartAtIndexZero = true
+                uint stepBudget = uint.MaxValue
             )
             {
                 this._src = start;
@@ -50,7 +48,6 @@ namespace ServerAndClient.Navigation
                 this.results = results;
                 this._hMultiplier = hMultiplier;
                 this._stepBudget = stepBudget;
-                this._resultsStartAtIndexZero = resultsStartAtIndexZero;
 
                 int length = moveCost.Length;
                 this._g = new (length, Allocator.TempJob, NativeArrayOptions.UninitializedMemory);
@@ -70,6 +67,7 @@ namespace ServerAndClient.Navigation
             public void Execute()
             {
                 __initialization.Begin();
+                results.Clear();
                 int srcIndex = GameGrid.ToIndex(_src, _mapSize);
                 int dstIndex = GameGrid.ToIndex(_dst, _mapSize);
                 {
@@ -140,30 +138,23 @@ namespace ServerAndClient.Navigation
 
                         _visited.Add(neighbourCoord);
                     }
+                    __neighbours.End();
 
                     destinationReached = math.all(currentCoord==_dst);
-
-                    __neighbours.End();
                 }
                 __search.End();
 
                 __trace.Begin();
                 if (destinationReached)
                 {
-                    bool backtrackSuccess = BacktrackToPath(_solution, _mapSize, _dst, results, _resultsStartAtIndexZero);
+                    bool backtrackSuccess = BacktrackToPath(_solution, _mapSize, _dst, results);
                     
                     #if UNITY_ASSERTIONS
                     Assert.IsTrue(backtrackSuccess);
                     #endif
                 }
-                else
-                {
-                    results.Clear();
-                }
                 __trace.End();
             }
-
-            public static float EuclideanHeuristic(uint2 a, uint2 b) => math.length((int2) a - (int2) b);
 
             public void Dispose()
             {
@@ -173,30 +164,18 @@ namespace ServerAndClient.Navigation
                 this._frontier.Dispose();
                 this._visited.Dispose();
             }
-            public struct Comparer : INativeMinHeapComparer<uint2,half>
-            {
-                public readonly uint2 _mapSize;
-                public Comparer(uint2 mapSize) => this._mapSize = mapSize;
-
-                public int Compare(uint2 lhs, uint2 rhs, NativeSlice<half> comparables)
-                {
-                    float lhsValue = comparables[GameGrid.ToIndex(lhs, _mapSize)];
-                    float rhsValue = comparables[GameGrid.ToIndex(rhs, _mapSize)];
-                    return lhsValue.CompareTo(rhsValue);
-                }
-            }
         }
+
+        public static float EuclideanHeuristic(uint2 a, uint2 b) => math.length((int2) a - (int2) b);
  
         static bool BacktrackToPath
         (
             NativeArray<uint2> solution,
             uint2 mapSize,
             uint2 destination,
-            NativeList<uint2> results,
-            bool resultsStartAtIndexZero
+            NativeList<uint2> results
         )
         {
-            results.Clear();
             int solutionLength = solution.Length;
 
             uint2 posCoord = destination;
@@ -211,8 +190,7 @@ namespace ServerAndClient.Navigation
             }
             bool wasDestinationReached = math.all(posCoord==solution[posIndex]);
 
-            if (resultsStartAtIndexZero)
-                ReverseArray(results.AsArray());
+            ReverseArray(results.AsArray());
 
             return wasDestinationReached;
         }
@@ -227,6 +205,19 @@ namespace ServerAndClient.Navigation
                 var tmp = array[i];
                 array[i] = array[last-i];
                 array[last-i] = tmp;
+            }
+        }
+
+        struct Comparer : INativeMinHeapComparer<uint2,half>
+        {
+            public readonly uint2 _mapSize;
+            public Comparer(uint2 mapSize) => this._mapSize = mapSize;
+
+            public int Compare(uint2 lhs, uint2 rhs, NativeSlice<half> comparables)
+            {
+                float lhsValue = comparables[GameGrid.ToIndex(lhs, _mapSize)];
+                float rhsValue = comparables[GameGrid.ToIndex(rhs, _mapSize)];
+                return lhsValue.CompareTo(rhsValue);
             }
         }
 

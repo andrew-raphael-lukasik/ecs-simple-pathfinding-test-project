@@ -43,8 +43,7 @@ namespace Server.Gameplay
                     mapSize: mapSettings.Size,
                     results: results,
                     hMultiplier: 1,
-                    stepBudget: mapSettings.Size.x * mapSettings.Size.y,
-                    resultsStartAtIndexZero: true
+                    stepBudget: mapSettings.Size.x * mapSettings.Size.y
                 );
                 job.Schedule().Complete();
                 job.Dispose();
