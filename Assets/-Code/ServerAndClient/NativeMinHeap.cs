@@ -109,9 +109,9 @@ namespace ServerAndClient
 			var array = _stack.AsArray().ToArray();
 			if( array.Length!=0 )
 			{
-				sb.Append($"{array[0]}");
+				sb.AppendFormat("{0}", array[0]);
 				for( int i=1 ; i<array.Length ; i++ )
-					sb.Append($" , {array[i]}");
+					sb.AppendFormat(" , {0}", array[i]);
 			}
 			sb.Append(" }");
 			return sb.ToString();
