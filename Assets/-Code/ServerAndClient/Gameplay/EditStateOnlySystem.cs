@@ -27,25 +27,26 @@ namespace ServerAndClient.Gameplay
             }.Schedule(state.Dependency);
         }
 
-        [WithPresent(typeof(Simulate), typeof(IsPlayStateOnly))]
+        [WithPresent(typeof(IsPlayStateOnly))]
         [Unity.Burst.BurstCompile]
         partial struct DisablePlayEntitiesJob : IJobEntity
         {
             public EntityCommandBuffer ECB;
-            public void Execute (in Entity entity)
+            public void Execute(in Entity entity)
             {
-                ECB.SetComponentEnabled<Simulate>(entity, false);
+                ECB.SetEnabled(entity, false);
             }
         }
 
-        [WithPresent(typeof(Simulate), typeof(IsEditStateOnly))]
+        [WithPresent(typeof(IsEditStateOnly))]
+        [WithOptions(EntityQueryOptions.IncludeDisabledEntities)]
         [Unity.Burst.BurstCompile]
         partial struct EnableEditEntitiesJob : IJobEntity
         {
             public EntityCommandBuffer ECB;
-            public void Execute (in Entity entity)
+            public void Execute(in Entity entity)
             {
-                ECB.SetComponentEnabled<Simulate>(entity, true);
+                ECB.SetEnabled(entity, true);
             }
         }
     }
