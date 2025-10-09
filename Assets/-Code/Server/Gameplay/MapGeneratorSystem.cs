@@ -58,7 +58,7 @@ namespace Server.Gameplay
             {
                 new DestroyExistingMapEntitiesJob{
                     ECBPW = ecb.AsParallelWriter(),
-                }.Schedule(state.Dependency).Complete();
+                }.ScheduleParallel(state.Dependency).Complete();
 
                 if (SystemAPI.TryGetSingletonEntity<GeneratedMapData>(out Entity mapDataEntity))
                     state.EntityManager.DestroyEntity(mapDataEntity);

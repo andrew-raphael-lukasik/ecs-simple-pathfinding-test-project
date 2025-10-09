@@ -77,7 +77,7 @@ namespace Server.Gameplay
             #if UNITY_EDITOR || DEBUG
             state.Dependency = new AssertionsJob{
                 Floors = floorsRef.ValueRO.Lookup,
-            }.Schedule(state.Dependency);
+            }.ScheduleParallel(state.Dependency);
             #endif
 
             floorsRef.ValueRW.Dependency = state.Dependency;
@@ -157,17 +157,18 @@ namespace Server.Gameplay
             }
         }
 
-        
         #if UNITY_EDITOR || DEBUG
+        [WithChangeFilter(typeof(FloorCoord))]
         [WithPresent(typeof(FloorCoord), typeof(LocalToWorld))]
         [WithAll(typeof(IsFloorCoordValid))]
         [Unity.Burst.BurstCompile]
         partial struct AssertionsJob : IJobEntity
         {
-            public NativeArray<Entity> Floors;
+            [ReadOnly] public NativeArray<Entity> Floors;
             public void Execute(in Entity entity)
             {
-                UnityEngine.Assertions.Assert.IsTrue(Floors.Contains(entity), $"{entity} is detached");
+                if (!Floors.Contains(entity))
+                    Debug.LogError($"Floor {entity} is detached");   
             }
         }
         #endif

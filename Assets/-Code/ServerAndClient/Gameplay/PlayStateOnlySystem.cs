@@ -17,24 +17,25 @@ namespace ServerAndClient.Gameplay
         void ISystem.OnUpdate(ref SystemState state)
         {
             var ecb = SystemAPI.GetSingleton<EndInitializationEntityCommandBufferSystem.Singleton>().CreateCommandBuffer(state.WorldUnmanaged);
+            var ecbpw = ecb.AsParallelWriter();
 
             state.Dependency = new DisableEditEntitiesJob{
-                ECB = ecb,
-            }.Schedule(state.Dependency);
+                ECBPW = ecbpw,
+            }.ScheduleParallel(state.Dependency);
 
             state.Dependency = new EnablePlayEntitiesJob{
-                ECB = ecb,
-            }.Schedule(state.Dependency);
+                ECBPW = ecbpw,
+            }.ScheduleParallel(state.Dependency);
         }
 
         [WithPresent(typeof(IsEditStateOnly))]
         [Unity.Burst.BurstCompile]
         partial struct DisableEditEntitiesJob : IJobEntity
         {
-            public EntityCommandBuffer ECB;
-            public void Execute(in Entity entity)
+            public EntityCommandBuffer.ParallelWriter ECBPW;
+            public void Execute(in Entity entity, [EntityIndexInQuery] int index)
             {
-                ECB.SetEnabled(entity, false);
+                ECBPW.SetEnabled(index, entity, false);
             }
         }
 
@@ -43,10 +44,10 @@ namespace ServerAndClient.Gameplay
         [Unity.Burst.BurstCompile]
         partial struct EnablePlayEntitiesJob : IJobEntity
         {
-            public EntityCommandBuffer ECB;
-            public void Execute(in Entity entity)
+            public EntityCommandBuffer.ParallelWriter ECBPW;
+            public void Execute(in Entity entity, [EntityIndexInQuery] int index)
             {
-                ECB.SetEnabled(entity, true);
+                ECBPW.SetEnabled(index, entity, true);
             }
         }
     }
