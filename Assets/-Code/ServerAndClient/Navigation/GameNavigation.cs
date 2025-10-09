@@ -20,13 +20,12 @@ namespace ServerAndClient.Navigation
             readonly uint2 _src, _dst;
             [ReadOnly] readonly NativeArray<EFloorType> _moveCost;
             readonly uint2 _mapSize;
+            readonly ushort _gmax;
             readonly float _hMultiplier;
-            readonly uint _stepBudget;
 
-            NativeArray<ushort> _g, _f;
-            NativeArray<uint2> _solution;
+            [DeallocateOnJobCompletion] NativeArray<ushort> _g, _f;
+            [DeallocateOnJobCompletion] NativeArray<uint2> _solution;
             NativeMinHeap<uint2, ushort, TieBreakingComparer_uint16> _frontier;
-            NativeHashSet<uint2> _visited;
 
             ProfilerMarker __initialization, __search, __neighbours, __frontier_push, __frontier_pop, __update_fg, __trace;
 
@@ -34,27 +33,26 @@ namespace ServerAndClient.Navigation
             (
                 uint2 start,
                 uint2 destination,
+                ushort moveRange,
                 NativeArray<EFloorType> moveCost,
                 uint2 mapSize,
                 NativeList<uint2> results,
-                float hMultiplier = 1,
-                uint stepBudget = uint.MaxValue
+                float hMultiplier = 1
             )
             {
                 this._src = start;
                 this._dst = destination;
+                this._gmax = moveRange;
                 this._moveCost = moveCost;
                 this._mapSize = mapSize;
                 this.results = results;
                 this._hMultiplier = hMultiplier;
-                this._stepBudget = stepBudget;
 
                 int length = moveCost.Length;
                 this._g = new (length, Allocator.TempJob, NativeArrayOptions.UninitializedMemory);
                 this._f = new (length, Allocator.TempJob, NativeArrayOptions.UninitializedMemory);
                 this._solution = new (length, Allocator.TempJob);
                 this._frontier = new (length, Allocator.TempJob, new (src: start, dst: destination, mapSize: mapSize), this._f);
-                this._visited = new (length, Allocator.TempJob);
 
                 this.__initialization = new ("initialization");
                 this.__search = new ("search");
@@ -64,7 +62,7 @@ namespace ServerAndClient.Navigation
                 this.__update_fg = new ("update f & g");
                 this.__trace = new ("trace path");
             }
-            public void Execute()
+            void IJob.Execute()
             {
                 __initialization.Begin();
                 results.Clear();
@@ -77,66 +75,61 @@ namespace ServerAndClient.Navigation
                 {
                     for (int i=_g.Length-1 ; i!=-1 ; i--)
                         _g[i] = ushort.MaxValue;
-                    _g[srcIndex] = ushort.MinValue;
+                    _g[srcIndex] = 0;
                 }
                 {
                     for (int i=_f.Length-1 ; i!=-1 ; i--)
                         _f[i] = ushort.MaxValue;
-                    _f[srcIndex] = ushort.MinValue;
+                    _f[srcIndex] = 0;
                 }
                 _solution[srcIndex] = _src;
                 _frontier.Push(_src);
-                _visited.Add(_src);
                 __initialization.End();
 
                 __search.Begin();
-                uint2 currentCoord;
-                uint numSearchSteps = 0;
+                uint2 coord;
                 bool destinationReached = false;
                 while (
                         _frontier.Length!=0
                     &&  !destinationReached
-                    &&  numSearchSteps++<_stepBudget
                 )
                 {
                     __initialization.Begin();
                     __frontier_pop.Begin();
-                    currentCoord = _frontier.Pop();
+                    coord = _frontier.Pop();
                     __frontier_pop.End();
-                    int currentIndex = GameGrid.ToIndex(currentCoord, _mapSize);
-                    ushort node_g = _g[currentIndex];
+                    int index = GameGrid.ToIndex(coord, _mapSize);
+                    ushort node_g = _g[index];
                     __initialization.End();
 
                     __neighbours.Begin();
-                    var enumerator = new NeighbourEnumerator(coord:currentCoord, mapSize:_mapSize);
+                    var enumerator = new NeighbourEnumerator(coord:coord, mapSize:_mapSize);
                     while (enumerator.MoveNext(out uint2 neighbourCoord))
                     {
                         int neighbourIndex = GameGrid.ToIndex(neighbourCoord, _mapSize);
                         if (_moveCost[neighbourIndex]!=EFloorType.Traversable) continue;// 100% obstacle
 
                         ushort g = (ushort)(node_g + 1);
-                        ushort h = (ushort)(ManhattanHeuristic(neighbourCoord, _dst) * _hMultiplier);
-                        ushort f = (ushort)(g + h);
+                        if (g>_gmax) continue;// range limit reached
 
                         if (g<_g[neighbourIndex])
                         {
                             __update_fg.Begin();
+                            ushort h = (ushort)(ManhattanHeuristic(neighbourCoord, _dst) * _hMultiplier);
+                            ushort f = (ushort)(g + h);
                             _f[neighbourIndex] = f;
                             _g[neighbourIndex] = g;
-                            _solution[neighbourIndex] = currentCoord;
+                            _solution[neighbourIndex] = coord;
                             __update_fg.End();
-                        }
 
-                        __frontier_push.Begin();
-                        if (!_visited.Contains(neighbourCoord))
+                            __frontier_push.Begin();
                             _frontier.Push(neighbourCoord);
-                        __frontier_push.End();
-
-                        _visited.Add(neighbourCoord);
+                            __frontier_push.End();
+                        }
                     }
                     __neighbours.End();
 
-                    destinationReached = math.all(currentCoord==_dst);
+                    destinationReached = math.all(coord==_dst);
                 }
                 __search.End();
 
@@ -154,11 +147,7 @@ namespace ServerAndClient.Navigation
 
             public void Dispose()
             {
-                this._g.Dispose();
-                this._f.Dispose();
-                this._solution.Dispose();
                 this._frontier.Dispose();
-                this._visited.Dispose();
             }
         }
 

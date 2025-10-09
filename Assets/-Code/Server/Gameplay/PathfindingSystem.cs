@@ -35,15 +35,17 @@ namespace Server.Gameplay
             if (SystemAPI.TryGetSingleton<GeneratedMapData>(out var mapData))
             foreach (var (request, entity) in SystemAPI.Query<PathfindingQuery>().WithEntityAccess())
             {
+                ushort moveRange = state.EntityManager.GetComponentData<MoveRange>(entity);
+
                 NativeList<uint2> results = new (Allocator.Persistent);
                 var job = new GameNavigation.AStarJob(
                     start: GameGrid.Clamp(request.Src, mapSettings.Size),
                     destination: GameGrid.Clamp(request.Dst, mapSettings.Size),
+                    moveRange: moveRange,
                     moveCost: mapData.FloorArray,
                     mapSize: mapSettings.Size,
                     results: results,
-                    hMultiplier: 1,
-                    stepBudget: mapSettings.Size.x * mapSettings.Size.y
+                    hMultiplier: 1
                 );
                 job.Schedule().Complete();
                 job.Dispose();
