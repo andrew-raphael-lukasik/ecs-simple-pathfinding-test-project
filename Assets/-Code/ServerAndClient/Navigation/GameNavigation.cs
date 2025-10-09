@@ -23,9 +23,9 @@ namespace ServerAndClient.Navigation
             readonly float _hMultiplier;
             readonly uint _stepBudget;
 
-            NativeArray<half> _g, _f;
+            NativeArray<ushort> _g, _f;
             NativeArray<uint2> _solution;
-            NativeMinHeap<uint2, half, Comparer_fp16> _frontier;
+            NativeMinHeap<uint2, ushort, Comparer_uint16> _frontier;
             NativeHashSet<uint2> _visited;
 
             ProfilerMarker __initialization, __search, __neighbours, __frontier_push, __frontier_pop, __update_fg, __trace;
@@ -76,13 +76,13 @@ namespace ServerAndClient.Navigation
                 }
                 {
                     for (int i=_g.Length-1 ; i!=-1 ; i--)
-                        _g[i] = (half) half.MaxValue;
-                    _g[srcIndex] = half.zero;
+                        _g[i] = ushort.MaxValue;
+                    _g[srcIndex] = ushort.MinValue;
                 }
                 {
                     for (int i=_f.Length-1 ; i!=-1 ; i--)
-                        _f[i] = (half) half.MaxValue;
-                    _f[srcIndex] = half.zero;
+                        _f[i] = ushort.MaxValue;
+                    _f[srcIndex] = ushort.MinValue;
                 }
                 _solution[srcIndex] = _src;
                 _frontier.Push(_src);
@@ -104,7 +104,7 @@ namespace ServerAndClient.Navigation
                     currentCoord = _frontier.Pop();
                     __frontier_pop.End();
                     int currentIndex = GameGrid.ToIndex(currentCoord, _mapSize);
-                    float node_g = _g[currentIndex];
+                    ushort node_g = _g[currentIndex];
                     __initialization.End();
 
                     __neighbours.Begin();
@@ -114,15 +114,15 @@ namespace ServerAndClient.Navigation
                         int neighbourIndex = GameGrid.ToIndex(neighbourCoord, _mapSize);
                         if (_moveCost[neighbourIndex]!=EFloorType.Traversable) continue;// 100% obstacle
 
-                        float g = node_g + 1;
-                        float h = EuclideanHeuristic(neighbourCoord, _dst) * _hMultiplier;
-                        float f = g + h;
+                        ushort g = (ushort)(node_g + 1);
+                        ushort h = (ushort)(ManhattanHeuristic(neighbourCoord, _dst) * _hMultiplier);
+                        ushort f = (ushort)(g + h);
 
                         if (g<_g[neighbourIndex])
                         {
                             __update_fg.Begin();
-                            _f[neighbourIndex] = (half) f;
-                            _g[neighbourIndex] = (half) g;
+                            _f[neighbourIndex] = f;
+                            _g[neighbourIndex] = g;
                             _solution[neighbourIndex] = currentCoord;
                             __update_fg.End();
                         }
@@ -163,6 +163,7 @@ namespace ServerAndClient.Navigation
         }
 
         public static float EuclideanHeuristic(uint2 a, uint2 b) => math.length((int2) a - (int2) b);
+        public static float ManhattanHeuristic(uint2 a, uint2 b) => math.csum(math.abs((int2) a - (int2) b));
  
         static bool BacktrackToPath
         (
@@ -204,12 +205,12 @@ namespace ServerAndClient.Navigation
             }
         }
 
-        struct Comparer_fp16 : INativeMinHeapComparer<uint2,half>
+        struct Comparer_uint16 : INativeMinHeapComparer<uint2,ushort>
         {
             public readonly uint2 _mapSize;
-            public Comparer_fp16(uint2 mapSize) => this._mapSize = mapSize;
+            public Comparer_uint16(uint2 mapSize) => this._mapSize = mapSize;
 
-            public int Compare(uint2 lhs, uint2 rhs, NativeSlice<half> comparables)
+            public int Compare(uint2 lhs, uint2 rhs, NativeSlice<ushort> comparables)
             {
                 float lhsValue = comparables[GameGrid.ToIndex(lhs, _mapSize)];
                 float rhsValue = comparables[GameGrid.ToIndex(rhs, _mapSize)];
