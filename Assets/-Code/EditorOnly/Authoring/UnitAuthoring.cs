@@ -30,11 +30,11 @@ namespace EditorOnly.Authoring
                 // AddComponent<IsUnitCoordValid>(entity);
                 // SetComponentEnabled<IsUnitCoordValid>(entity, false);
 
-                AddComponent(entity, new UnitMoveData{
-                    MoveRange = (ushort) authoring._moveRange
+                AddComponent(entity, new MoveRange{
+                    Value = (ushort) authoring._moveRange
                 });
-                AddComponent(entity, new UnitAttackData{
-                    AttackRange = (ushort) authoring._attackRange,
+                AddComponent(entity, new AttackRange{
+                    Value = (ushort) authoring._attackRange,
                 });
             }
         }

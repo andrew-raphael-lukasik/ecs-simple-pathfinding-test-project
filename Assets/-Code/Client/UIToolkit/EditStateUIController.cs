@@ -135,8 +135,8 @@ namespace Client.UIToolkit
                     var selectedUnitSingleton = _selectedUnitQuery.GetSingleton<SelectedUnitSingleton>();
                     UnityEngine.Assertions.Assert.IsTrue(_em.Exists(selectedUnitSingleton.Selected));
 
-                    _em.SetComponentData(selectedUnitSingleton.Selected, new UnitMoveData{
-                        MoveRange = (ushort) e.newValue
+                    _em.SetComponentData(selectedUnitSingleton.Selected, new MoveRange{
+                        Value = (ushort) e.newValue
                     });
 
                     unitMoveRangeSliderLabel.text = e.newValue.ToString();
@@ -149,8 +149,8 @@ namespace Client.UIToolkit
                     var selectedUnitSingleton = _selectedUnitQuery.GetSingleton<SelectedUnitSingleton>();
                     UnityEngine.Assertions.Assert.IsTrue(_em.Exists(selectedUnitSingleton.Selected));
 
-                    _em.SetComponentData(selectedUnitSingleton.Selected, new UnitAttackData{
-                        AttackRange = (ushort) e.newValue
+                    _em.SetComponentData(selectedUnitSingleton.Selected, new AttackRange{
+                        Value = (ushort) e.newValue
                     });
 
                     unitAttackRangeSliderLabel.text = e.newValue.ToString();
@@ -164,13 +164,13 @@ namespace Client.UIToolkit
                     _selectedUnitQuery.TryGetSingleton<SelectedUnitSingleton>(out var selectedUnitSingleton);
                     if (selectedUnitSingleton.Selected!=Entity.Null && _em.Exists(selectedUnitSingleton.Selected))
                     {
-                        var unitMove = _em.GetComponentData<UnitMoveData>(selectedUnitSingleton.Selected);
-                        var unitAttack = _em.GetComponentData<UnitAttackData>(selectedUnitSingleton.Selected);
+                        var unitMove = _em.GetComponentData<MoveRange>(selectedUnitSingleton.Selected);
+                        var unitAttack = _em.GetComponentData<AttackRange>(selectedUnitSingleton.Selected);
 
-                        unitMoveRangeSlider.SetValueWithoutNotify(unitMove.MoveRange);
-                        unitAttackRangeSlider.SetValueWithoutNotify(unitAttack.AttackRange);
-                        unitMoveRangeSliderLabel.text = unitMove.MoveRange.ToString();
-                        unitAttackRangeSliderLabel.text = unitAttack.AttackRange.ToString();
+                        unitMoveRangeSlider.SetValueWithoutNotify(unitMove.Value);
+                        unitAttackRangeSlider.SetValueWithoutNotify(unitAttack.Value);
+                        unitMoveRangeSliderLabel.text = unitMove.Value.ToString();
+                        unitAttackRangeSliderLabel.text = unitAttack.Value.ToString();
                     }
                     else
                     {
