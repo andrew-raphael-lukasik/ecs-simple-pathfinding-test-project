@@ -94,13 +94,11 @@ namespace ServerAndClient.Navigation
                     &&  !destinationReached
                 )
                 {
-                    __initialization.Begin();
                     __frontier_pop.Begin();
                     coord = _frontier.Pop();
                     __frontier_pop.End();
                     int index = GameGrid.ToIndex(coord, _mapSize);
                     ushort node_g = _g[index];
-                    __initialization.End();
 
                     __neighbours.Begin();
                     var enumerator = new NeighbourEnumerator(coord:coord, mapSize:_mapSize);
@@ -209,13 +207,11 @@ namespace ServerAndClient.Navigation
                 uint2 coord;
                 while (_frontier.Length!=0)
                 {
-                    __initialization.Begin();
                     __frontier_pop.Begin();
                     coord = _frontier.Pop();
                     __frontier_pop.End();
                     int index = GameGrid.ToIndex(coord, _mapSize);
                     ushort node_g = _g[index];
-                    __initialization.End();
 
                     __neighbours.Begin();
                     var enumerator = new NeighbourEnumerator(coord:coord, mapSize:_mapSize);
