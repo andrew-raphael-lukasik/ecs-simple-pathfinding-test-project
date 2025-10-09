@@ -8,8 +8,8 @@ using ServerAndClient.Navigation;
 
 namespace Server.Gameplay
 {
-    [WorldSystemFilter(WorldSystemFilterFlags.Presentation | WorldSystemFilterFlags.Editor)]
-    [UpdateInGroup(typeof(GameInitializationSystemGroup))]
+    [WorldSystemFilter(WorldSystemFilterFlags.Presentation)]
+    [UpdateInGroup(typeof(GamePresentationSystemGroup))]
     [RequireMatchingQueriesForUpdate]
     [Unity.Burst.BurstCompile]
     public partial struct PathfindingPresentationSystem : ISystem
@@ -19,6 +19,7 @@ namespace Server.Gameplay
         // [Unity.Burst.BurstCompile]
         void ISystem.OnCreate(ref SystemState state)
         {
+            state.RequireForUpdate<GameState.PLAY>();
             state.RequireForUpdate<MapSettingsSingleton>();
             state.RequireForUpdate<GeneratedMapData>();
             state.RequireForUpdate<PathfindingQueryResult>();
@@ -41,18 +42,18 @@ namespace Server.Gameplay
             foreach (var pathResults in SystemAPI.Query<PathfindingQueryResult>())
             if (pathResults.Success==1)
             {
-                int length = pathResults.Path.Length;
-                int iBufferStart = buffer.Length;
-                buffer.Length += length;
+                int pathLength = pathResults.Path.Length;
+                int bufferStart = buffer.Length;
+                buffer.Length += pathLength;
                 uint2 coord = pathResults.Path[0];
-                for (int i = 1; i < length; i++)
+                for (int i = 1; i < pathLength; i++)
                 {
-                    int indexPrev = GameGrid.ToIndex((uint2) coord, mapSettings.Size);
+                    int indexPrev = GameGrid.ToIndex(coord, mapSettings.Size);
                     coord = pathResults.Path[i];
-                    int index = GameGrid.ToIndex((uint2) coord, mapSettings.Size);
-                    buffer[iBufferStart+i] = new float3x2(
-                        mapData.PositionArray[indexPrev] + new float3(0, .5f, 0),
-                        mapData.PositionArray[index] + new float3(0, .5f, 0)
+                    int index = GameGrid.ToIndex(coord, mapSettings.Size);
+                    buffer[bufferStart+i] = new float3x2(
+                        mapData.PositionArray[indexPrev] + new float3(0, .1f, 0),
+                        mapData.PositionArray[index] + new float3(0, .1f, 0)
                     );
                 }
             }

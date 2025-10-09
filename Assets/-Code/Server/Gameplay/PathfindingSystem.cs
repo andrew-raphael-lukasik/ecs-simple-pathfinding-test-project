@@ -58,6 +58,7 @@ namespace Server.Gameplay
                 if (job.results.Length!=0)
                 {
                     Debug.Log($"Pathfinding succeeded! Path length:{job.results.Length}");
+
                     ecb.AddComponent(entity, new PathfindingQueryResult{
                         Success = 1,
                         Path = job.results.AsArray(),
@@ -70,9 +71,7 @@ namespace Server.Gameplay
                         else
                             cleanupBuffer = ecb.AddBuffer<DisposeNativeArrayOnDestroyed>(entity);
 
-                        cleanupBuffer.Add(
-                            DisposeNativeArrayOnDestroyed.Factory(job.results.AsArray())
-                        );
+                        cleanupBuffer.Add(DisposeNativeArrayOnDestroyed.Factory(job.results.AsArray()));
                     }
                 }
                 else
