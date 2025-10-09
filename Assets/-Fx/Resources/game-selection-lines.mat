@@ -116,7 +116,7 @@ Material:
     - _FarColorDistance: 14.1
     - _FarCutoffDistaneEnd: 13.7
     - _FarCutoffDistaneStart: 6.9
-    - _FarWidth: 0.25
+    - _FarWidth: 0.125
     - _FarWidthDistance: 22
     - _GlossMapScale: 0
     - _Glossiness: 0
