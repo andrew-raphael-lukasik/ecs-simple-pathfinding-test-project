@@ -47,6 +47,20 @@ namespace Server.Gameplay
                     {
                         moving.ValueRW.TimeUntilNextCoord = math.saturate(moving.ValueRW.TimeUntilNextCoord + SystemAPI.Time.DeltaTime * 3f);
 
+                        float4 Zprev = ltw.ValueRW.Value.c2;
+                        float3 Z = math.normalizesafe(
+                            math.lerp(
+                                new float3(Zprev.x, Zprev.y, Zprev.z),
+                                math.normalizesafe(nextPos - ltw.ValueRO.Position),
+                                SystemAPI.Time.DeltaTime * 7f
+                            )
+                        );
+                        float3 Y = new float3(0, 1, 0);
+                        float3 X = math.cross(Z, Y);
+                        
+                        ltw.ValueRW.Value.c0 = new float4(X, 0);
+                        ltw.ValueRW.Value.c1 = new float4(Y, 0);
+                        ltw.ValueRW.Value.c2 = new float4(Z, 0);
                         ltw.ValueRW.Value.c3 = math.lerp(
                             ltw.ValueRO.Value.c3,
                             new float4(nextPos, 1),
