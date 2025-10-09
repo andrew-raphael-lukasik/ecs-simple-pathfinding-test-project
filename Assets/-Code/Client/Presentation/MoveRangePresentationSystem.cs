@@ -18,9 +18,9 @@ namespace Client.Presentation
     {
         Entity _segments;
         NativeHashSet<uint2> _reachable;
-        Entity _solution_owner;
-        GameNavigation.MoveReachJob _solution_job;
-        JobHandle _solution_dependency;
+        Entity _reachable_owner;
+        GameNavigation.MoveReachJob _reachable_job;
+        JobHandle _reachable_dependency;
 
         // [Unity.Burst.BurstCompile]
         void ISystem.OnCreate(ref SystemState state)
@@ -39,8 +39,8 @@ namespace Client.Presentation
         [Unity.Burst.BurstCompile]
         void ISystem.OnDestroy(ref SystemState state)
         {
-            _solution_dependency.Complete();
-            _solution_job.Dispose();
+            _reachable_dependency.Complete();
+            _reachable_job.Dispose();
             if (_reachable.IsCreated) _reachable.Dispose();
         }
 
@@ -51,53 +51,59 @@ namespace Client.Presentation
             var mapSettings = SystemAPI.GetSingleton<MapSettingsSingleton>();
             var mapData = SystemAPI.GetSingleton<GeneratedMapData>();
 
-            if (_solution_owner!=Entity.Null && em.Exists(_solution_owner))
-            if (_solution_dependency.IsCompleted)
+            if (_reachable_owner!=Entity.Null && em.Exists(_reachable_owner))
+            if (_reachable_dependency.IsCompleted)
             {
-                _solution_dependency.Complete();
-                _solution_job.Dispose();
+                _reachable_dependency.Complete();
+                _reachable_job.Dispose();
 
                 var segmentRef = SystemAPI.GetComponentRW<Segments.Segment>(_segments);
                 var buffer = segmentRef.ValueRW.Buffer;
-                bool preExistingLines = buffer.Length!=0;
-                buffer.Length = 0;
 
-                const int numSegmentsPerField = 3;
-                var rot = quaternion.RotateX(math.PIHALF);
-                int bufferPosition = buffer.Length;
-                buffer.Length += _reachable.Count * numSegmentsPerField;
-                foreach (uint2 coord in _reachable)
+                if (_reachable.Count!=0)
                 {
-                    int index = GameGrid.ToIndex(coord, mapSettings.Size);
-                    float3 point = mapData.PositionArray[index];
-                    Segments.Plot.Circle(buffer, ref bufferPosition, numSegmentsPerField, 0.15f, point, rot);
-                }
+                    buffer.Length = 0;
+                    Segments.Core.SetSegmentChanged(_segments, em);
 
-                if (buffer.Length!=0 || preExistingLines)
-                    Segments.Core.SetSegmentChanged(_segments, state.EntityManager);
+                    const int numSegmentsPerField = 3;
+                    var rot = quaternion.RotateX(math.PIHALF);
+                    int bufferPosition = buffer.Length;
+                    buffer.Length += _reachable.Count * numSegmentsPerField;
+                    foreach (uint2 coord in _reachable)
+                    {
+                        int index = GameGrid.ToIndex(coord, mapSettings.Size);
+                        float3 point = mapData.PositionArray[index];
+                        Segments.Plot.Circle(buffer, ref bufferPosition, numSegmentsPerField, 0.15f, point, rot);
+                    }
+                }
+                else if(buffer.Length!=0)
+                {
+                    buffer.Length = 0;
+                    Segments.Core.SetSegmentChanged(_segments, em);
+                }
             }
 
             Entity selectedUnit = SystemAPI.GetSingleton<SelectedUnitSingleton>();
-            if (_solution_owner!=selectedUnit)
+            if (_reachable_owner!=selectedUnit)
             {
                 if (selectedUnit!=Entity.Null && em.Exists(selectedUnit))
                 {
                     ushort moveRange = em.GetComponentData<MoveRange>(selectedUnit);
                     uint2 coord = em.GetComponentData<UnitCoord>(selectedUnit);
 
-                    _solution_job = new GameNavigation.MoveReachJob(
+                    _reachable_job = new GameNavigation.MoveReachJob(
                         start: coord,
                         range: moveRange,
                         moveCost: mapData.FloorArray,
                         mapSize: mapSettings.Size,
                         reachable: _reachable
                     );
-                    _solution_dependency = _solution_job.Schedule(state.Dependency);
-                    _solution_owner = selectedUnit;
+                    _reachable_dependency = _reachable_job.Schedule(state.Dependency);
+                    _reachable_owner = selectedUnit;
                 }
                 else
                 {
-                    _solution_owner = Entity.Null;
+                    _reachable_owner = Entity.Null;
                     var segmentRef = SystemAPI.GetComponentRW<Segments.Segment>(_segments);
                     segmentRef.ValueRW.Buffer.Length = 0;
                     Segments.Core.SetSegmentChanged(_segments, state.EntityManager);

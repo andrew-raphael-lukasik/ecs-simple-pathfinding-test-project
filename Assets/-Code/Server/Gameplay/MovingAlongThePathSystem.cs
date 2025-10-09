@@ -57,7 +57,7 @@ namespace Server.Gameplay
                         );
                         float3 Y = new float3(0, 1, 0);
                         float3 X = math.cross(Z, Y);
-                        
+
                         ltw.ValueRW.Value.c0 = new float4(X, 0);
                         ltw.ValueRW.Value.c1 = new float4(Y, 0);
                         ltw.ValueRW.Value.c2 = new float4(Z, 0);
@@ -79,6 +79,8 @@ namespace Server.Gameplay
                 else
                 {
                     ecb.RemoveComponent<MovingAlongThePath>(entity);
+                    ecb.RemoveComponent<PathfindingQueryResult>(entity);
+                    path.Path.Dispose();
                 }
             }
 

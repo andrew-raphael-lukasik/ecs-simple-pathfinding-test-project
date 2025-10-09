@@ -31,18 +31,19 @@ namespace Client.Input
         [Unity.Burst.BurstCompile]
         void ISystem.OnUpdate(ref SystemState state)
         {
+            var em = state.EntityManager;
             var mapSettings = SystemAPI.GetSingleton<MapSettingsSingleton>();
             var playerInput = SystemAPI.GetSingleton<PlayerInputSingleton>();
             var selectedUnit = SystemAPI.GetSingleton<SelectedUnitSingleton>();
 
             if (playerInput.ExecuteStart==1 && playerInput.IsPointerOverUI==0)
-            if (selectedUnit.Selected!=Entity.Null && state.EntityManager.Exists(selectedUnit.Selected))
+            if (selectedUnit!=Entity.Null && em.Exists(selectedUnit))
             if (GameGrid.Raycast(ray: playerInput.PointerRay, mapOrigin: mapSettings.Origin, mapSize: mapSettings.Size, out uint2 dstCoord))
             {
                 bool clickedOnPathDestination = false;
-                if (SystemAPI.HasComponent<PathfindingQueryResult>(selectedUnit.Selected))
+                if (SystemAPI.HasComponent<PathfindingQueryResult>(selectedUnit))
                 {
-                    var pathResult = SystemAPI.GetComponent<PathfindingQueryResult>(selectedUnit.Selected);
+                    var pathResult = SystemAPI.GetComponent<PathfindingQueryResult>(selectedUnit);
                     if (pathResult.Success==1)
                     {
                         uint2 pathEnd = pathResult.Path[pathResult.Path.Length-1];
@@ -52,12 +53,12 @@ namespace Client.Input
 
                 if (clickedOnPathDestination)
                 {
-                    state.EntityManager.AddComponent<MovingAlongThePath>(selectedUnit.Selected);
+                    em.AddComponent<MovingAlongThePath>(selectedUnit);
                 }
-                else if(!SystemAPI.HasComponent<MovingAlongThePath>(selectedUnit.Selected))
+                else if(!SystemAPI.HasComponent<MovingAlongThePath>(selectedUnit))
                 {
-                    uint2 srcCoord = state.EntityManager.GetComponentData<UnitCoord>(selectedUnit.Selected);
-                    state.EntityManager.AddComponentData(selectedUnit.Selected, new PathfindingQuery{
+                    uint2 srcCoord = em.GetComponentData<UnitCoord>(selectedUnit);
+                    em.AddComponentData(selectedUnit, new PathfindingQuery{
                         Src = srcCoord,
                         Dst = dstCoord,
                     });
