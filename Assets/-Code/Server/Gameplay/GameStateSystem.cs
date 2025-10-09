@@ -25,6 +25,8 @@ namespace Server.Gameplay
         [Unity.Burst.BurstCompile]
         void ISystem.OnUpdate(ref SystemState state)
         {
+            var em = state.EntityManager;
+
             // look for game state changes:
             var ecb = new EntityCommandBuffer(Allocator.TempJob);
             EGameState requestedMode = EGameState.UNDEFINED;
@@ -56,10 +58,11 @@ namespace Server.Gameplay
                 {
                     if (SystemAPI.TryGetSingletonEntity<GameState.PLAY>(out Entity entity))
                     {
-                        state.EntityManager.DestroyEntity(entity);
+                        em.DestroyEntity(entity);
                     }
-                    state.EntityManager.CreateSingleton<GameState.EDIT>();
-                    state.EntityManager.CreateSingleton<GameState.EDIT_STARTED_EVENT>();
+
+                    if (!SystemAPI.HasSingleton<GameState.EDIT>()) em.CreateSingleton<GameState.EDIT>();
+                    if (!SystemAPI.HasSingleton<GameState.EDIT_STARTED_EVENT>()) em.CreateSingleton<GameState.EDIT_STARTED_EVENT>();
                     Debug.Log($"{state.DebugName}: {GameState.EDIT.DebugName} & {GameState.EDIT_STARTED_EVENT.DebugName} created");
                 }
                 break;
@@ -67,17 +70,17 @@ namespace Server.Gameplay
                 {
                     if (SystemAPI.TryGetSingletonEntity<GameState.EDIT>(out Entity entity))
                     {
-                        state.EntityManager.DestroyEntity(entity);
+                        em.DestroyEntity(entity);
                     }
-                    state.EntityManager.CreateSingleton<GameState.PLAY>();
-                    state.EntityManager.CreateSingleton<GameState.PLAY_STARTED_EVENT>();
+                    if (!SystemAPI.HasSingleton<GameState.PLAY>()) em.CreateSingleton<GameState.PLAY>();
+                    if (!SystemAPI.HasSingleton<GameState.PLAY_STARTED_EVENT>()) em.CreateSingleton<GameState.PLAY_STARTED_EVENT>();
                     Debug.Log($"{state.DebugName}: {GameState.PLAY.DebugName} & {GameState.PLAY_STARTED_EVENT.DebugName} created");
                 }
                 break;
                 default: throw new System.NotImplementedException($"{requestedMode}");
             }
 
-            if (ecb.ShouldPlayback) ecb.Playback(state.EntityManager);
+            if (ecb.ShouldPlayback) ecb.Playback(em);
         }
 
         [WorldSystemFilter(WorldSystemFilterFlags.Default | WorldSystemFilterFlags.ServerSimulation | WorldSystemFilterFlags.Editor)]
