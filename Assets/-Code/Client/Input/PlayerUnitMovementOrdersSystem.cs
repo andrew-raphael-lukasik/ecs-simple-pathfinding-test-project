@@ -34,7 +34,7 @@ namespace Client.Input
             var em = state.EntityManager;
             var mapSettings = SystemAPI.GetSingleton<MapSettingsSingleton>();
             var playerInput = SystemAPI.GetSingleton<PlayerInputSingleton>();
-            var selectedUnit = SystemAPI.GetSingleton<SelectedUnitSingleton>();
+            Entity selectedUnit = SystemAPI.GetSingleton<SelectedUnitSingleton>();
 
             if (playerInput.ExecuteStart==1 && playerInput.IsPointerOverUI==0)
             if (selectedUnit!=Entity.Null && em.Exists(selectedUnit))

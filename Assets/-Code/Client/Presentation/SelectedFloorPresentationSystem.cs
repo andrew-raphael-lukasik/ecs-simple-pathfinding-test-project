@@ -4,12 +4,9 @@ using Unity.Mathematics;
 using Unity.Collections;
 using Unity.Transforms;
 using Unity.Rendering;
-using Unity.Jobs;
 
 using ServerAndClient;
 using ServerAndClient.Gameplay;
-using ServerAndClient.Input;
-using Server.Gameplay;
 
 namespace Client.Presentation
 {
@@ -28,8 +25,7 @@ namespace Client.Presentation
 
             var lineMat = Resources.Load<Material>("game-selection-lines");
             Segments.Core.Create(out _segments, lineMat);
-
-            state.EntityManager.AddComponent<IsEditStateOnly>(_segments);// edit state only
+            state.EntityManager.AddComponent<IsEditStateOnly>(_segments);
         }
 
         [Unity.Burst.BurstCompile]
@@ -46,13 +42,13 @@ namespace Client.Presentation
             var segmentRef = SystemAPI.GetComponentRW<Segments.Segment>(_segments);
             var buffer = segmentRef.ValueRW.Buffer;
 
-            var selectedFloor = SystemAPI.GetSingleton<SelectedFloorSingleton>();
-            if (selectedFloor.Selected!=Entity.Null && em.Exists(selectedFloor.Selected))
+            Entity selectedFloor = SystemAPI.GetSingleton<SelectedFloorSingleton>();
+            if (selectedFloor!=Entity.Null && em.Exists(selectedFloor))
             {
                 buffer.Length = 0;
                 Segments.Core.SetSegmentChanged(_segments, em);
 
-                var aabb = GetTotalRenderBounds(em, selectedFloor.Selected);
+                var aabb = GetTotalRenderBounds(em, selectedFloor);
                 buffer.Length += 12;
 
                 Segments.Plot.Box(

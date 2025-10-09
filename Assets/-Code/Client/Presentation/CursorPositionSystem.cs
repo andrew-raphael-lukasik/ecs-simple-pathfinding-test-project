@@ -5,7 +5,6 @@ using Unity.Transforms;
 using Unity.Collections;
 using Unity.Jobs;
 
-using Client.Input;
 using ServerAndClient.Input;
 using ServerAndClient.Gameplay;
 using ServerAndClient;
@@ -78,7 +77,7 @@ namespace Client.Presentation
             }
         }
 
-        [WithAny(typeof(IsEditModeCursor), typeof(IsPlayModeCursor))]
+        [WithPresent(typeof(IsCursor))]
         [Unity.Burst.BurstCompile]
         partial struct SetCursorPositionJob : IJobEntity
         {

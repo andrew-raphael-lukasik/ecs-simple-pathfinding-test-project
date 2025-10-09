@@ -48,13 +48,13 @@ namespace Client.UIToolkit
             {
                 var style = _selectedUnitUi.style;
                 if (
-                        _selectedUnitQuery.TryGetSingleton<SelectedUnitSingleton>(out var selectedUnitSingleton)
-                    &&  selectedUnitSingleton.Selected!=Entity.Null
-                    &&  _em.Exists(selectedUnitSingleton.Selected)
-                    &&  _em.HasComponent<LocalToWorld>(selectedUnitSingleton.Selected)
+                        _selectedUnitQuery.TryGetSingleton<SelectedUnitSingleton>(out var selectedUnit)
+                    &&  selectedUnit!=Entity.Null
+                    &&  _em.Exists(selectedUnit)
+                    &&  _em.HasComponent<LocalToWorld>(selectedUnit)
                 )
                 {
-                    var ltw = _em.GetComponentData<LocalToWorld>(selectedUnitSingleton.Selected);
+                    var ltw = _em.GetComponentData<LocalToWorld>(selectedUnit);
                     Vector2 guiPoint = RuntimePanelUtils.CameraTransformWorldToPanel(_selectedUnitUi.panel, ltw.Position, MainCameraComponent.MainCamera);
                     style.left = guiPoint.x + 30;
                     style.top = guiPoint.y;
@@ -132,10 +132,10 @@ namespace Client.UIToolkit
             Label unitMoveRangeSliderLabel = root.Find<Label>("selected-unit-move-range-display");
             SliderInt unitMoveRangeSlider = root.For<SliderInt>("selected-unit-move-range", (slider) => {
                 slider.RegisterValueChangedCallback((e) => {
-                    var selectedUnitSingleton = _selectedUnitQuery.GetSingleton<SelectedUnitSingleton>();
-                    UnityEngine.Assertions.Assert.IsTrue(_em.Exists(selectedUnitSingleton.Selected));
+                    Entity selectedUnit = _selectedUnitQuery.GetSingleton<SelectedUnitSingleton>();
+                    UnityEngine.Assertions.Assert.IsTrue(_em.Exists(selectedUnit));
 
-                    _em.SetComponentData(selectedUnitSingleton.Selected, new MoveRange{
+                    _em.SetComponentData(selectedUnit, new MoveRange{
                         Value = (ushort) e.newValue
                     });
 
@@ -146,10 +146,10 @@ namespace Client.UIToolkit
             Label unitAttackRangeSliderLabel = root.Find<Label>("selected-unit-attack-range-display");
             SliderInt unitAttackRangeSlider = root.For<SliderInt>("selected-unit-attack-range", (slider) => {
                 slider.RegisterValueChangedCallback((e) => {
-                    var selectedUnitSingleton = _selectedUnitQuery.GetSingleton<SelectedUnitSingleton>();
-                    UnityEngine.Assertions.Assert.IsTrue(_em.Exists(selectedUnitSingleton.Selected));
+                    Entity selectedUnit = _selectedUnitQuery.GetSingleton<SelectedUnitSingleton>();
+                    UnityEngine.Assertions.Assert.IsTrue(_em.Exists(selectedUnit));
 
-                    _em.SetComponentData(selectedUnitSingleton.Selected, new AttackRange{
+                    _em.SetComponentData(selectedUnit, new AttackRange{
                         Value = (ushort) e.newValue
                     });
 
@@ -161,11 +161,11 @@ namespace Client.UIToolkit
                 panel.style.visibility = Visibility.Hidden;
 
                 panel.RegisterCallback<GeometryChangedEvent>((e) => {
-                    _selectedUnitQuery.TryGetSingleton<SelectedUnitSingleton>(out var selectedUnitSingleton);
-                    if (selectedUnitSingleton.Selected!=Entity.Null && _em.Exists(selectedUnitSingleton.Selected))
+                    _selectedUnitQuery.TryGetSingleton<SelectedUnitSingleton>(out var selectedUnit);
+                    if (selectedUnit!=Entity.Null && _em.Exists(selectedUnit))
                     {
-                        var unitMove = _em.GetComponentData<MoveRange>(selectedUnitSingleton.Selected);
-                        var unitAttack = _em.GetComponentData<AttackRange>(selectedUnitSingleton.Selected);
+                        var unitMove = _em.GetComponentData<MoveRange>(selectedUnit);
+                        var unitAttack = _em.GetComponentData<AttackRange>(selectedUnit);
 
                         unitMoveRangeSlider.SetValueWithoutNotify(unitMove.Value);
                         unitAttackRangeSlider.SetValueWithoutNotify(unitAttack.Value);

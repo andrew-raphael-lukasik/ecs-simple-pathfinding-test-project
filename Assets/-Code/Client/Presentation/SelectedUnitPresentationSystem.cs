@@ -4,12 +4,9 @@ using Unity.Mathematics;
 using Unity.Collections;
 using Unity.Transforms;
 using Unity.Rendering;
-using Unity.Jobs;
 
 using ServerAndClient;
 using ServerAndClient.Gameplay;
-using ServerAndClient.Input;
-using Server.Gameplay;
 
 namespace Client.Presentation
 {

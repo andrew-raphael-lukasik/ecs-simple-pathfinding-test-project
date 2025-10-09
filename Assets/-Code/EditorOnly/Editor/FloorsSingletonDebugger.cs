@@ -85,7 +85,7 @@ namespace EditorOnly.Debugging
 
             var selectedFloorQuery = em.CreateEntityQuery(typeof(SelectedFloorSingleton));
             _selected = selectedFloorQuery.CalculateEntityCount()!=0
-                ? selectedFloorQuery.GetSingleton<SelectedFloorSingleton>().Selected
+                ? selectedFloorQuery.GetSingleton<SelectedFloorSingleton>()
                 : Entity.Null;
 
             _entityManager = em;

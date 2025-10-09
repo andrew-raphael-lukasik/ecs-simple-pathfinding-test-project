@@ -19,21 +19,13 @@ namespace EditorOnly.Authoring
             {
                 Entity entity = GetEntity(authoring, TransformUsageFlags.WorldSpace);
 
+                AddComponent<IsCursor>(entity);
+
                 switch (authoring._type)
                 {
-                    case EGameState.EDIT:
-                        AddComponent<IsEditModeCursor>(entity);
-                        AddComponent<IsEditStateOnly>(entity);
-                        break;
-                    
-                    case EGameState.PLAY:
-                        AddComponent<IsPlayModeCursor>(entity);
-                        AddComponent<IsPlayStateOnly>(entity);
-                        break;
-
-                    default:
-                        Debug.LogError($"value not implemented: {authoring._type}", authoring);
-                        break;
+                    case EGameState.EDIT: AddComponent<IsEditStateOnly>(entity); break;
+                    case EGameState.PLAY: AddComponent<IsPlayStateOnly>(entity); break;
+                    default: Debug.LogError($"value not implemented: {authoring._type}", authoring); break;
                 }
             }
         }

@@ -45,8 +45,8 @@ namespace Server.GameEdit
                     var mapDataRef = SystemAPI.GetSingletonRW<GeneratedMapData>();
                     var floorsRef = SystemAPI.GetSingletonRW<FloorsSingleton>();
                     var unitsRef = SystemAPI.GetSingletonRW<UnitsSingleton>();
-                    Entity srcFloor = SystemAPI.GetSingleton<SelectedFloorSingleton>().Selected;
-                    Entity srcUnit = SystemAPI.GetSingleton<SelectedUnitSingleton>().Selected;
+                    Entity srcFloor = SystemAPI.GetSingleton<SelectedFloorSingleton>();
+                    Entity srcUnit = SystemAPI.GetSingleton<SelectedUnitSingleton>();
 
                     if (!(srcFloor!=Entity.Null && em.Exists(srcFloor)))
                     {

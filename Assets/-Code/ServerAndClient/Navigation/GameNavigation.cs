@@ -351,7 +351,7 @@ namespace ServerAndClient.Navigation
                 this._coord = (int2) coord;
                 this._xMax = mapSize.x - 1;
                 this._yMax = mapSize.y - 1;
-                this._current = new uint2(uint.MaxValue, uint.MaxValue);
+                this._current = uint.MaxValue;
                 this._tick = 0;
             }
 

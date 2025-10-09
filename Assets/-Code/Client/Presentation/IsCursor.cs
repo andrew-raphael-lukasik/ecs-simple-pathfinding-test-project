@@ -2,5 +2,5 @@ using Unity.Entities;
 
 namespace Client.Presentation
 {
-    public struct IsPlayModeCursor : IComponentData {}
+    public struct IsCursor : IComponentData {}
 }

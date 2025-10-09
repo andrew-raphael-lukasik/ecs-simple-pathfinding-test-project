@@ -85,7 +85,7 @@ namespace EditorOnly.Debugging
 
             var selectedUnitQuery = em.CreateEntityQuery(typeof(SelectedUnitSingleton));
             _selected = selectedUnitQuery.CalculateEntityCount()!=0
-                ? selectedUnitQuery.GetSingleton<SelectedUnitSingleton>().Selected
+                ? selectedUnitQuery.GetSingleton<SelectedUnitSingleton>()
                 : Entity.Null;
 
             _entityManager = em;
