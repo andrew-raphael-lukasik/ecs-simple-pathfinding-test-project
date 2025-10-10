@@ -1,7 +1,4 @@
-using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.InputSystem;
-using UnityEngine.UIElements;
 using Unity.Entities;
 
 using ServerAndClient.Input;
@@ -10,7 +7,7 @@ using Client.UIToolkit;
 
 namespace Client.Input
 {
-    [WorldSystemFilter(WorldSystemFilterFlags.Default | WorldSystemFilterFlags.LocalSimulation | WorldSystemFilterFlags.ClientSimulation)]
+    [WorldSystemFilter(WorldSystemFilterFlags.LocalSimulation | WorldSystemFilterFlags.ClientSimulation)]
     [UpdateInGroup(typeof(GameInitializationSystemGroup))]
     public partial class PlayerInputSystem : SystemBase
     {

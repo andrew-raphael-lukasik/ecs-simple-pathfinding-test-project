@@ -1,9 +1,5 @@
-using UnityEngine;
 using Unity.Entities;
 using Unity.Mathematics;
-using Unity.Transforms;
-using Unity.Collections;
-using Unity.Jobs;
 
 using ServerAndClient;
 using ServerAndClient.Gameplay;
@@ -12,7 +8,7 @@ using ServerAndClient.Navigation;
 
 namespace Client.Input
 {
-    [WorldSystemFilter(WorldSystemFilterFlags.Default | WorldSystemFilterFlags.LocalSimulation | WorldSystemFilterFlags.ClientSimulation)]
+    [WorldSystemFilter(WorldSystemFilterFlags.LocalSimulation | WorldSystemFilterFlags.ClientSimulation)]
     [UpdateInGroup(typeof(GameInitializationSystemGroup))]
     [RequireMatchingQueriesForUpdate]
     [Unity.Burst.BurstCompile]

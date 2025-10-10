@@ -1,18 +1,16 @@
 using UnityEngine;
 using Unity.Entities;
 using Unity.Mathematics;
-using Unity.Transforms;
 using Unity.Collections;
 using Unity.Jobs;
 
 using ServerAndClient;
 using ServerAndClient.Gameplay;
-using ServerAndClient.Input;
 using ServerAndClient.Navigation;
 
 namespace Server.Gameplay
 {
-    [WorldSystemFilter(WorldSystemFilterFlags.Default | WorldSystemFilterFlags.ServerSimulation | WorldSystemFilterFlags.Editor)]
+    [WorldSystemFilter(WorldSystemFilterFlags.ServerSimulation | WorldSystemFilterFlags.LocalSimulation | WorldSystemFilterFlags.Editor)]
     [UpdateInGroup(typeof(GameInitializationSystemGroup), OrderFirst = true)]
     [RequireMatchingQueriesForUpdate]
     [Unity.Burst.BurstCompile]

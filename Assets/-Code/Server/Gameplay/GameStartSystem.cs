@@ -1,13 +1,12 @@
 using UnityEngine;
 using Unity.Entities;
-using Unity.Collections;
 
 using ServerAndClient.Gameplay;
 using ServerAndClient;
 
 namespace Server.Gameplay
 {
-    [WorldSystemFilter(WorldSystemFilterFlags.Default | WorldSystemFilterFlags.ServerSimulation | WorldSystemFilterFlags.Editor)]
+    [WorldSystemFilter(WorldSystemFilterFlags.ServerSimulation | WorldSystemFilterFlags.LocalSimulation | WorldSystemFilterFlags.Editor)]
     [UpdateInGroup(typeof(GameInitializationSystemGroup))]
     [RequireMatchingQueriesForUpdate]
     [Unity.Burst.BurstCompile]

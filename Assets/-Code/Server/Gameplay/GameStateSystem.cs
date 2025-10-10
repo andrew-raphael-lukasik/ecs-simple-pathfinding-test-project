@@ -6,7 +6,7 @@ using ServerAndClient.Gameplay;
 
 namespace Server.Gameplay
 {
-    [WorldSystemFilter(WorldSystemFilterFlags.Default | WorldSystemFilterFlags.ServerSimulation | WorldSystemFilterFlags.Editor)]
+    [WorldSystemFilter(WorldSystemFilterFlags.ServerSimulation | WorldSystemFilterFlags.LocalSimulation | WorldSystemFilterFlags.Editor)]
     [UpdateInGroup(typeof(InitializationSystemGroup), OrderFirst = true)]
     [RequireMatchingQueriesForUpdate]
     [Unity.Burst.BurstCompile]
@@ -83,7 +83,7 @@ namespace Server.Gameplay
             if (ecb.ShouldPlayback) ecb.Playback(em);
         }
 
-        [WorldSystemFilter(WorldSystemFilterFlags.Default | WorldSystemFilterFlags.ServerSimulation | WorldSystemFilterFlags.Editor)]
+        [WorldSystemFilter(WorldSystemFilterFlags.ServerSimulation | WorldSystemFilterFlags.LocalSimulation | WorldSystemFilterFlags.Editor)]
         [UpdateInGroup(typeof(InitializationSystemGroup), OrderFirst = true)]
         [UpdateBefore(typeof(GameStateSystem))]
         [Unity.Burst.BurstCompile]
