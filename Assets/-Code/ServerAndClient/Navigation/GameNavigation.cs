@@ -13,12 +13,12 @@ namespace ServerAndClient.Navigation
     {
 
         [Unity.Burst.BurstCompile]
-        public struct AStarJob : IJob, System.IDisposable
+        public struct MovePathJob : IJob, System.IDisposable
         {
             public NativeList<uint2> results;
 
             readonly uint2 _src, _dst;
-            [ReadOnly] readonly NativeArray<EFloorType> _moveCost;
+            [ReadOnly] readonly NativeArray<EFloorType> _floor;
             readonly uint2 _mapSize;
             readonly ushort _gmax;
             readonly float _hMultiplier;
@@ -29,12 +29,12 @@ namespace ServerAndClient.Navigation
 
             ProfilerMarker __initialization, __search, __neighbours, __frontier_push, __frontier_pop, __update_fg, __trace;
 
-            public AStarJob
+            public MovePathJob
             (
                 uint2 start,
                 uint2 destination,
-                ushort moveRange,
-                NativeArray<EFloorType> moveCost,
+                ushort range,
+                NativeArray<EFloorType> floor,
                 uint2 mapSize,
                 NativeList<uint2> results,
                 float hMultiplier = 1
@@ -42,13 +42,13 @@ namespace ServerAndClient.Navigation
             {
                 this._src = start;
                 this._dst = destination;
-                this._gmax = moveRange;
-                this._moveCost = moveCost;
+                this._gmax = range;
+                this._floor = floor;
                 this._mapSize = mapSize;
                 this.results = results;
                 this._hMultiplier = hMultiplier;
 
-                int length = moveCost.Length;
+                int length = floor.Length;
                 this._g = new (length, Allocator.TempJob, NativeArrayOptions.UninitializedMemory);
                 this._f = new (length, Allocator.TempJob, NativeArrayOptions.UninitializedMemory);
                 this._solution = new (length, Allocator.TempJob);
@@ -69,8 +69,8 @@ namespace ServerAndClient.Navigation
                 int srcIndex = GameGrid.ToIndex(_src, _mapSize);
                 int dstIndex = GameGrid.ToIndex(_dst, _mapSize);
                 {
-                    if (_moveCost[srcIndex]!=EFloorType.Traversable) return;
-                    if (_moveCost[dstIndex]!=EFloorType.Traversable) return;
+                    if (_floor[srcIndex]!=EFloorType.Traversable) return;
+                    if (_floor[dstIndex]!=EFloorType.Traversable) return;
                 }
                 {
                     for (int i=_g.Length-1 ; i!=-1 ; i--)
@@ -105,7 +105,7 @@ namespace ServerAndClient.Navigation
                     while (enumerator.MoveNext(out uint2 neighbourCoord))
                     {
                         int neighbourIndex = GameGrid.ToIndex(neighbourCoord, _mapSize);
-                        if (_moveCost[neighbourIndex]!=EFloorType.Traversable) continue;// 100% obstacle
+                        if (_floor[neighbourIndex]!=EFloorType.Traversable) continue;// 100% obstacle
 
                         ushort g = (ushort)(node_g + 1);
                         if (g>_gmax) continue;// range limit reached
@@ -150,11 +150,11 @@ namespace ServerAndClient.Navigation
         }
 
         [Unity.Burst.BurstCompile]
-        public struct MoveReachJob : IJob, System.IDisposable
+        public struct MoveRangeJob : IJob, System.IDisposable
         {
             public NativeHashSet<uint2> reachable;
             readonly uint2 _src;
-            [ReadOnly] readonly NativeArray<EFloorType> _moveCost;
+            [ReadOnly] readonly NativeArray<EFloorType> _floor;
             readonly uint2 _mapSize;
             readonly ushort _gmax;
 
@@ -163,22 +163,22 @@ namespace ServerAndClient.Navigation
 
             ProfilerMarker __initialization, __search, __neighbours, __frontier_push, __frontier_pop, __update_g;
 
-            public MoveReachJob
+            public MoveRangeJob
             (
                 uint2 start,
                 ushort range,
-                NativeArray<EFloorType> moveCost,
+                NativeArray<EFloorType> floor,
                 uint2 mapSize,
                 NativeHashSet<uint2> reachable
             )
             {
                 this._src = start;
                 this._gmax = range;
-                this._moveCost = moveCost;
+                this._floor = floor;
                 this._mapSize = mapSize;
                 this.reachable = reachable;
 
-                int length = moveCost.Length;
+                int length = floor.Length;
                 this._g = new (length, Allocator.TempJob, NativeArrayOptions.UninitializedMemory);
                 this._frontier = new (length, Allocator.TempJob, new (mapSize), _g);
 
@@ -194,7 +194,7 @@ namespace ServerAndClient.Navigation
                 __initialization.Begin();
                 reachable.Clear();
                 int srcIndex = GameGrid.ToIndex(_src, _mapSize);
-                if (_moveCost[srcIndex]!=EFloorType.Traversable) return;
+                if (_floor[srcIndex]!=EFloorType.Traversable) return;
                 {
                     for (int i=_g.Length-1 ; i!=-1 ; i--)
                         _g[i] = ushort.MaxValue;
@@ -218,7 +218,7 @@ namespace ServerAndClient.Navigation
                     while (enumerator.MoveNext(out uint2 neighbourCoord))
                     {
                         int neighbourIndex = GameGrid.ToIndex(neighbourCoord, _mapSize);
-                        if (_moveCost[neighbourIndex]!=EFloorType.Traversable) continue;// 100% obstacle
+                        if (_floor[neighbourIndex]!=EFloorType.Traversable) continue;// 100% obstacle
 
                         ushort g = (ushort)(node_g + 1);
                         if (g>_gmax) continue;// range limit reached

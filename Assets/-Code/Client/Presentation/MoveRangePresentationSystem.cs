@@ -20,7 +20,7 @@ namespace Client.Presentation
         NativeHashSet<uint2> _reachable;
         Entity _reachable_owner;
         uint2 _reachable_coord;
-        GameNavigation.MoveReachJob _reachable_job;
+        GameNavigation.MoveRangeJob _reachable_job;
         JobHandle _reachable_dependency;
 
         // [Unity.Burst.BurstCompile]
@@ -97,10 +97,10 @@ namespace Client.Presentation
                 {
                     ushort moveRange = em.GetComponentData<MoveRange>(selectedUnit);
 
-                    _reachable_job = new GameNavigation.MoveReachJob(
+                    _reachable_job = new GameNavigation.MoveRangeJob(
                         start: selectedCoord,
                         range: moveRange,
-                        moveCost: mapData.FloorArray,
+                        floor: mapData.FloorArray,
                         mapSize: mapSettings.Size,
                         reachable: _reachable
                     );

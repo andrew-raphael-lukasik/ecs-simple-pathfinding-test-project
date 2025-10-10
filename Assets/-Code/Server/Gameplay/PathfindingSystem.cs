@@ -38,11 +38,11 @@ namespace Server.Gameplay
                 ushort moveRange = state.EntityManager.GetComponentData<MoveRange>(entity);
 
                 NativeList<uint2> results = new (Allocator.Persistent);
-                var job = new GameNavigation.AStarJob(
+                var job = new GameNavigation.MovePathJob(
                     start: GameGrid.Clamp(request.Src, mapSettings.Size),
                     destination: GameGrid.Clamp(request.Dst, mapSettings.Size),
-                    moveRange: moveRange,
-                    moveCost: mapData.FloorArray,
+                    range: moveRange,
+                    floor: mapData.FloorArray,
                     mapSize: mapSettings.Size,
                     results: results,
                     hMultiplier: 1
