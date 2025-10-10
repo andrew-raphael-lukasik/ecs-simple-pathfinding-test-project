@@ -3,6 +3,7 @@ using Unity.Entities;
 using Unity.Mathematics;
 
 using ServerAndClient.Gameplay;
+using Server.Gameplay;
 
 namespace EditorOnly.Authoring
 {
@@ -17,14 +18,7 @@ namespace EditorOnly.Authoring
                 Entity entity = GetEntity(authoring, TransformUsageFlags.WorldSpace);
 
                 AddComponent<IsFloor>(entity);
-
-                // note: FloorCoord wont serialize - my guess is because it's a cleanup component
-
-                // AddComponent(entity, new FloorCoord{
-                //     Value = new uint2(uint.MaxValue, uint.MaxValue)
-                // });
-                // AddComponent<IsFloorCoordValid>(entity);
-                // SetComponentEnabled<IsFloorCoordValid>(entity, false);
+                AddComponent<IsFloorUninitialized>(entity);
             }
         }
     }

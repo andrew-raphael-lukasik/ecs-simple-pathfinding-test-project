@@ -223,9 +223,6 @@ namespace Server.Gameplay
                     }
 
                     Entity e = ECB.Instantiate(prefab);
-                    ECB.AddComponent(e, new FloorCoord{
-                        Value = coord
-                    });
 
                     float azimuth = x * math.PIHALF + y * math.PIHALF;
                     float3 pos = PositionArray[i];
