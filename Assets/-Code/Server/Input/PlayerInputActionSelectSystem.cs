@@ -6,14 +6,15 @@ using Unity.Collections;
 using ServerAndClient;
 using ServerAndClient.Gameplay;
 using ServerAndClient.Input;
+using Server.Gameplay;
 
-namespace Server.Gameplay
+namespace Server.Input
 {
     [WorldSystemFilter(WorldSystemFilterFlags.ServerSimulation | WorldSystemFilterFlags.LocalSimulation)]
-    [UpdateInGroup(typeof(GameSimulationSystemGroup), OrderFirst = true)]
+    [UpdateInGroup(typeof(GameSimulationSystemGroup), OrderFirst = true)]// early simulation phase is best for input execution
     [RequireMatchingQueriesForUpdate]
     [Unity.Burst.BurstCompile]
-    public partial struct SelectedUnitSystem : ISystem
+    public partial struct PlayerInputActionSelectSystem : ISystem
     {
         [Unity.Burst.BurstCompile]
         void ISystem.OnCreate(ref SystemState state)
@@ -31,10 +32,11 @@ namespace Server.Gameplay
         void ISystem.OnUpdate(ref SystemState state)
         {
             var playerInput = SystemAPI.GetSingleton<PlayerInputSingleton>();
+
+            // SELECT action (left mouse button click)
             if (playerInput.SelectStart==1 && playerInput.IsPointerOverUI==0)
             {
                 var mapSettings = SystemAPI.GetSingleton<MapSettingsSingleton>();
-
                 if (GameGrid.Raycast(ray: playerInput.PointerRay, mapOrigin: mapSettings.Origin, mapSize: mapSettings.Size, out uint2 coord))
                 {
                     var unitsRef = SystemAPI.GetSingletonRW<UnitsSingleton>();
@@ -66,6 +68,13 @@ namespace Server.Gameplay
                         // Debug.Log($"No unit at {coord}");
                         // #endif
                     }
+                }
+
+                Entity selectedUnit = SystemAPI.GetSingleton<SelectedUnitSingleton>();
+                if (SystemAPI.GetComponent<TargettingEnemy>(selectedUnit)!=Entity.Null)
+                {
+                    var targettingEnemyRW = SystemAPI.GetComponentRW<TargettingEnemy>(selectedUnit);
+                    targettingEnemyRW.ValueRW = Entity.Null;
                 }
             }
         }
