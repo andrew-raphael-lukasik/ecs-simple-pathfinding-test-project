@@ -1,14 +1,14 @@
 using UnityEngine;
 using Unity.Entities;
 
-using ServerAndClient.Input;
 using ServerAndClient;
+using ServerAndClient.Input;
 using Client.UIToolkit;
 
 namespace Client.Input
 {
     [WorldSystemFilter(WorldSystemFilterFlags.LocalSimulation | WorldSystemFilterFlags.ClientSimulation)]
-    [UpdateInGroup(typeof(GameInitializationSystemGroup))]
+    [UpdateInGroup(typeof(GamePresentationSystemGroup))]// presentation phase is best for input collection
     public partial class PlayerInputSystem : SystemBase
     {
         PlayerInputActions _actions;
