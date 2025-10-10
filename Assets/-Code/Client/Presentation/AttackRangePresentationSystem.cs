@@ -82,7 +82,7 @@ namespace Client.Presentation
                         if (floors[index]==EFloorType.Traversable)
                         {
                             float3 point = mapData.PositionArray[index];
-                            Segments.Plot.Circle(buffer, ref bufferPosition, numSegmentsPerField, 0.1f, point, rot);
+                            Segments.Plot.Circle(buffer, ref bufferPosition, numSegmentsPerField, 0.05f, point, rot);
                         }
                     }
                 }
