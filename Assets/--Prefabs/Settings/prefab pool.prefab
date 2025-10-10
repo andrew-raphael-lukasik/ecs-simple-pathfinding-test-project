@@ -45,8 +45,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: ECS Prefab System::PrefabSystem.Authoring.PrefabPoolAuthoring
   _prefabs:
-  - {fileID: 7923538082853338066, guid: 004d885776cdb3702b018ebec348e5b2, type: 3}
-  - {fileID: 7923538082853338066, guid: 7b01708da5ba25997b02f3f0d28ec3b2, type: 3}
   - {fileID: 7923538082853338066, guid: f2ecd5d12d9328e7495b6df97adb1695, type: 3}
   - {fileID: 7923538082853338066, guid: 4e078b1f8465fd9f2812a5cb4b3302cb, type: 3}
   - {fileID: 7923538082853338066, guid: 4f24989ac78c09a2caba0ad383d3fb31, type: 3}
