@@ -75,8 +75,8 @@ namespace Server.Gameplay
 
                 DynamicBuffer<DisposeNativeArrayOnDestroyed> cleanupBuffer;
                 {
-                    if (state.EntityManager.HasBuffer<DisposeNativeArrayOnDestroyed>(mapDataEntity))
-                        cleanupBuffer = state.EntityManager.GetBuffer<DisposeNativeArrayOnDestroyed>(mapDataEntity);
+                    if (SystemAPI.HasBuffer<DisposeNativeArrayOnDestroyed>(mapDataEntity))
+                        cleanupBuffer = SystemAPI.GetBuffer<DisposeNativeArrayOnDestroyed>(mapDataEntity);
                     else
                         cleanupBuffer = state.EntityManager.AddBuffer<DisposeNativeArrayOnDestroyed>(mapDataEntity);
 

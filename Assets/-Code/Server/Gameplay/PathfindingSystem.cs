@@ -33,7 +33,7 @@ namespace Server.Gameplay
             if (SystemAPI.TryGetSingleton<GeneratedMapData>(out var mapData))
             foreach (var (request, entity) in SystemAPI.Query<PathfindingQuery>().WithEntityAccess())
             {
-                ushort moveRange = state.EntityManager.GetComponentData<MoveRange>(entity);
+                ushort moveRange = SystemAPI.GetComponent<MoveRange>(entity);
 
                 NativeList<uint2> results = new (Allocator.Persistent);
                 var job = new GameNavigation.MovePathJob(
@@ -66,8 +66,8 @@ namespace Server.Gameplay
 
                     DynamicBuffer<DisposeNativeArrayOnDestroyed> cleanupBuffer;
                     {
-                        if (state.EntityManager.HasBuffer<DisposeNativeArrayOnDestroyed>(entity))
-                            cleanupBuffer = state.EntityManager.GetBuffer<DisposeNativeArrayOnDestroyed>(entity);
+                        if (SystemAPI.HasBuffer<DisposeNativeArrayOnDestroyed>(entity))
+                            cleanupBuffer = SystemAPI.GetBuffer<DisposeNativeArrayOnDestroyed>(entity);
                         else
                             cleanupBuffer = ecb.AddBuffer<DisposeNativeArrayOnDestroyed>(entity);
 

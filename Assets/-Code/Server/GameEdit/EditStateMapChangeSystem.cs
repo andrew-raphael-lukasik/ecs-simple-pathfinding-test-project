@@ -41,14 +41,13 @@ namespace Server.GameEdit
                 if (GameGrid.Raycast(ray: playerInput.PointerRay, mapOrigin: mapSettings.Origin, mapSize: mapSettings.Size, out uint2 dstCoord))
                 {
                     int dstIndex = GameGrid.ToIndex(dstCoord, mapSettings.Size);
-                    var em = state.EntityManager;
                     var mapDataRef = SystemAPI.GetSingletonRW<GeneratedMapData>();
                     var floorsRef = SystemAPI.GetSingletonRW<FloorsSingleton>();
                     var unitsRef = SystemAPI.GetSingletonRW<UnitsSingleton>();
                     Entity srcFloor = SystemAPI.GetSingleton<SelectedFloorSingleton>();
                     Entity srcUnit = SystemAPI.GetSingleton<SelectedUnitSingleton>();
 
-                    if (!(srcFloor!=Entity.Null && em.Exists(srcFloor)))
+                    if (!(srcFloor!=Entity.Null && SystemAPI.Exists(srcFloor)))
                     {
                         #if UNITY_EDITOR || DEBUG
                         Debug.Log($"{DebugName}: no src floor entity, swap won't happen");
@@ -67,22 +66,22 @@ namespace Server.GameEdit
                     var units = unitsRef.ValueRO.Lookup;
 
                     #if UNITY_EDITOR || DEBUG
-                    // Assert.IsTrue(em.Exists(srcFloor), $"{DebugName} can't execute swap action without a src floor entity - it is a source of srcCoord");
+                    // Assert.IsTrue(SystemAPI.Exists(srcFloor), $"{DebugName} can't execute swap action without a src floor entity - it is a source of srcCoord");
                     Assert.IsTrue(floors[dstIndex]!=Entity.Null, $"{DebugName} can't execute swap action without a floors lookup having an entity at {dstCoord}");
                     #endif
 
-                    uint2 srcCoord = em.GetComponentData<FloorCoord>(srcFloor);
+                    uint2 srcCoord = SystemAPI.GetComponent<FloorCoord>(srcFloor);
                     int srcIndex = GameGrid.ToIndex(srcCoord, mapSettings.Size);
                     if (math.all(srcCoord==dstCoord)) return;// ignore, src and dst are the same
                     Entity dstFloor = floors[dstIndex];
 
                     #if UNITY_EDITOR || DEBUG
-                    if (em.Exists(srcFloor)) Assert.IsTrue(em.HasComponent<FloorCoord>(srcFloor), $"Floor {srcFloor} has no {FloorCoord.DebugName}");
-                    if (em.Exists(srcUnit)) Assert.IsTrue(em.HasComponent<UnitCoord>(srcUnit), $"Unit {srcUnit} has no {UnitCoord.DebugName}");
+                    if (SystemAPI.Exists(srcFloor)) Assert.IsTrue(SystemAPI.HasComponent<FloorCoord>(srcFloor), $"Floor {srcFloor} has no {FloorCoord.DebugName}");
+                    if (SystemAPI.Exists(srcUnit)) Assert.IsTrue(SystemAPI.HasComponent<UnitCoord>(srcUnit), $"Unit {srcUnit} has no {UnitCoord.DebugName}");
                     #endif
 
-                    LocalToWorld srcLtw = em.GetComponentData<LocalToWorld>(srcFloor);
-                    LocalToWorld dstLtw = em.GetComponentData<LocalToWorld>(dstFloor);
+                    LocalToWorld srcLtw = SystemAPI.GetComponent<LocalToWorld>(srcFloor);
+                    LocalToWorld dstLtw = SystemAPI.GetComponent<LocalToWorld>(dstFloor);
 
                     // swap floors:
                     {
@@ -93,10 +92,10 @@ namespace Server.GameEdit
                             floorTypesRW[dstIndex] = srcType;
                         }
 
-                        em.SetComponentData(srcFloor, dstLtw);
+                        SystemAPI.SetComponent(srcFloor, dstLtw);
                         SystemAPI.SetComponentEnabled<IsFloorCoordValid>(srcFloor, false);
 
-                        em.SetComponentData(dstFloor, srcLtw);
+                        SystemAPI.SetComponent(dstFloor, srcLtw);
                         SystemAPI.SetComponentEnabled<IsFloorCoordValid>(dstFloor, false);
 
                         SystemAPI.SetSingleton(new SelectedFloorSingleton{
@@ -108,15 +107,15 @@ namespace Server.GameEdit
                     {
                         Entity dstUnit = units[dstIndex];
 
-                        if (em.Exists(srcUnit))
+                        if (SystemAPI.Exists(srcUnit))
                         {
-                            em.SetComponentData(srcUnit, dstLtw);
+                            SystemAPI.SetComponent(srcUnit, dstLtw);
                             SystemAPI.SetComponentEnabled<IsUnitCoordValid>(srcUnit, false);
                         }
 
-                        if (em.Exists(dstUnit))
+                        if (SystemAPI.Exists(dstUnit))
                         {
-                            em.SetComponentData(dstUnit, srcLtw);
+                            SystemAPI.SetComponent(dstUnit, srcLtw);
                             SystemAPI.SetComponentEnabled<IsUnitCoordValid>(dstUnit, false);
                         }
 

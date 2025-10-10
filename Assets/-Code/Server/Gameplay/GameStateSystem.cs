@@ -25,8 +25,6 @@ namespace Server.Gameplay
         [Unity.Burst.BurstCompile]
         void ISystem.OnUpdate(ref SystemState state)
         {
-            var em = state.EntityManager;
-
             // look for game state changes:
             var ecb = new EntityCommandBuffer(Allocator.TempJob);
             EGameState requestedMode = EGameState.UNDEFINED;
@@ -58,11 +56,11 @@ namespace Server.Gameplay
                 {
                     if (SystemAPI.TryGetSingletonEntity<GameState.PLAY>(out Entity entity))
                     {
-                        em.DestroyEntity(entity);
+                        state.EntityManager.DestroyEntity(entity);
                     }
 
-                    if (!SystemAPI.HasSingleton<GameState.EDIT>()) em.CreateSingleton<GameState.EDIT>();
-                    if (!SystemAPI.HasSingleton<GameState.EDIT_STARTED_EVENT>()) em.CreateSingleton<GameState.EDIT_STARTED_EVENT>();
+                    if (!SystemAPI.HasSingleton<GameState.EDIT>()) state.EntityManager.CreateSingleton<GameState.EDIT>();
+                    if (!SystemAPI.HasSingleton<GameState.EDIT_STARTED_EVENT>()) state.EntityManager.CreateSingleton<GameState.EDIT_STARTED_EVENT>();
                     Debug.Log($"{state.DebugName}: {GameState.EDIT.DebugName} & {GameState.EDIT_STARTED_EVENT.DebugName} created");
                 }
                 break;
@@ -70,17 +68,17 @@ namespace Server.Gameplay
                 {
                     if (SystemAPI.TryGetSingletonEntity<GameState.EDIT>(out Entity entity))
                     {
-                        em.DestroyEntity(entity);
+                        state.EntityManager.DestroyEntity(entity);
                     }
-                    if (!SystemAPI.HasSingleton<GameState.PLAY>()) em.CreateSingleton<GameState.PLAY>();
-                    if (!SystemAPI.HasSingleton<GameState.PLAY_STARTED_EVENT>()) em.CreateSingleton<GameState.PLAY_STARTED_EVENT>();
+                    if (!SystemAPI.HasSingleton<GameState.PLAY>()) state.EntityManager.CreateSingleton<GameState.PLAY>();
+                    if (!SystemAPI.HasSingleton<GameState.PLAY_STARTED_EVENT>()) state.EntityManager.CreateSingleton<GameState.PLAY_STARTED_EVENT>();
                     Debug.Log($"{state.DebugName}: {GameState.PLAY.DebugName} & {GameState.PLAY_STARTED_EVENT.DebugName} created");
                 }
                 break;
                 default: throw new System.NotImplementedException($"{requestedMode}");
             }
 
-            if (ecb.ShouldPlayback) ecb.Playback(em);
+            if (ecb.ShouldPlayback) ecb.Playback(state.EntityManager);
         }
 
         [WorldSystemFilter(WorldSystemFilterFlags.ServerSimulation | WorldSystemFilterFlags.LocalSimulation | WorldSystemFilterFlags.Editor)]
@@ -93,32 +91,31 @@ namespace Server.Gameplay
             void ISystem.OnUpdate(ref SystemState state)
             {
                 // end active events:
-                var em = state.EntityManager;
                 {
                     if (SystemAPI.TryGetSingletonEntity<GameState.EDIT_STARTED_EVENT>(out Entity singleton))
                     {
-                        em.DestroyEntity(singleton);
+                        state.EntityManager.DestroyEntity(singleton);
                         Debug.Log($"{state.DebugName}: {GameState.EDIT_STARTED_EVENT.DebugName} has ended.");
                     }
                 }
                 {
                     if (SystemAPI.TryGetSingletonEntity<GameState.EDIT_ENDED_EVENT>(out Entity singleton))
                     {
-                        em.DestroyEntity(singleton);
+                        state.EntityManager.DestroyEntity(singleton);
                         Debug.Log($"{state.DebugName}: {GameState.EDIT_ENDED_EVENT.DebugName} has ended.");
                     }
                 }
                 {
                     if (SystemAPI.TryGetSingletonEntity<GameState.PLAY_STARTED_EVENT>(out Entity singleton))
                     {
-                        em.DestroyEntity(singleton);
+                        state.EntityManager.DestroyEntity(singleton);
                         Debug.Log($"{state.DebugName}: {GameState.PLAY_STARTED_EVENT.DebugName} has ended.");
                     }
                 }
                 {
                     if (SystemAPI.TryGetSingletonEntity<GameState.PLAY_ENDED_EVENT>(out Entity singleton))
                     {
-                        em.DestroyEntity(singleton);
+                        state.EntityManager.DestroyEntity(singleton);
                         Debug.Log($"{state.DebugName}: {GameState.PLAY_ENDED_EVENT.DebugName} has ended.");
                     }
                 }

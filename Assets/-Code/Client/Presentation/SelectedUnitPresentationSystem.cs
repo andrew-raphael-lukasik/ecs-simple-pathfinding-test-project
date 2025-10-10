@@ -36,18 +36,47 @@ namespace Client.Presentation
         [Unity.Burst.BurstCompile]
         void ISystem.OnUpdate(ref SystemState state)
         {
-            var em = state.EntityManager;
-
             var segmentRef = SystemAPI.GetComponentRW<Segments.Segment>(_segments);
             var buffer = segmentRef.ValueRW.Buffer;
 
             Entity selectedUnit = SystemAPI.GetSingleton<SelectedUnitSingleton>();
-            if (selectedUnit!=Entity.Null && em.Exists(selectedUnit))
+            if (selectedUnit!=Entity.Null && SystemAPI.Exists(selectedUnit))
             {
                 buffer.Length = 0;
-                Segments.Core.SetSegmentChanged(_segments, em);
+                Segments.Core.SetSegmentChanged(_segments, state.EntityManager);
 
-                var aabb = GetTotalRenderBounds(em, selectedUnit);
+                AABB aabb;
+                {
+                    Bounds bounds = default;
+                    if (state.EntityManager.HasComponent<LinkedEntityGroup>(selectedUnit))
+                    {
+                        var list = SystemAPI.GetBuffer<LinkedEntityGroup>(selectedUnit);
+
+                        foreach (var item in list)
+                        if (SystemAPI.HasComponent<WorldRenderBounds>(item.Value))
+                        {
+                            bounds = SystemAPI.GetComponent<WorldRenderBounds>(item.Value).Value.ToBounds();
+                            if (bounds.center!=Vector3.zero && bounds.extents!=Vector3.zero) break;
+                        }
+                        
+                        foreach (var item in list)
+                        if (SystemAPI.HasComponent<WorldRenderBounds>(item.Value))
+                        {
+                            Bounds b = SystemAPI.GetComponent<WorldRenderBounds>(item.Value).Value.ToBounds();
+                            if (!(b.center==Vector3.zero && b.extents==Vector3.zero))
+                                bounds.Encapsulate(b);
+                        }
+                    }
+                    else if (SystemAPI.HasComponent<WorldRenderBounds>(selectedUnit))
+                    {
+                        bounds = SystemAPI.GetComponent<WorldRenderBounds>(selectedUnit).Value.ToBounds();
+                    }
+                    else if (SystemAPI.HasComponent<LocalToWorld>(selectedUnit))
+                    {
+                        bounds = new Bounds(SystemAPI.GetComponent<LocalToWorld>(selectedUnit).Position, new Vector3(1, 1, 1));
+                    }
+                    aabb = bounds.ToAABB();
+                }
                 aabb.Extents = new float3(.5f, aabb.Extents.y, .5f);
                 buffer.Length += 12;
 
@@ -61,41 +90,8 @@ namespace Client.Presentation
             else if(buffer.Length!=0)
             {
                 buffer.Length = 0;
-                Segments.Core.SetSegmentChanged(_segments, em);
+                Segments.Core.SetSegmentChanged(_segments, state.EntityManager);
             }
-        }
-
-        AABB GetTotalRenderBounds(EntityManager entityManager, Entity entity)
-        {
-            Bounds bounds = default;
-            if (entityManager.HasComponent<LinkedEntityGroup>(entity))
-            {
-                var list = entityManager.GetBuffer<LinkedEntityGroup>(entity);
-
-                foreach (var item in list)
-                if (entityManager.HasComponent<WorldRenderBounds>(item.Value))
-                {
-                    bounds = entityManager.GetComponentData<WorldRenderBounds>(item.Value).Value.ToBounds();
-                    if (bounds.center!=Vector3.zero && bounds.extents!=Vector3.zero) break;
-                }
-                
-                foreach (var item in list)
-                if (entityManager.HasComponent<WorldRenderBounds>(item.Value))
-                {
-                    Bounds b = entityManager.GetComponentData<WorldRenderBounds>(item.Value).Value.ToBounds();
-                    if (!(b.center==Vector3.zero && b.extents==Vector3.zero))
-                        bounds.Encapsulate(b);
-                }
-            }
-            else if (entityManager.HasComponent<WorldRenderBounds>(entity))
-            {
-                bounds = entityManager.GetComponentData<WorldRenderBounds>(entity).Value.ToBounds();
-            }
-            else if (entityManager.HasComponent<LocalToWorld>(entity))
-            {
-                bounds = new Bounds(entityManager.GetComponentData<LocalToWorld>(entity).Position, new Vector3(1, 1, 1));
-            }
-            return bounds.ToAABB();
         }
     }
 }

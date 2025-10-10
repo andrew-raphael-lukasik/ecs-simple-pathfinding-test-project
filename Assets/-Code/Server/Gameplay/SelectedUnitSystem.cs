@@ -45,7 +45,7 @@ namespace Server.Gameplay
                     if (entity!=Entity.Null)
                     {
                         #if UNITY_EDITOR || DEBUG
-                        UnityEngine.Assertions.Assert.IsTrue(state.EntityManager.HasComponent<UnitCoord>(entity), $"Unit {entity} has no {UnitCoord.DebugName}");
+                        UnityEngine.Assertions.Assert.IsTrue(SystemAPI.HasComponent<UnitCoord>(entity), $"Unit {entity} has no {UnitCoord.DebugName}");
                         #endif
 
                         SystemAPI.SetSingleton(new SelectedUnitSingleton{

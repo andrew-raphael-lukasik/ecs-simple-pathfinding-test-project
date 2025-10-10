@@ -46,7 +46,7 @@ namespace Server.GameEdit
                     if (entity!=Entity.Null)
                     {
                         #if UNITY_EDITOR || DEBUG
-                        UnityEngine.Assertions.Assert.IsTrue(state.EntityManager.HasComponent<FloorCoord>(entity), $"Floor {entity} has no {FloorCoord.DebugName}");
+                        UnityEngine.Assertions.Assert.IsTrue(SystemAPI.HasComponent<FloorCoord>(entity), $"Floor {entity} has no {FloorCoord.DebugName}");
                         #endif
 
                         SystemAPI.SetSingleton(new SelectedFloorSingleton{

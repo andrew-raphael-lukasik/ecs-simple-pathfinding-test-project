@@ -40,20 +40,19 @@ namespace Client.Presentation
         [Unity.Burst.BurstCompile]
         void ISystem.OnUpdate(ref SystemState state)
         {
-            var em = state.EntityManager;
             var mapSettings = SystemAPI.GetSingleton<MapSettingsSingleton>();
             var mapData = SystemAPI.GetSingleton<GeneratedMapData>();
             var segmentRef = SystemAPI.GetComponentRW<Segments.Segment>(_segments);
             var buffer = segmentRef.ValueRW.Buffer;
 
             Entity selectedUnit = SystemAPI.GetSingleton<SelectedUnitSingleton>();
-            if (selectedUnit!=Entity.Null && em.Exists(selectedUnit))
+            if (selectedUnit!=Entity.Null && SystemAPI.Exists(selectedUnit))
             {
                 var inMoveRange = SystemAPI.GetComponent<InMoveRange>(selectedUnit);
                 if (inMoveRange.Coords.Count!=0)
                 {
                     buffer.Length = 0;
-                    Segments.Core.SetSegmentChanged(_segments, em);
+                    Segments.Core.SetSegmentChanged(_segments, state.EntityManager);
 
                     const int numSegmentsPerField = 3;
                     var rot = quaternion.RotateX(math.PIHALF);
@@ -69,13 +68,13 @@ namespace Client.Presentation
                 else if(buffer.Length!=0)
                 {
                     buffer.Length = 0;
-                    Segments.Core.SetSegmentChanged(_segments, em);
+                    Segments.Core.SetSegmentChanged(_segments, state.EntityManager);
                 }
             }
             else if(buffer.Length!=0)
             {
                 buffer.Length = 0;
-                Segments.Core.SetSegmentChanged(_segments, em);
+                Segments.Core.SetSegmentChanged(_segments, state.EntityManager);
             }
         }
     }

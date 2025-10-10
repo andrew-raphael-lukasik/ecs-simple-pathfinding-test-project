@@ -31,7 +31,6 @@ namespace Server.Gameplay
         [Unity.Burst.BurstCompile]
         void ISystem.OnUpdate(ref SystemState state)
         {
-            var em = state.EntityManager;
             var mapSettings = SystemAPI.GetSingleton<MapSettingsSingleton>();
             var mapData = SystemAPI.GetSingleton<GeneratedMapData>();
 
@@ -39,13 +38,13 @@ namespace Server.Gameplay
             var buffer = segmentRef.ValueRW.Buffer;
 
             Entity selectedUnit = SystemAPI.GetSingleton<SelectedUnitSingleton>();
-            if (selectedUnit!=Entity.Null && em.Exists(selectedUnit) && em.HasComponent<PathfindingQueryResult>(selectedUnit))
+            if (selectedUnit!=Entity.Null && SystemAPI.Exists(selectedUnit) && SystemAPI.HasComponent<PathfindingQueryResult>(selectedUnit))
             {
-                var pathResults = em.GetComponentData<PathfindingQueryResult>(selectedUnit);
+                var pathResults = SystemAPI.GetComponent<PathfindingQueryResult>(selectedUnit);
                 if (pathResults.Success==1)
                 {
                     buffer.Length = 0;
-                    Segments.Core.SetSegmentChanged(_segments, em);
+                    Segments.Core.SetSegmentChanged(_segments, state.EntityManager);
 
                     int pathLength = pathResults.Path.Length;
                     int bufferStart = buffer.Length;
@@ -65,13 +64,13 @@ namespace Server.Gameplay
                 else if(buffer.Length!=0)
                 {
                     buffer.Length = 0;
-                    Segments.Core.SetSegmentChanged(_segments, em);
+                    Segments.Core.SetSegmentChanged(_segments, state.EntityManager);
                 }
             }
             else if(buffer.Length!=0)
             {
                 buffer.Length = 0;
-                Segments.Core.SetSegmentChanged(_segments, em);
+                Segments.Core.SetSegmentChanged(_segments, state.EntityManager);
             }
         }
     }

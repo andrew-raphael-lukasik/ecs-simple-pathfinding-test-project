@@ -27,13 +27,12 @@ namespace Client.Input
         [Unity.Burst.BurstCompile]
         void ISystem.OnUpdate(ref SystemState state)
         {
-            var em = state.EntityManager;
             var mapSettings = SystemAPI.GetSingleton<MapSettingsSingleton>();
             var playerInput = SystemAPI.GetSingleton<PlayerInputSingleton>();
             Entity selectedUnit = SystemAPI.GetSingleton<SelectedUnitSingleton>();
 
             if (playerInput.ExecuteStart==1 && playerInput.IsPointerOverUI==0)
-            if (selectedUnit!=Entity.Null && em.Exists(selectedUnit))
+            if (selectedUnit!=Entity.Null && SystemAPI.Exists(selectedUnit))
             if (GameGrid.Raycast(ray: playerInput.PointerRay, mapOrigin: mapSettings.Origin, mapSize: mapSettings.Size, out uint2 dstCoord))
             {
                 bool clickedOnPathDestination = false;
@@ -51,12 +50,13 @@ namespace Client.Input
 
                 if (clickedOnPathDestination)
                 {
-                    em.AddComponent<MovingAlongThePath>(selectedUnit);
+                    state.EntityManager.AddComponent<MovingAlongThePath>(selectedUnit);
                 }
                 else if(!SystemAPI.HasComponent<MovingAlongThePath>(selectedUnit))
                 {
-                    uint2 srcCoord = em.GetComponentData<UnitCoord>(selectedUnit);
-                    em.AddComponentData(selectedUnit, new PathfindingQuery{
+                    
+                    uint2 srcCoord = SystemAPI.GetComponent<UnitCoord>(selectedUnit);
+                    state.EntityManager.AddComponentData(selectedUnit, new PathfindingQuery{
                         Src = srcCoord,
                         Dst = dstCoord,
                     });
