@@ -34,6 +34,9 @@ namespace Server.Gameplay
                 ecb.AddComponent(entity, new InMoveRange{
                     Coords = new (32, Allocator.Persistent),
                 });
+                ecb.AddComponent(entity, new InAttackRange{
+                    Coords = new (32, Allocator.Persistent),
+                });
 
                 ecb.RemoveComponent<IsUnitUninitialized>(entity);
             }

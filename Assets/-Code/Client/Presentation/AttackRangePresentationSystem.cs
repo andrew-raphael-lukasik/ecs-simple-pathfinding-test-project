@@ -17,11 +17,6 @@ namespace Client.Presentation
     public partial struct AttackRangePresentationSystem : ISystem
     {
         Entity _segments;
-        NativeHashSet<uint2> _reachable;
-        Entity _reachable_owner;
-        uint2 _reachable_coord;
-        GameNavigation.AttackRangeJob _reachable_job;
-        JobHandle _reachable_dependency;
 
         // [Unity.Burst.BurstCompile]
         void ISystem.OnCreate(ref SystemState state)
@@ -31,8 +26,6 @@ namespace Client.Presentation
             state.RequireForUpdate<GeneratedMapData>();
             state.RequireForUpdate<SelectedUnitSingleton>();
 
-            _reachable = new (64, Allocator.Persistent);
-
             var lineMat = Resources.Load<Material>("game-attack-range-lines");
             Segments.Core.Create(out _segments, lineMat);
             state.EntityManager.AddComponent<IsPlayStateOnly>(_segments);
@@ -41,9 +34,7 @@ namespace Client.Presentation
         [Unity.Burst.BurstCompile]
         void ISystem.OnDestroy(ref SystemState state)
         {
-            _reachable_dependency.Complete();
-            _reachable_job.Dispose();
-            if (_reachable.IsCreated) _reachable.Dispose();
+            state.EntityManager.DestroyEntity(_segments);
         }
 
         [Unity.Burst.BurstCompile]
@@ -52,19 +43,14 @@ namespace Client.Presentation
             var em = state.EntityManager;
             var mapSettings = SystemAPI.GetSingleton<MapSettingsSingleton>();
             var mapData = SystemAPI.GetSingleton<GeneratedMapData>();
+            var segmentRef = SystemAPI.GetComponentRW<Segments.Segment>(_segments);
+            var buffer = segmentRef.ValueRW.Buffer;
 
-            if (_reachable_owner!=Entity.Null && em.Exists(_reachable_owner))
-            if (_reachable_dependency.IsCompleted)
+            Entity selectedUnit = SystemAPI.GetSingleton<SelectedUnitSingleton>();
+            if (selectedUnit!=Entity.Null && em.Exists(selectedUnit))
             {
-                _reachable_dependency.Complete();
-                _reachable_job.Dispose();
-                _reachable_owner = Entity.Null;
-                _reachable_coord = 0;
-
-                var segmentRef = SystemAPI.GetComponentRW<Segments.Segment>(_segments);
-                var buffer = segmentRef.ValueRW.Buffer;
-
-                if (_reachable.Count!=0)
+                var inAttackRange = SystemAPI.GetComponent<InAttackRange>(selectedUnit);
+                if (inAttackRange.Coords.Count!=0)
                 {
                     var mapDataRef = SystemAPI.GetSingletonRW<GeneratedMapData>();
                     var floors = mapDataRef.ValueRO.FloorArray;
@@ -75,8 +61,8 @@ namespace Client.Presentation
                     const int numSegmentsPerField = 3;
                     var rot = quaternion.RotateX(math.PIHALF);
                     int bufferPosition = buffer.Length;
-                    buffer.Length += _reachable.Count * numSegmentsPerField;
-                    foreach (uint2 coord in _reachable)
+                    buffer.Length += inAttackRange.Coords.Count * numSegmentsPerField;
+                    foreach (uint2 coord in inAttackRange.Coords)
                     {
                         int index = GameGrid.ToIndex(coord, mapSettings.Size);
                         if (floors[index]==EFloorType.Traversable)
@@ -92,37 +78,10 @@ namespace Client.Presentation
                     Segments.Core.SetSegmentChanged(_segments, em);
                 }
             }
-
-            Entity selectedUnit = SystemAPI.GetSingleton<SelectedUnitSingleton>();
-            uint2 selectedCoord = em.Exists(selectedUnit) && SystemAPI.HasComponent<UnitCoord>(selectedUnit)
-                ? em.GetComponentData<UnitCoord>(selectedUnit)
-                : uint.MaxValue;
-            if (_reachable_owner!=selectedUnit || math.any(_reachable_coord!=selectedCoord))
+            else if(buffer.Length!=0)
             {
-                if (selectedUnit!=Entity.Null && em.Exists(selectedUnit))
-                {
-                    ushort attackRange = em.GetComponentData<AttackRange>(selectedUnit);
-
-                    _reachable_job = new GameNavigation.AttackRangeJob(
-                        start: selectedCoord,
-                        range: attackRange,
-                        floor: mapData.FloorArray,
-                        mapSize: mapSettings.Size,
-                        reachable: _reachable
-                    );
-                    _reachable_dependency = _reachable_job.Schedule(state.Dependency);
-                    _reachable_owner = selectedUnit;
-                    _reachable_coord = selectedCoord;
-                }
-                else
-                {
-                    _reachable_owner = Entity.Null;
-                    _reachable_coord = 0;
-
-                    var segmentRef = SystemAPI.GetComponentRW<Segments.Segment>(_segments);
-                    segmentRef.ValueRW.Buffer.Length = 0;
-                    Segments.Core.SetSegmentChanged(_segments, state.EntityManager);
-                }
+                buffer.Length = 0;
+                Segments.Core.SetSegmentChanged(_segments, em);
             }
         }
     }
