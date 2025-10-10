@@ -37,6 +37,9 @@ namespace Server.Gameplay
                 ecb.AddComponent(entity, new InAttackRange{
                     Coords = new (32, Allocator.Persistent),
                 });
+                ecb.AddComponent(entity, new TargettingEnemy{
+                    Value = Entity.Null,
+                });
 
                 ecb.RemoveComponent<IsUnitUninitialized>(entity);
             }
