@@ -13,9 +13,9 @@ namespace Server.Gameplay
     [UpdateInGroup(typeof(GameSimulationSystemGroup))]
     [RequireMatchingQueriesForUpdate]
     [Unity.Burst.BurstCompile]
-    public partial struct PlayerUnitMovementOrdersSystem : ISystem
+    public partial struct PlayerUnitControlSystem : ISystem
     {
-        public static FixedString64Bytes DebugName {get;} = nameof(PlayerUnitMovementOrdersSystem);
+        public static FixedString64Bytes DebugName {get;} = nameof(PlayerUnitControlSystem);
 
         [Unity.Burst.BurstCompile]
         void ISystem.OnCreate(ref SystemState state)
