@@ -14,8 +14,8 @@ namespace ServerAndClient.Gameplay
 
     public enum EFloorType : byte
     {
-        Traversable,
-        Obstacle,
-        Cover
+        Traversable,// passes movement, passes attack
+        Obstacle,// blocks movement, blocks attack
+        Cover// blocks movement, passes attacks
     }
 }
