@@ -1,12 +1,9 @@
 using UnityEngine;
 using Unity.Entities;
 using Unity.Mathematics;
-using Unity.Collections;
-using Unity.Jobs;
 
 using ServerAndClient;
 using ServerAndClient.Gameplay;
-using ServerAndClient.Navigation;
 
 namespace Client.Presentation
 {

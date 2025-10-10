@@ -11,7 +11,7 @@ using ServerAndClient.Navigation;
 namespace Server.Gameplay
 {
     [WorldSystemFilter(WorldSystemFilterFlags.ServerSimulation | WorldSystemFilterFlags.LocalSimulation | WorldSystemFilterFlags.Editor)]
-    [UpdateInGroup(typeof(GameInitializationSystemGroup), OrderFirst = true)]
+    [UpdateInGroup(typeof(GameInitializationSystemGroup))]
     [RequireMatchingQueriesForUpdate]
     [Unity.Burst.BurstCompile]
     public partial struct PathfindingSystem : ISystem

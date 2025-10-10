@@ -7,7 +7,7 @@ using ServerAndClient.Navigation;
 
 namespace Server.Gameplay
 {
-    [WorldSystemFilter(WorldSystemFilterFlags.LocalSimulation | WorldSystemFilterFlags.ServerSimulation)]
+    [WorldSystemFilter(WorldSystemFilterFlags.ServerSimulation | WorldSystemFilterFlags.LocalSimulation)]
     [UpdateInGroup(typeof(GameInitializationSystemGroup))]
     [RequireMatchingQueriesForUpdate]
     [Unity.Burst.BurstCompile]
@@ -31,9 +31,9 @@ namespace Server.Gameplay
             var mapSettings = SystemAPI.GetSingleton<MapSettingsSingleton>();
             var mapData = SystemAPI.GetSingleton<GeneratedMapData>();
 
-            foreach (var (coord, attackRange, inAttackRange, entity) in SystemAPI
+            foreach (var (coord, attackRange, inAttackRange) in SystemAPI
                 .Query<UnitCoord, AttackRange, InAttackRange>()
-                .WithChangeFilter<UnitCoord, AttackRange>().WithEntityAccess())
+                .WithChangeFilter<UnitCoord, AttackRange>())
             {
                 state.Dependency = new GameNavigation.AttackRangeJob(
                     start: coord,

@@ -7,7 +7,7 @@ using ServerAndClient.Gameplay;
 namespace ServerAndClient.MonoBehaviours
 {
     [WorldSystemFilter(WorldSystemFilterFlags.ServerSimulation| WorldSystemFilterFlags.LocalSimulation | WorldSystemFilterFlags.ClientSimulation | WorldSystemFilterFlags.ThinClientSimulation | WorldSystemFilterFlags.Presentation)]
-    [UpdateInGroup(typeof(InitializationSystemGroup), OrderFirst = true)]
+    [UpdateInGroup(typeof(InitializationSystemGroup))]
     [RequireMatchingQueriesForUpdate]
     [Unity.Burst.BurstCompile]
     partial struct SingleStateStartedGameObjectInitializationSystem : ISystem

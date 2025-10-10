@@ -1,13 +1,10 @@
 using UnityEngine;
 using Unity.Entities;
 using Unity.Mathematics;
-using Unity.Collections;
-using Unity.Jobs;
 using Unity.Transforms;
 
 using ServerAndClient;
 using ServerAndClient.Gameplay;
-using ServerAndClient.Navigation;
 using ServerAndClient.Input;
 
 namespace Client.Presentation

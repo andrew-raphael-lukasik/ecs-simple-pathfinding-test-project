@@ -11,7 +11,7 @@ using ServerAndClient.Gameplay;
 namespace Server.Gameplay
 {
     [WorldSystemFilter(WorldSystemFilterFlags.ServerSimulation | WorldSystemFilterFlags.LocalSimulation | WorldSystemFilterFlags.Editor)]
-    [UpdateInGroup(typeof(GameInitializationSystemGroup), OrderFirst = true)]
+    [UpdateInGroup(typeof(GameInitializationSystemGroup))]
     [RequireMatchingQueriesForUpdate]
     [Unity.Burst.BurstCompile]
     public partial struct FloorEntitiesSystem : ISystem
@@ -30,9 +30,9 @@ namespace Server.Gameplay
         [Unity.Burst.BurstCompile]
         void ISystem.OnDestroy(ref SystemState state)
         {
-            if (SystemAPI.TryGetSingletonRW<FloorsSingleton>(out var singleton))
+            if (SystemAPI.TryGetSingletonRW<FloorsSingleton>(out var floorsRW))
             {
-                if (singleton.ValueRW.Lookup.IsCreated) singleton.ValueRW.Lookup.Dispose();
+                if (floorsRW.ValueRW.Lookup.IsCreated) floorsRW.ValueRW.Lookup.Dispose();
             }
         }
 
@@ -40,17 +40,19 @@ namespace Server.Gameplay
         void ISystem.OnUpdate(ref SystemState state)
         {
             var floorsRef = SystemAPI.GetSingletonRW<FloorsSingleton>();
+            var floorsRW = floorsRef.ValueRW;
+            var floorsRO = floorsRef.ValueRO;
             var mapSettings = SystemAPI.GetSingleton<MapSettingsSingleton>();
             var ecb = SystemAPI.GetSingleton<EndInitializationEntityCommandBufferSystem.Singleton>().CreateCommandBuffer(state.WorldUnmanaged);
 
-            state.Dependency = JobHandle.CombineDependencies(state.Dependency, floorsRef.ValueRW.Dependency);
+            state.Dependency = JobHandle.CombineDependencies(state.Dependency, floorsRW.Dependency);
 
             int requiredBufferLength = (int)(mapSettings.Size.x * mapSettings.Size.y);
-            if (floorsRef.ValueRO.Lookup.Length!=requiredBufferLength)
+            if (floorsRO.Lookup.Length!=requiredBufferLength)
             {
-                floorsRef.ValueRW.Dependency.Complete();
-                floorsRef.ValueRW.Lookup.Dispose();
-                floorsRef.ValueRW.Lookup = new NativeArray<Entity>(requiredBufferLength, Allocator.Persistent);
+                floorsRW.Dependency.Complete();
+                floorsRW.Lookup.Dispose();
+                floorsRW.Lookup = new NativeArray<Entity>(requiredBufferLength, Allocator.Persistent);
 
                 state.Dependency = new InvalidateAllFloorsJob{
                     ECB = ecb,
@@ -60,7 +62,7 @@ namespace Server.Gameplay
             state.Dependency = new FloorEntityDestroyedJob{
                 ECB = ecb,
                 MapSize = mapSettings.Size,
-                Floors = floorsRef.ValueRW.Lookup,
+                Floors = floorsRW.Lookup,
             }.Schedule(state.Dependency);
 
             state.Dependency = new AddValidityTagJob{
@@ -71,16 +73,16 @@ namespace Server.Gameplay
                 ECB = ecb,
                 MapSize = mapSettings.Size,
                 MapOrigin = mapSettings.Origin,
-                Floors = floorsRef.ValueRW.Lookup,
+                Floors = floorsRW.Lookup,
             }.Schedule(state.Dependency);
 
             #if UNITY_EDITOR || DEBUG
             state.Dependency = new AssertionsJob{
-                Floors = floorsRef.ValueRO.Lookup,
+                Floors = floorsRO.Lookup,
             }.ScheduleParallel(state.Dependency);
             #endif
 
-            floorsRef.ValueRW.Dependency = state.Dependency;
+            floorsRW.Dependency = state.Dependency;
         }
 
         [WithPresent(typeof(FloorCoord), typeof(LocalToWorld))]
