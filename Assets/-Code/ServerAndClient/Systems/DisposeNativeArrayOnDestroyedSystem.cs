@@ -45,5 +45,7 @@ namespace ServerAndClient
                 Allocation = allocation.Reinterpret<byte>(UnsafeUtility.SizeOf<T>()),
             };
         }
+        public static DisposeNativeArrayOnDestroyed Factory<T> (NativeList<T> allocation) where T : unmanaged
+            => Factory(allocation.AsArray());
     }
 }

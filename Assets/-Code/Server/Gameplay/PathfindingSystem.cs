@@ -73,7 +73,7 @@ namespace Server.Gameplay
                         else
                             cleanupBuffer = ecb.AddBuffer<DisposeNativeArrayOnDestroyed>(entity);
 
-                        cleanupBuffer.Add(DisposeNativeArrayOnDestroyed.Factory(job.results.AsArray()));
+                        cleanupBuffer.Add(DisposeNativeArrayOnDestroyed.Factory(job.results));
                     }
                 }
                 else
