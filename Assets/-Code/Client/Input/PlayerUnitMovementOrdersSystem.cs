@@ -51,6 +51,8 @@ namespace Client.Input
                     }
                 }
 
+                // @TODO: replace with player input messages and leave decision making to server-side code
+
                 if (clickedOnPathDestination)
                 {
                     em.AddComponent<MovingAlongThePath>(selectedUnit);
