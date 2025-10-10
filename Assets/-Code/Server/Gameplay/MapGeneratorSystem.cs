@@ -270,9 +270,6 @@ namespace Server.Gameplay
                         if (!takenUnitCoords.Contains(coord))
                         {
                             Entity e = ECB.Instantiate(PrefabPlayer);
-                            ECB.AddComponent(e, new UnitCoord{
-                                Value = coord,
-                            });
 
                             float azimuth = coord.x * math.PIHALF + coord.y * math.PIHALF;
                             float3 pos = PositionArray[i];
@@ -301,9 +298,6 @@ namespace Server.Gameplay
                         if (!takenUnitCoords.Contains(coord))
                         {
                             Entity e = ECB.Instantiate(PrefabEnemy);
-                            ECB.AddComponent(e, new UnitCoord{
-                                Value = coord
-                            });
 
                             float azimuth = coord.x * math.PIHALF + coord.y * math.PIHALF;
                             float3 pos = PositionArray[i];
