@@ -121,5 +121,3 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 899d840a12077a945b277367626f9d0d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EditorOnly.Authoring.PlayerUnitAuthoring
-  _moveRange: 3
-  _attackRange: 3
