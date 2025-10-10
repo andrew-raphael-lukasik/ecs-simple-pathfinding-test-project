@@ -57,8 +57,8 @@ namespace Server.Gameplay
                         coord = pathResults.Path[i];
                         int index = GameGrid.ToIndex(coord, mapSettings.Size);
                         buffer[bufferStart+i] = new float3x2(
-                            mapData.PositionArray[indexPrev] + new float3(0, .1f, 0),
-                            mapData.PositionArray[index] + new float3(0, .1f, 0)
+                            mapData.PositionArray[indexPrev] + new float3(0, .2f, 0),
+                            mapData.PositionArray[index] + new float3(0, .2f, 0)
                         );
                     }
                 }
