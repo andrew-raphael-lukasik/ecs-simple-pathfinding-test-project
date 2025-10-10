@@ -12,29 +12,31 @@ using Server.Gameplay;
 
 using Assert = UnityEngine.Assertions.Assert;
 
-namespace Server.GameEdit
+namespace Server.Input
 {
     [WorldSystemFilter(WorldSystemFilterFlags.ServerSimulation | WorldSystemFilterFlags.LocalSimulation)]
-    [UpdateInGroup(typeof(GameInitializationSystemGroup), OrderFirst = true)]
+    [UpdateInGroup(typeof(GameSimulationSystemGroup), OrderFirst = true)]// early simulation phase is best for input execution
     [RequireMatchingQueriesForUpdate]
     [Unity.Burst.BurstCompile]
-    public partial struct EditStateMapChangeSystem : ISystem
+    public partial struct EditExecuteSystem : ISystem
     {
-        public static FixedString64Bytes DebugName {get;} = nameof(EditStateMapChangeSystem);
+        public static FixedString64Bytes DebugName {get;} = nameof(EditExecuteSystem);
 
         [Unity.Burst.BurstCompile]
         void ISystem.OnCreate(ref SystemState state)
         {
+            state.RequireForUpdate<GameState.EDIT>();
             state.RequireForUpdate<PlayerInputSingleton>();
             state.RequireForUpdate<MapSettingsSingleton>();
             state.RequireForUpdate<GeneratedMapData>();
-            state.RequireForUpdate<GameState.EDIT>();
         }
 
         [Unity.Burst.BurstCompile]
         void ISystem.OnUpdate(ref SystemState state)
         {
             var playerInput = SystemAPI.GetSingleton<PlayerInputSingleton>();
+
+            // EXECUTE action (right mouse button click)
             if (playerInput.ExecuteStart==1 && playerInput.IsPointerOverUI==0)
             {
                 var mapSettings = SystemAPI.GetSingleton<MapSettingsSingleton>();

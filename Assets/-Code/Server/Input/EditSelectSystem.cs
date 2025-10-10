@@ -1,7 +1,6 @@
 using UnityEngine;
 using Unity.Entities;
 using Unity.Mathematics;
-using Unity.Collections;
 
 using ServerAndClient;
 using ServerAndClient.Gameplay;
@@ -14,16 +13,17 @@ namespace Server.Input
     [UpdateInGroup(typeof(GameSimulationSystemGroup), OrderFirst = true)]// early simulation phase is best for input execution
     [RequireMatchingQueriesForUpdate]
     [Unity.Burst.BurstCompile]
-    public partial struct PlayerInputActionSelectSystem : ISystem
+    public partial struct EditSelectSystem : ISystem
     {
         [Unity.Burst.BurstCompile]
         void ISystem.OnCreate(ref SystemState state)
         {
+            state.RequireForUpdate<GameState.EDIT>();
             state.RequireForUpdate<PlayerInputSingleton>();
             state.RequireForUpdate<MapSettingsSingleton>();
-            state.RequireForUpdate<UnitsSingleton>();
+            state.RequireForUpdate<FloorsSingleton>();
 
-            state.EntityManager.CreateSingleton(new SelectedUnitSingleton{
+            state.EntityManager.CreateSingleton(new SelectedFloorSingleton{
                 Selected = Entity.Null
             });
         }
@@ -39,24 +39,24 @@ namespace Server.Input
                 var mapSettings = SystemAPI.GetSingleton<MapSettingsSingleton>();
                 if (GameGrid.Raycast(ray: playerInput.PointerRay, mapOrigin: mapSettings.Origin, mapSize: mapSettings.Size, out uint2 coord))
                 {
-                    var unitsRef = SystemAPI.GetSingletonRW<UnitsSingleton>();
-                    var units = unitsRef.ValueRW.Lookup;
-
                     int index = GameGrid.ToIndex(coord, mapSettings.Size);
-                    Entity entity = units[index];
+                    var floorsRef = SystemAPI.GetSingletonRW<FloorsSingleton>();
+                    var floors = floorsRef.ValueRW.Lookup;
+
+                    Entity entity = floors[index];
                     if (entity!=Entity.Null)
                     {
                         #if UNITY_EDITOR || DEBUG
-                        UnityEngine.Assertions.Assert.IsTrue(SystemAPI.HasComponent<UnitCoord>(entity), $"Unit {entity} has no {UnitCoord.DebugName}");
+                        UnityEngine.Assertions.Assert.IsTrue(SystemAPI.HasComponent<FloorCoord>(entity), $"Floor {entity} has no {FloorCoord.DebugName}");
                         #endif
 
-                        SystemAPI.SetSingleton(new SelectedUnitSingleton{
+                        SystemAPI.SetSingleton(new SelectedFloorSingleton{
                             Selected = entity
                         });
 
                         #if UNITY_EDITOR || DEBUG
-                        if (entity!=Entity.Null) Debug.Log($"Unit ({entity.Index}:{entity.Version}) selected at {coord}");
-                        else Debug.Log($"Unit unselected at {coord}");
+                        if (entity!=Entity.Null) Debug.Log($"Floor ({entity.Index}:{entity.Version}) selected at {coord}");
+                        else Debug.Log($"Floor unselected at {coord}");
                         #endif
                     }
                     else
@@ -65,16 +65,9 @@ namespace Server.Input
                             Selected = Entity.Null
                         });
                         // #if UNITY_EDITOR || DEBUG
-                        // Debug.Log($"No unit at {coord}");
+                        // Debug.Log($"No floor at {coord}");
                         // #endif
                     }
-                }
-
-                Entity selectedUnit = SystemAPI.GetSingleton<SelectedUnitSingleton>();
-                if (SystemAPI.GetComponent<TargettingEnemy>(selectedUnit)!=Entity.Null)
-                {
-                    var targettingEnemyRW = SystemAPI.GetComponentRW<TargettingEnemy>(selectedUnit);
-                    targettingEnemyRW.ValueRW = Entity.Null;
                 }
             }
         }

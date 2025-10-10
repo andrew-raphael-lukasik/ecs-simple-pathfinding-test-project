@@ -14,9 +14,9 @@ namespace Server.Input
     [UpdateInGroup(typeof(GameSimulationSystemGroup), OrderFirst = true)]// early simulation phase is best for input execution
     [RequireMatchingQueriesForUpdate]
     [Unity.Burst.BurstCompile]
-    public partial struct PlayerInputActionExecuteSystem : ISystem
+    public partial struct PlayExecuteSystem : ISystem
     {
-        public static FixedString64Bytes DebugName {get;} = nameof(PlayerInputActionExecuteSystem);
+        public static FixedString64Bytes DebugName {get;} = nameof(PlayExecuteSystem);
 
         [Unity.Burst.BurstCompile]
         void ISystem.OnCreate(ref SystemState state)
