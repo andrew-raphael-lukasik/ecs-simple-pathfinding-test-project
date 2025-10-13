@@ -62,9 +62,14 @@ namespace Server.Input
                                     var targettingEnemyRW = SystemAPI.GetComponentRW<TargettingEnemy>(selectedUnit);
                                     targettingEnemyRW.ValueRW = Entity.Null;
 
-                                    state.EntityManager.DestroyEntity(dstEntity);
+                                    var damageBuf = SystemAPI.GetBuffer<Damage>(dstEntity);
+                                    damageBuf.Add(new Damage{
+                                        Amount = 200,
+                                        Types = EDamageType.Ranged | EDamageType.Kinetic,
+                                        Instigator = selectedUnit,
+                                    });
 
-                                    UnityEngine.Debug.Log($"{DebugName}: ({selectedUnit.Index}:{selectedUnit.Version}) killed ({dstEntity.Index}:{dstEntity.Version})");
+                                    UnityEngine.Debug.Log($"{DebugName}: ({selectedUnit.Index}:{selectedUnit.Version}) attacks ({dstEntity.Index}:{dstEntity.Version})");
                                     return;// <- pointer click action ends here
                                 }
                                 else

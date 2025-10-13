@@ -31,6 +31,11 @@ namespace Server.Gameplay
                 ecb.AddComponent<IsUnitCoordValid>(entity);
                 ecb.SetComponentEnabled<IsUnitCoordValid>(entity, false);
 
+                ecb.AddComponent(entity, new Health{
+                    Value = 100,
+                });
+                ecb.AddBuffer<Damage>(entity);
+
                 ecb.AddComponent(entity, new InMoveRange{
                     Coords = new (32, Allocator.Persistent),
                 });
