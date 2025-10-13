@@ -47,6 +47,7 @@ namespace Client.Presentation
                 Segments.Core.SetSegmentChanged(_segments, state.EntityManager);
 
                 AABB aabb;
+                #region get_world_bounds
                 {
                     Bounds bounds = default;
                     if (state.EntityManager.HasComponent<LinkedEntityGroup>(selectedFloor))
@@ -78,8 +79,9 @@ namespace Client.Presentation
                     }
                     aabb = bounds.ToAABB();
                 }
-                buffer.Length += 12;
+                #endregion
 
+                buffer.Length += 12;
                 Segments.Plot.Box(
                     segments: buffer.AsArray().Slice(buffer.Length - 12, 12),
                     size: aabb.Size * 1.1f,
