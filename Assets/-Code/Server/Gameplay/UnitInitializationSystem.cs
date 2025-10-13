@@ -1,9 +1,12 @@
+using UnityEngine;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Collections;
 
 using ServerAndClient;
 using ServerAndClient.Gameplay;
+using ServerAndClient.Presentation;
+using Client.Animation;// @TODO: remove client-side code
 
 namespace Server.Gameplay
 {
@@ -13,13 +16,17 @@ namespace Server.Gameplay
     [Unity.Burst.BurstCompile]
     public partial struct UnitInitializationSystem : ISystem
     {
-        [Unity.Burst.BurstCompile]
+        // [Unity.Burst.BurstCompile]
         void ISystem.OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<IsUnitUninitialized>();
+
+            UnitAnimationPresenter.id_motion_speed = Animator.StringToHash("MotionSpeed");
+            UnitAnimationPresenter.id_speed = Animator.StringToHash("Speed");
+            UnitAnimationPresenter.id_grounded = Animator.StringToHash("Grounded");
         }
 
-        [Unity.Burst.BurstCompile]
+        // [Unity.Burst.BurstCompile]
         void ISystem.OnUpdate(ref SystemState state)
         {
             var ecb = SystemAPI.GetSingleton<EndInitializationEntityCommandBufferSystem.Singleton>().CreateCommandBuffer(state.WorldUnmanaged);
@@ -45,6 +52,31 @@ namespace Server.Gameplay
                 ecb.AddComponent(entity, new TargettingEnemy{
                     Value = Entity.Null,
                 });
+
+                var animatorPrefab = SystemAPI.GetComponent<AnimatorPrefab>(entity);
+                {
+                    var go = GameObject.Instantiate<GameObject>(animatorPrefab.Prefab);
+
+                    #if UNITY_EDITOR
+                    go.name = $"Animator for ({entity.Index}:{entity.Version})";
+                    #endif
+
+                    var animator = go.GetComponent<Animator>();
+                    ecb.AddComponent(entity, new UnitAnimationControls{
+                        Speed = 0,
+                    });
+                    ecb.AddComponent(entity, new UnitAnimationPresenter{
+                        Animator = animator,
+                        Transform = animator.transform,
+                        Rotation = animatorPrefab.PrefabRotation,
+                    });
+                    var gameObjects = ecb.AddBuffer<GameObjectCleanup>(entity);
+                    gameObjects.Add(animator.gameObject);
+
+                    animator.SetBool(UnitAnimationPresenter.id_grounded, true);
+                    animator.SetFloat(UnitAnimationPresenter.id_motion_speed, 1.0f);
+                }
+                ecb.RemoveComponent<AnimatorPrefab>(entity);
 
                 ecb.RemoveComponent<IsUnitUninitialized>(entity);
             }

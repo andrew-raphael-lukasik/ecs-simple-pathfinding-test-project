@@ -108,12 +108,22 @@ PrefabInstance:
       propertyPath: m_Layer
       value: 5
       objectReference: {fileID: 0}
+    - target: {fileID: 4674842516542703359, guid: 7106ca9426f7fdf069e8a05238947276, type: 3}
+      propertyPath: _moveRange
+      value: 6
+      objectReference: {fileID: 0}
+    - target: {fileID: 4674842516542703359, guid: 7106ca9426f7fdf069e8a05238947276, type: 3}
+      propertyPath: _animatorPrefab
+      value: 
+      objectReference: {fileID: 6708549344061761079, guid: 0338607aded849ee1902d0f1b294bce2, type: 3}
     - target: {fileID: 7501064737555037636, guid: 7106ca9426f7fdf069e8a05238947276, type: 3}
       propertyPath: m_Layer
       value: 5
       objectReference: {fileID: 0}
     m_RemovedComponents: []
-    m_RemovedGameObjects: []
+    m_RemovedGameObjects:
+    - {fileID: 7501064737555037636, guid: 7106ca9426f7fdf069e8a05238947276, type: 3}
+    - {fileID: 27817912423541555, guid: 7106ca9426f7fdf069e8a05238947276, type: 3}
     m_AddedGameObjects: []
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 1851647400118133837, guid: 7106ca9426f7fdf069e8a05238947276, type: 3}
@@ -137,5 +147,3 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 439903d13b53be6ceab0723d860f3eda, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EditorOnly.Authoring.EnemyUnitAuthoring
-  _moveRange: 3
-  _attackRange: 3

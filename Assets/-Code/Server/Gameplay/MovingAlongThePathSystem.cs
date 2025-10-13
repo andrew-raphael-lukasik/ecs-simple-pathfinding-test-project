@@ -9,6 +9,7 @@ using ServerAndClient.Gameplay;
 using ServerAndClient.Input;
 using Server.Gameplay;
 using ServerAndClient.Navigation;
+using ServerAndClient.Presentation;
 
 namespace Server.Gameplay
 {
@@ -47,14 +48,20 @@ namespace Server.Gameplay
                     {
                         moving.ValueRW.TimeUntilNextCoord = math.saturate(moving.ValueRW.TimeUntilNextCoord + SystemAPI.Time.DeltaTime * 3f);
 
-                        float4 Zprev = ltw.ValueRW.Value.c2;
-                        float3 Z = math.normalizesafe(
-                            math.lerp(
-                                new float3(Zprev.x, Zprev.y, Zprev.z),
-                                math.normalizesafe(nextPos - ltw.ValueRO.Position),
-                                SystemAPI.Time.DeltaTime * 7f
-                            )
-                        );
+                        SystemAPI.GetComponentRW<UnitAnimationControls>(entity).ValueRW.Speed = 3;
+
+                        float3 Z;
+                        {
+                            float3 vec = nextPos - ltw.ValueRO.Position;
+                            float3 Z0 = math.normalizesafe(new float3(ltw.ValueRW.Value.c2.x, 0, ltw.ValueRW.Value.c2.z));
+                            float3 Z1 = math.normalizesafe(new float3(vec.x, 0, vec.z));
+                            quaternion q0 = quaternion.LookRotationSafe(Z0, new float3(0, 1, 0));
+                            quaternion q1 = quaternion.LookRotationSafe(Z1, new float3(0, 1, 0));
+                            float step = 7f * SystemAPI.Time.DeltaTime;
+                            float t = math.min(1, step / math.angle(q0, q1)); 
+                            quaternion q = math.slerp(q0, q1, t);
+                            Z = math.mul(q, new float3(0, 0, 1));
+                        }
                         float3 Y = new float3(0, 1, 0);
                         float3 X = math.cross(Z, Y);
 
@@ -78,6 +85,8 @@ namespace Server.Gameplay
                 }
                 else
                 {
+                    SystemAPI.GetComponentRW<UnitAnimationControls>(entity).ValueRW.Speed = 0;
+
                     ecb.RemoveComponent<MovingAlongThePath>(entity);
                     ecb.RemoveComponent<PathfindingQueryResult>(entity);
                     path.Path.Dispose();
