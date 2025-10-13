@@ -7,7 +7,7 @@ using Client.UIToolkit;
 
 namespace Client.Input
 {
-    [WorldSystemFilter(WorldSystemFilterFlags.LocalSimulation | WorldSystemFilterFlags.ClientSimulation)]
+    [WorldSystemFilter(WorldSystemFilterFlags.ClientSimulation | WorldSystemFilterFlags.LocalSimulation)]
     [UpdateInGroup(typeof(GamePresentationSystemGroup))]// presentation phase is best for input collection
     public partial class PlayerInputSystem : SystemBase
     {

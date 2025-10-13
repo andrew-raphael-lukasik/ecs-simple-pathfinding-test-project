@@ -18,7 +18,6 @@ namespace Server.Input
         [Unity.Burst.BurstCompile]
         void ISystem.OnCreate(ref SystemState state)
         {
-            state.RequireForUpdate<GameState.PLAY>();
             state.RequireForUpdate<PlayerInputSingleton>();
             state.RequireForUpdate<MapSettingsSingleton>();
             state.RequireForUpdate<UnitsSingleton>();
@@ -71,7 +70,7 @@ namespace Server.Input
                 }
 
                 Entity selectedUnit = SystemAPI.GetSingleton<SelectedUnitSingleton>();
-                if (SystemAPI.GetComponent<TargettingEnemy>(selectedUnit)!=Entity.Null)
+                if (selectedUnit!=Entity.Null && SystemAPI.Exists(selectedUnit) && SystemAPI.GetComponent<TargettingEnemy>(selectedUnit)!=Entity.Null)
                 {
                     var targettingEnemyRW = SystemAPI.GetComponentRW<TargettingEnemy>(selectedUnit);
                     targettingEnemyRW.ValueRW = Entity.Null;

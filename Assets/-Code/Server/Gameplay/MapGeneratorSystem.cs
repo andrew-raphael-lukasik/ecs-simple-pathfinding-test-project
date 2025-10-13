@@ -36,7 +36,8 @@ namespace Server.Gameplay
             prefabsRef.ValueRW.Dependency.Complete();
             var lookupRO = prefabsRef.ValueRO.Lookup;
             if (
-                    !GetPrefabSafe("floor-traversable", lookupRO, state.EntityManager, out Entity prefabTraversable)
+                    lookupRO.Count==0
+                ||  !GetPrefabSafe("floor-traversable", lookupRO, state.EntityManager, out Entity prefabTraversable)
                 ||  !GetPrefabSafe("floor-obstacle", lookupRO, state.EntityManager, out Entity prefabObstacle)
                 ||  !GetPrefabSafe("floor-cover", lookupRO, state.EntityManager, out Entity prefabCover)
                 ||  !GetPrefabSafe("player-unit", lookupRO, state.EntityManager, out Entity prefabPlayer)
