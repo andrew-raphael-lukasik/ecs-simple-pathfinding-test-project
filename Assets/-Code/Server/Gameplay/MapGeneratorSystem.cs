@@ -57,9 +57,11 @@ namespace Server.Gameplay
 
             // clear existing map:
             {
+                var ecb2 = new EntityCommandBuffer(Allocator.TempJob);
                 new DestroyExistingMapEntitiesJob{
-                    ECBPW = ecb.AsParallelWriter(),
+                    ECBPW = ecb2.AsParallelWriter(),
                 }.ScheduleParallel(state.Dependency).Complete();
+                if (ecb2.ShouldPlayback) ecb2.Playback(state.EntityManager);
 
                 if (SystemAPI.TryGetSingletonEntity<GeneratedMapData>(out Entity mapDataEntity))
                     state.EntityManager.DestroyEntity(mapDataEntity);

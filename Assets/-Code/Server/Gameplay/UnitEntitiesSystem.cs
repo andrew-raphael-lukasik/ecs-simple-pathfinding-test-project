@@ -49,7 +49,7 @@ namespace Server.Gameplay
             if (unitsRef.ValueRO.Lookup.Length!=requiredBufferLength)
             {
                 unitsRef.ValueRW.Dependency.Complete();
-                unitsRef.ValueRW.Lookup.Dispose();
+                if (unitsRef.ValueRW.Lookup.IsCreated) unitsRef.ValueRW.Lookup.Dispose();
                 unitsRef.ValueRW.Lookup = new NativeArray<Entity>(requiredBufferLength, Allocator.Persistent);
 
                 state.Dependency = new InvalidateAllUnitsJob{

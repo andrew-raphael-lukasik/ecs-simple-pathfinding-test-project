@@ -40,19 +40,17 @@ namespace Server.Gameplay
         void ISystem.OnUpdate(ref SystemState state)
         {
             var floorsRef = SystemAPI.GetSingletonRW<FloorsSingleton>();
-            var floorsRW = floorsRef.ValueRW;
-            var floorsRO = floorsRef.ValueRO;
             var mapSettings = SystemAPI.GetSingleton<MapSettingsSingleton>();
             var ecb = SystemAPI.GetSingleton<EndInitializationEntityCommandBufferSystem.Singleton>().CreateCommandBuffer(state.WorldUnmanaged);
 
-            state.Dependency = JobHandle.CombineDependencies(state.Dependency, floorsRW.Dependency);
+            state.Dependency = JobHandle.CombineDependencies(state.Dependency, floorsRef.ValueRW.Dependency);
 
             int requiredBufferLength = (int)(mapSettings.Size.x * mapSettings.Size.y);
-            if (floorsRO.Lookup.Length!=requiredBufferLength)
+            if (floorsRef.ValueRO.Lookup.Length!=requiredBufferLength)
             {
-                floorsRW.Dependency.Complete();
-                floorsRW.Lookup.Dispose();
-                floorsRW.Lookup = new NativeArray<Entity>(requiredBufferLength, Allocator.Persistent);
+                floorsRef.ValueRW.Dependency.Complete();
+                if (floorsRef.ValueRW.Lookup.IsCreated) floorsRef.ValueRW.Lookup.Dispose();
+                floorsRef.ValueRW.Lookup = new NativeArray<Entity>(requiredBufferLength, Allocator.Persistent);
 
                 state.Dependency = new InvalidateAllFloorsJob{
                     ECB = ecb,
@@ -62,7 +60,7 @@ namespace Server.Gameplay
             state.Dependency = new FloorEntityDestroyedJob{
                 ECB = ecb,
                 MapSize = mapSettings.Size,
-                Floors = floorsRW.Lookup,
+                Floors = floorsRef.ValueRW.Lookup,
             }.Schedule(state.Dependency);
 
             state.Dependency = new AddValidityTagJob{
@@ -73,16 +71,16 @@ namespace Server.Gameplay
                 ECB = ecb,
                 MapSize = mapSettings.Size,
                 MapOrigin = mapSettings.Origin,
-                Floors = floorsRW.Lookup,
+                Floors = floorsRef.ValueRW.Lookup,
             }.Schedule(state.Dependency);
 
             #if UNITY_EDITOR || DEBUG
             state.Dependency = new AssertionsJob{
-                Floors = floorsRO.Lookup,
+                Floors = floorsRef.ValueRO.Lookup,
             }.ScheduleParallel(state.Dependency);
             #endif
 
-            floorsRW.Dependency = state.Dependency;
+            floorsRef.ValueRW.Dependency = state.Dependency;
         }
 
         [WithPresent(typeof(FloorCoord), typeof(LocalToWorld))]
