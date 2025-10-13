@@ -44,9 +44,18 @@ namespace Server.Gameplay
                     prefabsRef.ValueRW.Dependency.Complete();
                     if (prefabsRef.ValueRW.Lookup.TryGetValue("unit-death-fx", out Entity prefab))
                     {
-                        ecb.Instantiate(prefab);
+                        Entity instance = ecb.Instantiate(prefab);
+
                         var ltw = SystemAPI.GetComponentRO<LocalToWorld>(entity);
-                        ecb.SetComponent(prefab, ltw.ValueRO);
+                        if (SystemAPI.HasComponent<LocalTransform>(prefab))
+                        {
+                            ecb.SetComponent(instance, new LocalTransform{
+                                Position = ltw.ValueRO.Position,
+                                Rotation = ltw.ValueRO.Rotation,
+                                Scale = 1,
+                            });
+                        }
+                        else ecb.SetComponent(instance, ltw.ValueRO);
                     }
 
                     UnityEngine.Debug.Log($"({entity.Index}:{entity.Version})'s health is 0, destroying");
