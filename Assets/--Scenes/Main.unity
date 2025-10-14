@@ -797,7 +797,7 @@ Transform:
   m_GameObject: {fileID: 778532981}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 16.7, y: 0, z: 19.37}
+  m_LocalPosition: {x: 7.3, y: 0, z: 7}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1073,7 +1073,7 @@ Transform:
   m_GameObject: {fileID: 1383336345}
   serializedVersion: 2
   m_LocalRotation: {x: 0.44182602, y: 0.41185725, z: -0.23937917, w: 0.7601717}
-  m_LocalPosition: {x: 12.620001, y: 8.55, z: 16.710001}
+  m_LocalPosition: {x: 3.2200003, y: 8.55, z: 4.34}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1361,7 +1361,7 @@ Transform:
   m_GameObject: {fileID: 2043941136}
   serializedVersion: 2
   m_LocalRotation: {x: 0.44182608, y: 0.41185728, z: -0.23937917, w: 0.76017165}
-  m_LocalPosition: {x: 12.620001, y: 8.55, z: 16.710001}
+  m_LocalPosition: {x: 3.2200003, y: 8.55, z: 4.34}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1451,7 +1451,7 @@ MonoBehaviour:
   m_ShadowLayerMask: 1
   m_ShadowRenderingLayers: 1
   m_LightCookieSize: {x: 111, y: 111}
-  m_LightCookieOffset: {x: 4.159879, y: 3.3799014}
+  m_LightCookieOffset: {x: 23.012651, y: 18.697779}
   m_SoftShadowQuality: 0
 --- !u!108 &2078836690
 Light:
