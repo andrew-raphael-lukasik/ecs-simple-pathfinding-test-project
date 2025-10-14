@@ -138,7 +138,7 @@ namespace Server.Gameplay
             }
         }
 
-        [WithAbsent(typeof(LocalToWorld))]
+        [WithAbsent(typeof(IsUnit))]
         [Unity.Burst.BurstCompile]
         partial struct UnitEntityDestroyedJob : IJobEntity
         {
