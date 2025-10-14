@@ -58,12 +58,6 @@ namespace Server.Input
                         return;
                     }
 
-                    JobHandle.CompleteAll(
-                        ref mapDataRef.ValueRW.Dependency,
-                        ref floorsRef.ValueRW.Dependency,
-                        ref unitsRef.ValueRW.Dependency
-                    );
-
                     var floors = floorsRef.ValueRO.Lookup;
                     var units = unitsRef.ValueRO.Lookup;
 

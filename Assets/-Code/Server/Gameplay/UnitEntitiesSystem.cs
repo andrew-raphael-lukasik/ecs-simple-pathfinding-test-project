@@ -43,12 +43,9 @@ namespace Server.Gameplay
             var mapSettings = SystemAPI.GetSingleton<MapSettingsSingleton>();
             var ecb = SystemAPI.GetSingleton<EndInitializationEntityCommandBufferSystem.Singleton>().CreateCommandBuffer(state.WorldUnmanaged);
 
-            state.Dependency = JobHandle.CombineDependencies(state.Dependency, unitsRef.ValueRW.Dependency);
-
             int requiredBufferLength = (int)(mapSettings.Size.x * mapSettings.Size.y);
             if (unitsRef.ValueRO.Lookup.Length!=requiredBufferLength)
             {
-                unitsRef.ValueRW.Dependency.Complete();
                 if (unitsRef.ValueRW.Lookup.IsCreated) unitsRef.ValueRW.Lookup.Dispose();
                 unitsRef.ValueRW.Lookup = new NativeArray<Entity>(requiredBufferLength, Allocator.Persistent);
 
@@ -79,8 +76,6 @@ namespace Server.Gameplay
                 Units = unitsRef.ValueRO.Lookup,
             }.ScheduleParallel(state.Dependency);
             #endif
-
-            unitsRef.ValueRW.Dependency = state.Dependency;
         }
 
         [WithPresent(typeof(UnitCoord), typeof(LocalToWorld))]
@@ -177,7 +172,6 @@ namespace Server.Gameplay
     public struct UnitsSingleton : IComponentData
     {
         public NativeArray<Entity> Lookup;
-        public JobHandle Dependency;
     }
 
 }

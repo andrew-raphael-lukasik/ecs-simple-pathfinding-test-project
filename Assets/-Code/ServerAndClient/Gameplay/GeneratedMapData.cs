@@ -7,7 +7,6 @@ namespace ServerAndClient.Gameplay
 {
     public struct GeneratedMapData : IComponentData
     {
-        public JobHandle Dependency;
         public NativeArray<float3> PositionArray;
         public NativeArray<EFloorType> FloorArray;
     }

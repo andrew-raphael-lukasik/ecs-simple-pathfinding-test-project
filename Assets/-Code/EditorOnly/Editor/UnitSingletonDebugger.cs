@@ -74,7 +74,6 @@ namespace EditorOnly.Debugging
                 return false;
             }
             var singletonRef = singletonQuery.GetSingletonRW<UnitsSingleton>();
-            singletonRef.ValueRW.Dependency.Complete();
 
             var lookup = singletonRef.ValueRO.Lookup;
             if (lookup.Length==0)
