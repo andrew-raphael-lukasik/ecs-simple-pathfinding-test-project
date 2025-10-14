@@ -11,6 +11,14 @@ namespace Client.Animation
         public UnityObjectRef<Transform> Transform;
         public quaternion Rotation;
 
-        public static int id_motion_speed, id_speed, id_grounded;
+        public static int
+            id_move_speed,
+            id_is_crounching,
+            id_event_pistol_attack,
+            id_event_melee_attack,
+            id_event_interact,
+            id_event_hit,
+            id_event_death,
+            id_event_revived;
     }
 }

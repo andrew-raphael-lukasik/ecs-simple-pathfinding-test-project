@@ -115,7 +115,7 @@ PrefabInstance:
     - target: {fileID: 4674842516542703359, guid: 7106ca9426f7fdf069e8a05238947276, type: 3}
       propertyPath: _animatorPrefab
       value: 
-      objectReference: {fileID: 6708549344061761079, guid: 0338607aded849ee1902d0f1b294bce2, type: 3}
+      objectReference: {fileID: 1000769371244841973, guid: 0338607aded849ee1902d0f1b294bce2, type: 3}
     - target: {fileID: 7501064737555037636, guid: 7106ca9426f7fdf069e8a05238947276, type: 3}
       propertyPath: m_Layer
       value: 5

@@ -30,7 +30,7 @@ namespace Client.Animation
             )
             {
                 var animator = presenter.ValueRW.Animator.Value;
-                animator.SetFloat(UnitAnimationPresenter.id_speed, controls.ValueRO.Speed);
+                animator.SetFloat(UnitAnimationPresenter.id_move_speed, controls.ValueRO.Speed);
 
                 var transform = presenter.ValueRW.Transform.Value;
                 transform.position = ltw.Position;

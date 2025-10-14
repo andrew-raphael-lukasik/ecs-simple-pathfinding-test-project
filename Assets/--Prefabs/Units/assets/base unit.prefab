@@ -46,7 +46,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _moveRange: 3
   _attackRange: 3
-  _animatorPrefab: {fileID: 1851647400118133837, guid: 4124cf5a70ea4007b99f81fdcb5d58c2, type: 3}
+  _animatorPrefab: {fileID: 5280649898990619023, guid: 4124cf5a70ea4007b99f81fdcb5d58c2, type: 3}
   _animatorPrefabRotation: {x: 0, y: 180, z: 0}
   _localBounds:
     m_Center: {x: 0, y: 1, z: 0}

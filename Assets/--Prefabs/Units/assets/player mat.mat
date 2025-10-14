@@ -116,11 +116,11 @@ Material:
     - _Metallic: 1
     - _OcclusionStrength: 1
     - _Parallax: 0.005
-    - _Push: 0.06
+    - _Push: 0
     - _QueueControl: 0
     - _QueueOffset: 0
     - _ReceiveShadows: 1
-    - _Rim_Power: 11.11
+    - _Rim_Power: 17.55
     - _Smoothness: 0.68
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
@@ -131,10 +131,10 @@ Material:
     - _XRMotionVectorsPass: 1
     - _ZWrite: 1
     m_Colors:
-    - _BaseColor: {r: 0.1503067, g: 1, b: 0, a: 1}
-    - _Color: {r: 0, g: 1, b: 0.20977807, a: 1}
+    - _BaseColor: {r: 0.66703415, g: 0, b: 1, a: 1}
+    - _Color: {r: 0.8301887, g: 0.8301887, b: 0.8301887, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
-    - _Rim_Color: {r: 16.19528, g: 170.89003, b: 0, a: 1}
+    - _Rim_Color: {r: 38.12933, g: 255.99997, b: 0, a: 1}
     - _Rim_Direction: {r: 0.4, g: -0.4, b: -1, a: 0}
     - _Rim_Direction_Bias: {r: -0.2, g: 0.2, b: 0, a: 0}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}

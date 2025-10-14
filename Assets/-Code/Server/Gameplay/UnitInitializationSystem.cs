@@ -21,9 +21,14 @@ namespace Server.Gameplay
         {
             state.RequireForUpdate<IsUnitUninitialized>();
 
-            UnitAnimationPresenter.id_motion_speed = Animator.StringToHash("MotionSpeed");
-            UnitAnimationPresenter.id_speed = Animator.StringToHash("Speed");
-            UnitAnimationPresenter.id_grounded = Animator.StringToHash("Grounded");
+            UnitAnimationPresenter.id_move_speed = Animator.StringToHash("move_speed");
+            UnitAnimationPresenter.id_is_crounching = Animator.StringToHash("is_crounching");
+            UnitAnimationPresenter.id_event_pistol_attack = Animator.StringToHash("event_pistol_attack");
+            UnitAnimationPresenter.id_event_melee_attack = Animator.StringToHash("event_melee_attack");
+            UnitAnimationPresenter.id_event_interact = Animator.StringToHash("event_interact");
+            UnitAnimationPresenter.id_event_hit = Animator.StringToHash("event_hit");
+            UnitAnimationPresenter.id_event_death = Animator.StringToHash("event_death");
+            UnitAnimationPresenter.id_event_revived = Animator.StringToHash("event_revived");
         }
 
         // [Unity.Burst.BurstCompile]
@@ -73,8 +78,7 @@ namespace Server.Gameplay
                     var gameObjects = ecb.AddBuffer<GameObjectCleanup>(entity);
                     gameObjects.Add(animator.gameObject);
 
-                    animator.SetBool(UnitAnimationPresenter.id_grounded, true);
-                    animator.SetFloat(UnitAnimationPresenter.id_motion_speed, 1.0f);
+                    animator.SetFloat(UnitAnimationPresenter.id_move_speed, 1.0f);
                 }
                 ecb.RemoveComponent<AnimatorPrefab>(entity);
 
