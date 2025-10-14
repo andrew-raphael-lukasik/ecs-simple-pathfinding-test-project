@@ -66,7 +66,7 @@ namespace Server.Input
 
                                     var damageBuf = SystemAPI.GetBuffer<Damage>(dstEntity);
                                     damageBuf.Add(new Damage{
-                                        Amount = 200,
+                                        Amount = 60,
                                         TypeMask = EDamageType.Ranged | EDamageType.Kinetic,
                                         Instigator = selectedUnit,
                                     });

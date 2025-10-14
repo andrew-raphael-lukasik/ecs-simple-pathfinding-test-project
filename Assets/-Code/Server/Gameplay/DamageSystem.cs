@@ -29,29 +29,24 @@ namespace Server.Gameplay
                 .WithEntityAccess()
             )
             {
+                uint damageDealtTotal = 0;
                 foreach (var damage in damageBuf)
                 {
-                    healthRef.ValueRW.Value -= (ushort) math.min((int) damage.Amount, (int) healthRef.ValueRW.Value);
+                    uint damageDealt = (uint) math.min((int) damage.Amount, (int) healthRef.ValueRW.Value);;
+                    damageDealtTotal += damageDealt;
+
+                    healthRef.ValueRW.Value -= (ushort) damageDealt;
                     animControlsRef.ValueRW.EventHit = 1;
 
                     UnityEngine.Debug.Log($"({entity.Index}:{entity.Version}) attacked by ({damage.Instigator.Index}:{damage.Instigator.Version}), damage: {damage.Amount} ({damage.TypeMask}), health changed to {healthRef.ValueRO.Value}");
                 }
                 damageBuf.Clear();
 
-                if (healthRef.ValueRO==0)
+                if (damageDealtTotal>0)
                 {
-                    animControlsRef.ValueRW.EventDeath = 1;
-                    // ecb.DestroyEntity(entity);
-                    ecb.RemoveComponent<IsUnit>(entity);
-                    ecb.RemoveComponent<Health>(entity);
-                    ecb.RemoveComponent<Damage>(entity);
-                    ecb.RemoveComponent<InMoveRange>(entity);
-                    ecb.RemoveComponent<InAttackRange>(entity);
-                    ecb.RemoveComponent<TargettingEnemy>(entity);
-
                     var prefabsRef = SystemAPI.GetSingletonRW<PrefabSystem.Prefabs>();
                     prefabsRef.ValueRW.Dependency.Complete();
-                    if (prefabsRef.ValueRW.Lookup.TryGetValue("unit-death-fx", out Entity prefab))
+                    if (prefabsRef.ValueRW.Lookup.TryGetValue("pistol-hit-fx", out Entity prefab))
                     {
                         Entity instance = ecb.Instantiate(prefab);
 
@@ -59,13 +54,24 @@ namespace Server.Gameplay
                         if (SystemAPI.HasComponent<LocalTransform>(prefab))
                         {
                             ecb.SetComponent(instance, new LocalTransform{
-                                Position = ltw.ValueRO.Position,
+                                Position = ltw.ValueRO.Position + new float3(0, 1, 0),
                                 Rotation = ltw.ValueRO.Rotation,
                                 Scale = 1,
                             });
                         }
                         else ecb.SetComponent(instance, ltw.ValueRO);
                     }
+                }
+
+                if (healthRef.ValueRO==0)
+                {
+                    animControlsRef.ValueRW.EventDeath = 1;
+                    ecb.RemoveComponent<IsUnit>(entity);
+                    ecb.RemoveComponent<Health>(entity);
+                    ecb.RemoveComponent<Damage>(entity);
+                    ecb.RemoveComponent<InMoveRange>(entity);
+                    ecb.RemoveComponent<InAttackRange>(entity);
+                    ecb.RemoveComponent<TargettingEnemy>(entity);
 
                     UnityEngine.Debug.Log($"({entity.Index}:{entity.Version})'s health is 0, destroying");
                 }
