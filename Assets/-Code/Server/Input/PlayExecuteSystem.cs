@@ -104,8 +104,8 @@ namespace Server.Input
                     }
 
                     var inMoveRangeRW = SystemAPI.GetComponentRW<InMoveRange>(selectedUnit);
-                    bool clickedOnMoveDestination = inMoveRangeRW.ValueRO.Coords.Contains(dstCoord);
-                    if (clickedOnMoveDestination)
+                    bool clickedCoordIsInMoveRange = inMoveRangeRW.ValueRO.Coords.Contains(dstCoord);
+                    if (clickedCoordIsInMoveRange)
                     {
                         if (SystemAPI.HasComponent<PathfindingQueryResult>(selectedUnit))
                         {
@@ -137,6 +137,14 @@ namespace Server.Input
                             UnityEngine.Debug.Log($"{DebugName}: ({selectedUnit.Index}:{selectedUnit.Version}) pathfinding");
                             return;// <- pointer click action ends here
                         }
+                    }
+                    else
+                    {
+                        uint2 srcCoord = SystemAPI.GetComponent<UnitCoord>(selectedUnit);
+                        state.EntityManager.AddComponentData(selectedUnit, new PathfindingPreviewQuery{
+                            Src = srcCoord,
+                            Dst = dstCoord,
+                        });
                     }
                 }
             }
