@@ -17,22 +17,10 @@ namespace Client.Presentation
     [Unity.Burst.BurstCompile]
     public partial struct CursorPositionSystem : ISystem
     {
-        NativeReference<float3> _positionRef;
-        NativeReference<bool> _rayHitRef;
-
         [Unity.Burst.BurstCompile]
         void ISystem.OnCreate(ref SystemState state)
         {
-            _positionRef = new (Allocator.Persistent);
-            _rayHitRef = new (Allocator.Persistent);
             state.RequireForUpdate<PlayerInputSingleton>();
-        }
-
-        [Unity.Burst.BurstCompile]
-        void ISystem.OnDestroy(ref SystemState state)
-        {
-            if (_positionRef.IsCreated) _positionRef.Dispose();
-            if (_rayHitRef.IsCreated) _rayHitRef.Dispose();
         }
 
         [Unity.Burst.BurstCompile]
@@ -46,32 +34,24 @@ namespace Client.Presentation
             if (SystemAPI.TryGetSingleton<GeneratedMapData>(out var mapData))
             {
                 var mapSettings = SystemAPI.GetSingleton<MapSettingsSingleton>();
-
-                state.Dependency = new GameGrid.RaycastJob{
-                    RayValue = ray,
-                    MapOrigin = mapSettings.Origin,
-                    MapSize = mapSettings.Size,
-                    PositionArray = mapData.PositionArray,
-                    PositionRef = _positionRef,
-                    RayHitRef = _rayHitRef,
-                }.Schedule(state.Dependency);
-
-                state.Dependency = new SetCursorLocalTransformJob{
-                    ElapsedTime = SystemAPI.Time.ElapsedTime,
-                    DeltaTime = SystemAPI.Time.DeltaTime,
-                    DestinationRef = _positionRef,
-                }.ScheduleParallel(state.Dependency);
+                if (GameGrid.Raycast(ray, mapSettings.Origin, mapSettings.Size, out int i))
+                {
+                    float3 pos = mapData.PositionArray[i];
+                    state.Dependency = new SetCursorLocalTransformJob{
+                        ElapsedTime = SystemAPI.Time.ElapsedTime,
+                        Position = pos,
+                    }.ScheduleParallel(state.Dependency);
+                }
             }
             else
             {
                 var plane = new Plane(Vector3.up, Vector3.zero);
                 if (plane.Raycast(ray, out float dist))
                 {
-                    _positionRef.Value = ray.origin + ray.direction * dist;
+                    float3 pos = ray.origin + ray.direction * dist;
                     state.Dependency = new SetCursorLocalTransformJob{
                         ElapsedTime = SystemAPI.Time.ElapsedTime,
-                        DeltaTime = SystemAPI.Time.DeltaTime,
-                        DestinationRef = _positionRef,
+                        Position = pos,
                     }.ScheduleParallel(state.Dependency);
                 }
             }
@@ -82,19 +62,17 @@ namespace Client.Presentation
         partial struct SetCursorLocalTransformJob : IJobEntity
         {
             public double ElapsedTime;
-            public float DeltaTime;
-            [ReadOnly] public NativeReference<float3> DestinationRef;
+            public float3 Position;
             public void Execute(ref LocalTransform lt)
             {
                 lt.Scale = 0.7f + (Easing.InOutElastic((float)math.sin(ElapsedTime*20f))*0.05f);
-                lt.Position = DestinationRef.AsReadOnly().Value + new float3(0, 0.05f, 0);
+                lt.Position = Position + new float3(0, 0.05f, 0);
 
                 #if UNITY_EDITOR
-                Debug.DrawRay(DestinationRef.AsReadOnly().Value, Vector3.up, Color.cyan);
+                Debug.DrawRay(Position, Vector3.up, Color.cyan);
                 #endif
             }
         }
-
     }
 
     public struct IsCursor : IComponentData {}

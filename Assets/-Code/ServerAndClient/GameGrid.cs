@@ -108,30 +108,5 @@ namespace ServerAndClient
         }
 
 
-        [Unity.Burst.BurstCompile]
-        public struct RaycastJob : IJob
-        {
-            public Ray RayValue;
-            public float3 MapOrigin;
-            public uint2 MapSize;
-            [ReadOnly] public NativeArray<float3> PositionArray;
-            [WriteOnly] public NativeReference<float3> PositionRef;
-            [WriteOnly] public NativeReference<bool> RayHitRef;
-            void IJob.Execute()
-            {
-                if (Raycast(ray: RayValue, mapOrigin: MapOrigin, mapSize: MapSize, out int i))
-                {
-                    PositionRef.Value = PositionArray[i];
-                    RayHitRef.Value = true;
-                }
-                else
-                {
-                    PositionRef.Value = 0;
-                    RayHitRef.Value = false;
-                }
-            }
-        }
-
-
     }
 }
