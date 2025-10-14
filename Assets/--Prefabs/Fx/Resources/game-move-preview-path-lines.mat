@@ -49,11 +49,11 @@ Material:
     - _FarColorDistance: 1000
     - _FarCutoffDistaneEnd: 100
     - _FarCutoffDistaneStart: 0
-    - _FarWidth: 0.125
+    - _FarWidth: 0.1
     - _FarWidthDistance: 22
     - _NearColorDistance: 1000
     - _NearCutoffDistane: 0.5
-    - _NearWidth: 0.95
+    - _NearWidth: 0.1
     - _NearWidthDistance: 5
     - _Roundness: 1
     - _Smoothness: 1
