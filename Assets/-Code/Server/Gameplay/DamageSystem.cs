@@ -4,6 +4,7 @@ using Unity.Transforms;
 
 using ServerAndClient;
 using ServerAndClient.Gameplay;
+using ServerAndClient.Presentation;
 
 namespace Server.Gameplay
 {
@@ -23,14 +24,15 @@ namespace Server.Gameplay
         void ISystem.OnUpdate(ref SystemState state)
         {
             var ecb = SystemAPI.GetSingleton<EndSimulationEntityCommandBufferSystem.Singleton>().CreateCommandBuffer(state.WorldUnmanaged);
-            foreach (var (healthRef, damageBuf, entity) in SystemAPI
-                .Query< RefRW<Health>, DynamicBuffer<Damage> >()
+            foreach (var (healthRef, damageBuf, animControlsRef, entity) in SystemAPI
+                .Query< RefRW<Health>, DynamicBuffer<Damage>, RefRW<UnitAnimationControls> >()
                 .WithEntityAccess()
             )
             {
                 foreach (var damage in damageBuf)
                 {
                     healthRef.ValueRW.Value -= (ushort) math.min((int) damage.Amount, (int) healthRef.ValueRW.Value);
+                    animControlsRef.ValueRW.EventHit = 1;
 
                     UnityEngine.Debug.Log($"({entity.Index}:{entity.Version}) attacked by ({damage.Instigator.Index}:{damage.Instigator.Version}), damage: {damage.Amount} ({damage.TypeMask}), health changed to {healthRef.ValueRO.Value}");
                 }
@@ -38,7 +40,14 @@ namespace Server.Gameplay
 
                 if (healthRef.ValueRO==0)
                 {
-                    ecb.DestroyEntity(entity);
+                    animControlsRef.ValueRW.EventDeath = 1;
+                    // ecb.DestroyEntity(entity);
+                    ecb.RemoveComponent<IsUnit>(entity);
+                    ecb.RemoveComponent<Health>(entity);
+                    ecb.RemoveComponent<Damage>(entity);
+                    ecb.RemoveComponent<InMoveRange>(entity);
+                    ecb.RemoveComponent<InAttackRange>(entity);
+                    ecb.RemoveComponent<TargettingEnemy>(entity);
 
                     var prefabsRef = SystemAPI.GetSingletonRW<PrefabSystem.Prefabs>();
                     prefabsRef.ValueRW.Dependency.Complete();

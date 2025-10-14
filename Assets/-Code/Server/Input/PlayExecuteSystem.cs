@@ -1,5 +1,6 @@
 using Unity.Entities;
 using Unity.Mathematics;
+using Unity.Transforms;
 using Unity.Collections;
 
 using ServerAndClient;
@@ -7,6 +8,7 @@ using ServerAndClient.Gameplay;
 using ServerAndClient.Input;
 using ServerAndClient.Navigation;
 using Server.Gameplay;
+using ServerAndClient.Presentation;
 
 namespace Server.Input
 {
@@ -69,6 +71,10 @@ namespace Server.Input
                                         Instigator = selectedUnit,
                                     });
 
+                                    var selectedAnimControlsRef = SystemAPI.GetComponentRW<UnitAnimationControls>(selectedUnit);
+                                    selectedAnimControlsRef.ValueRW.EventPistolAttack = 1;
+                                    selectedAnimControlsRef.ValueRW.IsAiming = 0;
+
                                     UnityEngine.Debug.Log($"{DebugName}: ({selectedUnit.Index}:{selectedUnit.Version}) attacks ({dstEntity.Index}:{dstEntity.Version})");
                                     return;// <- pointer click action ends here
                                 }
@@ -76,6 +82,19 @@ namespace Server.Input
                                 {
                                     var targettingEnemyRW = SystemAPI.GetComponentRW<TargettingEnemy>(selectedUnit);
                                     targettingEnemyRW.ValueRW = dstEntity;
+
+                                    var selectedLtwRef = SystemAPI.GetComponentRW<LocalToWorld>(selectedUnit);
+                                    var dstLtwRef = SystemAPI.GetComponentRO<LocalToWorld>(dstEntity);
+                                    selectedLtwRef.ValueRW.Value = float4x4.TRS(
+                                        selectedLtwRef.ValueRO.Position,
+                                        quaternion.LookRotationSafe(
+                                            -math.normalizesafe(dstLtwRef.ValueRO.Position - selectedLtwRef.ValueRO.Position),
+                                            new float3(0, 1, 0)
+                                        ),
+                                        new float3(1, 1, 1)
+                                    );
+
+                                    SystemAPI.GetComponentRW<UnitAnimationControls>(selectedUnit).ValueRW.IsAiming = 1;
 
                                     UnityEngine.Debug.Log($"{DebugName}: ({selectedUnit.Index}:{selectedUnit.Version}) selects ({dstEntity.Index}:{dstEntity.Version}) as target");
                                     return;// <- pointer click action ends here

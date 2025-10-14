@@ -22,7 +22,8 @@ namespace Server.Gameplay
             state.RequireForUpdate<IsUnitUninitialized>();
 
             UnitAnimationPresenter.id_move_speed = Animator.StringToHash("move_speed");
-            UnitAnimationPresenter.id_is_crounching = Animator.StringToHash("is_crounching");
+            UnitAnimationPresenter.id_is_crouching = Animator.StringToHash("is_crouching");
+            UnitAnimationPresenter.id_is_aiming = Animator.StringToHash("is_aiming");
             UnitAnimationPresenter.id_event_pistol_attack = Animator.StringToHash("event_pistol_attack");
             UnitAnimationPresenter.id_event_melee_attack = Animator.StringToHash("event_melee_attack");
             UnitAnimationPresenter.id_event_interact = Animator.StringToHash("event_interact");

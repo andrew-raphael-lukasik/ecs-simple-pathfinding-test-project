@@ -13,7 +13,8 @@ namespace Client.Animation
 
         public static int
             id_move_speed,
-            id_is_crounching,
+            id_is_crouching,
+            id_is_aiming,
             id_event_pistol_attack,
             id_event_melee_attack,
             id_event_interact,
