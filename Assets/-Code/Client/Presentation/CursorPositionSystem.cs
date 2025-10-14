@@ -56,7 +56,7 @@ namespace Client.Presentation
                     RayHitRef = _rayHitRef,
                 }.Schedule(state.Dependency);
 
-                state.Dependency = new SetCursorPositionJob{
+                state.Dependency = new SetCursorLocalTransformJob{
                     ElapsedTime = SystemAPI.Time.ElapsedTime,
                     DeltaTime = SystemAPI.Time.DeltaTime,
                     DestinationRef = _positionRef,
@@ -68,7 +68,7 @@ namespace Client.Presentation
                 if (plane.Raycast(ray, out float dist))
                 {
                     _positionRef.Value = ray.origin + ray.direction * dist;
-                    state.Dependency = new SetCursorPositionJob{
+                    state.Dependency = new SetCursorLocalTransformJob{
                         ElapsedTime = SystemAPI.Time.ElapsedTime,
                         DeltaTime = SystemAPI.Time.DeltaTime,
                         DestinationRef = _positionRef,
@@ -79,21 +79,15 @@ namespace Client.Presentation
 
         [WithPresent(typeof(IsCursor))]
         [Unity.Burst.BurstCompile]
-        partial struct SetCursorPositionJob : IJobEntity
+        partial struct SetCursorLocalTransformJob : IJobEntity
         {
             public double ElapsedTime;
             public float DeltaTime;
             [ReadOnly] public NativeReference<float3> DestinationRef;
-            public void Execute(ref LocalToWorld ltw)
+            public void Execute(ref LocalTransform lt)
             {
-                // animated scale:
-                float scale = 0.7f + (Easing.InOutElastic((float)math.sin(ElapsedTime*20f))*0.05f);
-                ltw.Value.c0 = new float4(scale, 0, 0, 0);
-                ltw.Value.c1 = new float4(0, 0.05f, 0, 0);
-                ltw.Value.c2 = new float4(0, 0, scale, 0);
-
-                // position:
-                ltw.Value.c3 = new float4(DestinationRef.AsReadOnly().Value + new float3(0, 0.05f, 0), 1);
+                lt.Scale = 0.7f + (Easing.InOutElastic((float)math.sin(ElapsedTime*20f))*0.05f);
+                lt.Position = DestinationRef.AsReadOnly().Value + new float3(0, 0.05f, 0);
 
                 #if UNITY_EDITOR
                 Debug.DrawRay(DestinationRef.AsReadOnly().Value, Vector3.up, Color.cyan);

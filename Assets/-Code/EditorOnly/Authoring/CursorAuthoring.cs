@@ -17,7 +17,7 @@ namespace EditorOnly.Authoring
         {
             public override void Bake(CursorAuthoring authoring)
             {
-                Entity entity = GetEntity(authoring, TransformUsageFlags.WorldSpace);
+                Entity entity = GetEntity(authoring, TransformUsageFlags.Dynamic);// Dynamic seems required for projector translation
 
                 AddComponent<IsCursor>(entity);
 
