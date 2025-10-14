@@ -51,8 +51,8 @@ namespace Client.Presentation
                 var mapData = SystemAPI.GetSingleton<GeneratedMapData>();
                 var playerInput = SystemAPI.GetSingleton<PlayerInputSingleton>();
 
-                var inAttackRange = SystemAPI.GetComponent<InAttackRange>(selectedUnit);
-                if (inAttackRange.Coords.Count!=0)
+                var inAttackRangeRO = SystemAPI.GetComponentRW<InAttackRange>(selectedUnit).ValueRO;
+                if (inAttackRangeRO.Coords.Count!=0)
                 {
                     var mapDataRef = SystemAPI.GetSingletonRW<GeneratedMapData>();
                     var floors = mapDataRef.ValueRO.FloorArray;
@@ -63,8 +63,8 @@ namespace Client.Presentation
                     const int numSegmentsPerField = 3;
                     var rot = quaternion.RotateX(math.PIHALF);
                     int bufferPosition = segmentBufferRO.Length;
-                    segmentBufferRW.Length += inAttackRange.Coords.Count * numSegmentsPerField;
-                    foreach (uint2 coord in inAttackRange.Coords)
+                    segmentBufferRW.Length += inAttackRangeRO.Coords.Count * numSegmentsPerField;
+                    foreach (uint2 coord in inAttackRangeRO.Coords)
                     {
                         int index = GameGrid.ToIndex(coord, mapSettings.Size);
                         if (floors[index]==EFloorType.Traversable)

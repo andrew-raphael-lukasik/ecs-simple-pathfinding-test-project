@@ -5,6 +5,7 @@ using Unity.Mathematics;
 using ServerAndClient;
 using ServerAndClient.Gameplay;
 using ServerAndClient.Input;
+using ServerAndClient.Navigation;
 using Server.Gameplay;
 
 namespace Server.Input
@@ -36,12 +37,12 @@ namespace Server.Input
             if (playerInput.SelectStart==1 && playerInput.IsPointerOverUI==0)
             {
                 var mapSettings = SystemAPI.GetSingleton<MapSettingsSingleton>();
-                if (GameGrid.Raycast(ray: playerInput.PointerRay, mapOrigin: mapSettings.Origin, mapSize: mapSettings.Size, out uint2 coord))
+                if (GameGrid.Raycast(ray: playerInput.PointerRay, mapOrigin: mapSettings.Origin, mapSize: mapSettings.Size, out uint2 dstCoord))
                 {
                     var unitsRef = SystemAPI.GetSingletonRW<UnitsSingleton>();
                     var units = unitsRef.ValueRW.Lookup;
 
-                    int index = GameGrid.ToIndex(coord, mapSettings.Size);
+                    int index = GameGrid.ToIndex(dstCoord, mapSettings.Size);
                     Entity entity = units[index];
                     if (entity!=Entity.Null)
                     {
@@ -54,8 +55,8 @@ namespace Server.Input
                         });
 
                         #if UNITY_EDITOR || DEBUG
-                        if (entity!=Entity.Null) Debug.Log($"Unit ({entity.Index}:{entity.Version}) selected at {coord}");
-                        else Debug.Log($"Unit unselected at {coord}");
+                        if (entity!=Entity.Null) Debug.Log($"Unit ({entity.Index}:{entity.Version}) selected at {dstCoord}");
+                        else Debug.Log($"Unit unselected at {dstCoord}");
                         #endif
                     }
                     else
@@ -74,6 +75,25 @@ namespace Server.Input
                 {
                     var targettingEnemyRW = SystemAPI.GetComponentRW<TargettingEnemy>(selectedUnit);
                     targettingEnemyRW.ValueRW = Entity.Null;
+                }
+
+                if (selectedUnit!=Entity.Null)
+                {
+                    if (SystemAPI.HasComponent<PathfindingPreviewQueryResult>(selectedUnit))
+                    {
+                        var results = SystemAPI.GetComponentRW<PathfindingPreviewQueryResult>(selectedUnit);
+                        if (results.ValueRW.Path.IsCreated) results.ValueRW.Path.Dispose();
+
+                        state.EntityManager.RemoveComponent<PathfindingPreviewQueryResult>(selectedUnit);
+                    }
+
+                    if (SystemAPI.HasComponent<PathfindingQueryResult>(selectedUnit))
+                    {
+                        var results = SystemAPI.GetComponentRW<PathfindingQueryResult>(selectedUnit);
+                        if (results.ValueRW.Path.IsCreated) results.ValueRW.Path.Dispose();
+
+                        state.EntityManager.RemoveComponent<PathfindingQueryResult>(selectedUnit);
+                    }
                 }
             }
         }

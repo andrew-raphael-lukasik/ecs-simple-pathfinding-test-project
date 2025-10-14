@@ -40,6 +40,14 @@ namespace Server.Input
                 var mapSettings = SystemAPI.GetSingleton<MapSettingsSingleton>();
                 Entity selectedUnit = SystemAPI.GetSingleton<SelectedUnitSingleton>();
 
+                if (selectedUnit!=Entity.Null && SystemAPI.HasComponent<PathfindingPreviewQueryResult>(selectedUnit))
+                {
+                    var results = SystemAPI.GetComponentRW<PathfindingPreviewQueryResult>(selectedUnit);
+                    if (results.ValueRW.Path.IsCreated) results.ValueRW.Path.Dispose();
+
+                    state.EntityManager.RemoveComponent<PathfindingPreviewQueryResult>(selectedUnit);
+                }
+
                 if (selectedUnit!=Entity.Null && SystemAPI.Exists(selectedUnit))
                 if (GameGrid.Raycast(ray: playerInput.PointerRay, mapOrigin: mapSettings.Origin, mapSize: mapSettings.Size, out uint2 dstCoord))
                 {
