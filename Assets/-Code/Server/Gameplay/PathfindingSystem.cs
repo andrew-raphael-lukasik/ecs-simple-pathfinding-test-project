@@ -28,9 +28,9 @@ namespace Server.Gameplay
         void ISystem.OnUpdate(ref SystemState state)
         {
             var ecb = SystemAPI.GetSingleton<EndInitializationEntityCommandBufferSystem.Singleton>().CreateCommandBuffer(state.WorldUnmanaged);
+            var mapSettings = SystemAPI.GetSingleton<MapSettingsSingleton>();
+            var mapData = SystemAPI.GetSingleton<GeneratedMapData>();
 
-            if (SystemAPI.TryGetSingleton<MapSettingsSingleton>(out var mapSettings))
-            if (SystemAPI.TryGetSingleton<GeneratedMapData>(out var mapData))
             foreach (var (request, entity) in SystemAPI.Query<PathfindingQuery>().WithEntityAccess())
             {
                 ushort moveRange = SystemAPI.GetComponent<MoveRange>(entity);
