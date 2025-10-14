@@ -159,7 +159,7 @@ namespace Server.Gameplay
                 }
 
                 uint mapCellArea = size.x * size.y;
-                for (int i = 0; i < mapCellArea; i++)
+                for (int i = 0; i < mapCellArea; ++i)
                 {
                     FloorArray[i] = EFloorType.Traversable;
                 }

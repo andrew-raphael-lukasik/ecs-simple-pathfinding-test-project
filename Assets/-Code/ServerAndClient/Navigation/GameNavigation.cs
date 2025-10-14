@@ -378,7 +378,7 @@ namespace ServerAndClient.Navigation
             int length = array.Length;
             int lengthHalf = length / 2;
             int last = length-1;
-            for (int i=0 ; i<lengthHalf ; i++)
+            for (int i=0 ; i<lengthHalf ; ++i)
             {
                 var tmp = array[i];
                 array[i] = array[last-i];

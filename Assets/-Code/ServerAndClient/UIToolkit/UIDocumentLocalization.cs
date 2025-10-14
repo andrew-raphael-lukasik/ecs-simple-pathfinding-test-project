@@ -91,12 +91,12 @@ public class UIDocumentLocalization : MonoBehaviour
     {
         VisualElement.Hierarchy elementHierarchy = element.hierarchy;
         int numChildren = elementHierarchy.childCount;
-        for (int i = 0; i < numChildren; i++)
+        for (int i = 0; i < numChildren; ++i)
         {
             VisualElement child = elementHierarchy.ElementAt(i);
             Localize(child, table);
         }
-        for (int i = 0; i < numChildren; i++)
+        for (int i = 0; i < numChildren; ++i)
         {
             VisualElement child = elementHierarchy.ElementAt(i);
             VisualElement.Hierarchy childHierarchy = child.hierarchy;

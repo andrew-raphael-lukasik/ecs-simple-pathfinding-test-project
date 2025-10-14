@@ -50,7 +50,7 @@ namespace Server.Gameplay
                     int bufferStart = buffer.Length;
                     buffer.Length += pathLength;
                     uint2 coord = pathResults.Path[0];
-                    for (int i = 1; i < pathLength; i++)
+                    for (int i = 1; i < pathLength; ++i)
                     {
                         int indexPrev = GameGrid.ToIndex(coord, mapSettings.Size);
                         coord = pathResults.Path[i];
