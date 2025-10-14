@@ -32,7 +32,7 @@ namespace Server.Gameplay
                 {
                     healthRef.ValueRW.Value -= (ushort) math.min((int) damage.Amount, (int) healthRef.ValueRW.Value);
 
-                    UnityEngine.Debug.Log($"({entity.Index}:{entity.Version}) attacked by ({damage.Instigator.Index}:{damage.Instigator.Version}), damage: {damage.Amount} ({damage.Types}), health changed to {healthRef.ValueRO.Value}");
+                    UnityEngine.Debug.Log($"({entity.Index}:{entity.Version}) attacked by ({damage.Instigator.Index}:{damage.Instigator.Version}), damage: {damage.Amount} ({damage.TypeMask}), health changed to {healthRef.ValueRO.Value}");
                 }
                 damageBuf.Clear();
 

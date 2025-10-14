@@ -5,7 +5,7 @@ namespace ServerAndClient.Gameplay
     public struct Damage : IBufferElementData
     {
         public ushort Amount;
-        public EDamageType Types;
+        public EDamageType TypeMask;
         public Entity Instigator;
     }
 
