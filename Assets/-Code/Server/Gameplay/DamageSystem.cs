@@ -17,7 +17,7 @@ namespace Server.Gameplay
         [Unity.Burst.BurstCompile]
         void ISystem.OnCreate(ref SystemState state)
         {
-            state.RequireForUpdate<Health>();
+            state.RequireForUpdate<Damage>();
         }
 
         [Unity.Burst.BurstCompile]
