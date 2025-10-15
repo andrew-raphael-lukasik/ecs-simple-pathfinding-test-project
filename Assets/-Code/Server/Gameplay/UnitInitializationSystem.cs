@@ -24,12 +24,11 @@ namespace Server.Gameplay
             UnitAnimationPresenter.id_move_speed = Animator.StringToHash("move_speed");
             UnitAnimationPresenter.id_is_crouching = Animator.StringToHash("is_crouching");
             UnitAnimationPresenter.id_is_aiming = Animator.StringToHash("is_aiming");
+            UnitAnimationPresenter.id_is_dead = Animator.StringToHash("is_dead");
             UnitAnimationPresenter.id_event_pistol_attack = Animator.StringToHash("event_pistol_attack");
             UnitAnimationPresenter.id_event_melee_attack = Animator.StringToHash("event_melee_attack");
             UnitAnimationPresenter.id_event_interact = Animator.StringToHash("event_interact");
             UnitAnimationPresenter.id_event_hit = Animator.StringToHash("event_hit");
-            UnitAnimationPresenter.id_event_death = Animator.StringToHash("event_death");
-            UnitAnimationPresenter.id_event_revived = Animator.StringToHash("event_revived");
         }
 
         // [Unity.Burst.BurstCompile]

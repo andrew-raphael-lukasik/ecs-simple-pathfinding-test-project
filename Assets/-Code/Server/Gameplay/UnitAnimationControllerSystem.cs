@@ -36,6 +36,7 @@ namespace Client.Animation
                     animator.SetFloat(UnitAnimationPresenter.id_move_speed, controlsRO.Speed);
                     animator.SetBool(UnitAnimationPresenter.id_is_aiming, controlsRO.IsAiming==1);
                     animator.SetBool(UnitAnimationPresenter.id_is_crouching, controlsRO.IsCrouching==1);
+                    animator.SetBool(UnitAnimationPresenter.id_is_dead, controlsRO.IsDead==1);
 
                     if (controlsRO.EventPistolAttack==1)
                     {
@@ -47,12 +48,6 @@ namespace Client.Animation
                     {
                         animator.SetTrigger(UnitAnimationPresenter.id_event_hit);
                         controlsRef.ValueRW.EventHit = 0;
-                    }
-
-                    if (controlsRO.EventDeath==1)
-                    {
-                        animator.SetTrigger(UnitAnimationPresenter.id_event_death);
-                        controlsRef.ValueRW.EventDeath = 0;
                     }
                 }
 

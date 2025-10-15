@@ -8,8 +8,8 @@ namespace ServerAndClient.Presentation
         public byte
             IsAiming,
             IsCrouching,
+            IsDead,
             EventPistolAttack,
-            EventHit,
-            EventDeath;
+            EventHit;
     }
 }

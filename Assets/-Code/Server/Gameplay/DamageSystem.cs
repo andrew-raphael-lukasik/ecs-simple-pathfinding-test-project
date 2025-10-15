@@ -65,7 +65,7 @@ namespace Server.Gameplay
 
                 if (healthRef.ValueRO==0)
                 {
-                    animControlsRef.ValueRW.EventDeath = 1;
+                    animControlsRef.ValueRW.IsDead = 1;
                     ecb.RemoveComponent<IsUnit>(entity);
                     ecb.RemoveComponent<Health>(entity);
                     ecb.RemoveComponent<Damage>(entity);

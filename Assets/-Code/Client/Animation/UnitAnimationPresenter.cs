@@ -15,11 +15,10 @@ namespace Client.Animation
             id_move_speed,
             id_is_crouching,
             id_is_aiming,
+            id_is_dead,
             id_event_pistol_attack,
             id_event_melee_attack,
             id_event_interact,
-            id_event_hit,
-            id_event_death,
-            id_event_revived;
+            id_event_hit;
     }
 }
