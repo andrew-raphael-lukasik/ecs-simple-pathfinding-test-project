@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.AddressableAssets;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Collections;
@@ -21,10 +22,11 @@ namespace Client.Presentation
         // [Unity.Burst.BurstCompile]
         void ISystem.OnCreate(ref SystemState state)
         {
+            var matLoadOp = Addressables.LoadAssetAsync<Material>("game-selection-lines.mat");
+
             state.RequireForUpdate<SelectedUnitSingleton>();
 
-            var lineMat = Resources.Load<Material>("game-selection-lines");
-            Segments.Core.Create(out _segments, lineMat);
+            Segments.Core.Create(out _segments, matLoadOp.WaitForCompletion());
         }
 
         [Unity.Burst.BurstCompile]

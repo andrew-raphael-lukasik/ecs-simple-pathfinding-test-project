@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.AddressableAssets;
 using Unity.Entities;
 using Unity.Mathematics;
 
@@ -18,13 +19,14 @@ namespace Client.Presentation
         // [Unity.Burst.BurstCompile]
         void ISystem.OnCreate(ref SystemState state)
         {
+            var matLoadOp = Addressables.LoadAssetAsync<Material>("game-move-range-lines.mat");
+
             state.RequireForUpdate<GameState.PLAY>();
             state.RequireForUpdate<MapSettingsSingleton>();
             state.RequireForUpdate<GeneratedMapData>();
             state.RequireForUpdate<SelectedUnitSingleton>();
 
-            var lineMat = Resources.Load<Material>("game-move-range-lines");
-            Segments.Core.Create(out _segments, lineMat);
+            Segments.Core.Create(out _segments, matLoadOp.WaitForCompletion());
             state.EntityManager.AddComponent<IsPlayStateOnly>(_segments);
         }
 

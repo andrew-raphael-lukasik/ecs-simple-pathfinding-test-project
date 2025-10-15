@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.AddressableAssets;
 using Unity.Entities;
 using Unity.Mathematics;
 
@@ -19,16 +20,16 @@ namespace Server.Gameplay
         // [Unity.Burst.BurstCompile]
         void ISystem.OnCreate(ref SystemState state)
         {
+            var mat1LoadOp = Addressables.LoadAssetAsync<Material>("game-move-preview-path-lines.mat");
+            var mat2LoadOp = Addressables.LoadAssetAsync<Material>("game-attack-range-lines.mat");
+
             state.RequireForUpdate<GameState.PLAY>();
             state.RequireForUpdate<MapSettingsSingleton>();
             state.RequireForUpdate<GeneratedMapData>();
             state.RequireForUpdate<SelectedUnitSingleton>();
 
-            var lineMat = Resources.Load<Material>("game-move-preview-path-lines");
-            Segments.Core.Create(out _segments, lineMat);
-
-            var attackMat = Resources.Load<Material>("game-attack-range-lines");
-            Segments.Core.Create(out _segments2, attackMat);
+            Segments.Core.Create(out _segments, mat1LoadOp.WaitForCompletion());
+            Segments.Core.Create(out _segments2, mat2LoadOp.WaitForCompletion());
         }
 
         [Unity.Burst.BurstCompile]

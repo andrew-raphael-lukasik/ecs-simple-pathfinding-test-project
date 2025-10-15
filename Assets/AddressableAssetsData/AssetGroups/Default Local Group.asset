@@ -14,7 +14,32 @@ MonoBehaviour:
   m_EditorClassIdentifier: Unity.Addressables.Editor::UnityEditor.AddressableAssets.Settings.AddressableAssetGroup
   m_GroupName: Default Local Group
   m_GUID: 9b0bed5ddbef75324987d0e40e5e1165
-  m_SerializeEntries: []
+  m_SerializeEntries:
+  - m_GUID: 340ca156e9e38180c97085ed1011fa93
+    m_Address: game-move-range-lines.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 489b09f2cf6956060863527cc0bfea8b
+    m_Address: game-attack-range-lines.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 5087ff43750c21a5dae522b24302f6a4
+    m_Address: game-move-path-lines.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: 68cb58a28cb497f2c9148fd40a76b85c
+    m_Address: game-move-preview-path-lines.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
+  - m_GUID: a51157b37c26d6427a9af7753ccdedc2
+    m_Address: game-selection-lines.mat
+    m_ReadOnly: 0
+    m_SerializedLabels: []
+    FlaggedDuringContentUpdateRestriction: 0
   m_ReadOnly: 0
   m_Settings: {fileID: 11400000, guid: 800669bbed2bc63ee92e2db47345eb4a, type: 2}
   m_SchemaSet:
