@@ -7,6 +7,7 @@ using Unity.Transforms;
 
 using ServerAndClient.Gameplay;
 using ServerAndClient;
+using ServerAndClient.Presentation;
 
 using Random = Unity.Mathematics.Random;
 using Assert = UnityEngine.Assertions.Assert;
@@ -320,7 +321,7 @@ namespace Server.Gameplay
             }
         }
 
-        [WithAny(typeof(FloorCoord), typeof(UnitCoord))]
+        [WithAny(typeof(FloorCoord), typeof(UnitCoord), typeof(UnitAnimationControls))]
         [Unity.Burst.BurstCompile]
         partial struct DestroyExistingMapEntitiesJob : IJobEntity
         {
