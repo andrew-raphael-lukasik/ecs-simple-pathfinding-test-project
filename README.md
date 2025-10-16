@@ -1,4 +1,4 @@
-## simple ECS-based pathfinding test
+## ECS-based pathfinding test
 
 <img width="1830" height="985" alt="image" src="https://github.com/user-attachments/assets/53db149c-9e2a-4c1f-b2b9-e8e3a85a11cd" />
 
