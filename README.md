@@ -4,7 +4,17 @@
 
 Sample project content:
 - grid-based pathfinding
+
+<p float="center">
+  <img src="https://github.com/user-attachments/assets/22d374bd-6130-497f-99ce-dd6fafa62116" height="300px">
+</p>
+
 - ECS game code, organized into 3 main namespaces: `Server` (simulation and sim data), `Client` (presentation and input reading) and `ServerAndClient` (shared)
+
+<p float="center">
+  <img src="https://github.com/user-attachments/assets/aad79d06-99f7-4108-896d-724459ecb1e4" height="300px">
+</p>
+
 - UI Toolkit in-game interface
 
 <p float="center">
